@@ -12,7 +12,6 @@
 
 ```cmd
 cd Dual-java
-./gradlew jar
-java -jar build/libs/Dual-1.0.jar
+./gradlew run
 ```
 
