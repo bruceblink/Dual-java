@@ -1,35 +1,61 @@
 plugins {
     id 'java'
     id 'application'
-    id 'jacoco'
 }
 
-group = 'com.likanug.game'
+group = 'com.likanug.dual'
 version = '1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://jogamp.org/deployment/maven/")
+    }
 }
 
 dependencies {
     implementation 'com.google.guava:guava:32.0.0-android'
-    implementation 'org.processing:core:3.3.7'
+    implementation 'org.processing:core:4.5.0'
+
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
-test {
-    useJUnitPlatform()
-    ignoreFailures = true
+application {
+    applicationName = 'Dual'
+    mainClass = 'com.likanug.dual.App'
 }
 
-jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    manifest {
-        attributes 'Main-Class': 'com.likanug.dual.App'
-    }
-    mainClassName = 'com.likanug.dual.App'
-    from {
-        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
-    }
+test {
+    useJUnitPlatform()
+}
+
+/**
+ * 使用 JDK 自带 jpackage
+ */
+def jpackageExe = "${javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(17)
+}.get().metadata.installationPath}/bin/jpackage"
+
+tasks.register('packageApp', Exec) {
+    dependsOn 'installDist'
+
+    commandLine = [
+        jpackageExe,
+        '--type', 'exe',
+        '--input', layout.buildDirectory.dir("install/${application.applicationName}/lib").get().asFile.absolutePath,
+        '--dest', layout.buildDirectory.dir("dist").get().asFile.absolutePath,
+        '--name', application.applicationName,
+        '--main-class', application.mainClass,
+        '--main-jar', "${application.applicationName}-${project.version}.jar",
+
+        '--java-options', '-Djava.awt.headless=false',
+        '--java-options', '-Djava.library.path=$APPDIR'
+    ]
 }
