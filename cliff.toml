@@ -17,6 +17,7 @@ body = """
     {% for commit in commits %}
         - {% if commit.scope %}**{{ commit.scope }}**: {% endif %}\
           {{ commit.message | upper_first }} \
+          &nbsp;-&nbsp; by @{{ commit.remote.username | default(value=commit.author.name) }} \
           [<samp>({{ commit.id | truncate(length=7, end="") }})</samp>](https://github.com/bruceblink/Dual-java/commit/{{ commit.id }})
     {%- endfor %}
 {% endfor %}

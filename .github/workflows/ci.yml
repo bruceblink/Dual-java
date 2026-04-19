@@ -116,6 +116,7 @@ jobs:
         env:
           OUTPUT: CHANGELOG_RELEASE.md
           GITHUB_REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download installer artifact
         uses: actions/download-artifact@v4
