@@ -65,6 +65,8 @@ tasks.register('packageApp', Exec) {
         '--java-options', '-Djava.awt.headless=false',
         '--java-options', '-Djava.library.path=$APPDIR',
 
+        '--icon', layout.projectDirectory.file("src/main/resources/icon.ico").asFile.absolutePath,
+
         '--win-shortcut',
         '--win-menu',
         '--win-menu-group', 'Games',
