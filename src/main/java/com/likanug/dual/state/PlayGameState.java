@@ -41,7 +41,7 @@ public class PlayGameState extends GameSystemState {
     public void displayMessage(GameSystem system) {
         int messageDurationFrameCount = FPS;
         if (properFrameCount >= messageDurationFrameCount) return;
-        app.fill(0, (float) (255.0 * (1.0 - properFrameCount / messageDurationFrameCount)));
+        app.fill(0, (float) (255.0 * (1.0 - (float) properFrameCount / messageDurationFrameCount)));
         app.text("Go", 0.0F, 0.0F);
     }
 

@@ -179,7 +179,7 @@ public class GameSystem {
     }
 
     public void addSquareParticles(float x, float y, int particleCount, int particleSize, float minSpeed, float maxSpeed, int lifespanSecondValue) {
-        final ParticleBuilder builder = app.getSystem().commonParticleSet.getBuilder()
+        final ParticleBuilder builder = commonParticleSet.getBuilder()
                 .type(1)  // Square
                 .position(x, y)
                 .particleSize(particleSize)
@@ -189,7 +189,7 @@ public class GameSystem {
             final Particle newParticle = builder
                     .polarVelocity(app.random(TWO_PI), app.random(minSpeed, maxSpeed))
                     .build();
-            app.getSystem().commonParticleSet.getParticleList().add(newParticle);
+            commonParticleSet.getParticleList().add(newParticle);
         }
     }
 }
