@@ -120,15 +120,15 @@ jobs:
         run: |
           brew install imagemagick
           mkdir -p build/icons/Dual.iconset
-          convert 'src/main/resources/icon.ico[0]' -resize 16x16   build/icons/Dual.iconset/icon_16x16.png
-          convert 'src/main/resources/icon.ico[0]' -resize 32x32   build/icons/Dual.iconset/icon_16x16@2x.png
-          convert 'src/main/resources/icon.ico[0]' -resize 32x32   build/icons/Dual.iconset/icon_32x32.png
-          convert 'src/main/resources/icon.ico[0]' -resize 64x64   build/icons/Dual.iconset/icon_32x32@2x.png
-          convert 'src/main/resources/icon.ico[0]' -resize 128x128 build/icons/Dual.iconset/icon_128x128.png
-          convert 'src/main/resources/icon.ico[0]' -resize 256x256 build/icons/Dual.iconset/icon_128x128@2x.png
-          convert 'src/main/resources/icon.ico[0]' -resize 256x256 build/icons/Dual.iconset/icon_256x256.png
-          convert 'src/main/resources/icon.ico[0]' -resize 512x512 build/icons/Dual.iconset/icon_256x256@2x.png
-          convert 'src/main/resources/icon.ico[0]' -resize 512x512 build/icons/Dual.iconset/icon_512x512.png
+          magick 'src/main/resources/icon.ico[0]' -resize 16x16   build/icons/Dual.iconset/icon_16x16.png
+          magick 'src/main/resources/icon.ico[0]' -resize 32x32   build/icons/Dual.iconset/icon_16x16@2x.png
+          magick 'src/main/resources/icon.ico[0]' -resize 32x32   build/icons/Dual.iconset/icon_32x32.png
+          magick 'src/main/resources/icon.ico[0]' -resize 64x64   build/icons/Dual.iconset/icon_32x32@2x.png
+          magick 'src/main/resources/icon.ico[0]' -resize 128x128 build/icons/Dual.iconset/icon_128x128.png
+          magick 'src/main/resources/icon.ico[0]' -resize 256x256 build/icons/Dual.iconset/icon_128x128@2x.png
+          magick 'src/main/resources/icon.ico[0]' -resize 256x256 build/icons/Dual.iconset/icon_256x256.png
+          magick 'src/main/resources/icon.ico[0]' -resize 512x512 build/icons/Dual.iconset/icon_256x256@2x.png
+          magick 'src/main/resources/icon.ico[0]' -resize 512x512 build/icons/Dual.iconset/icon_512x512.png
           iconutil -c icns build/icons/Dual.iconset -o src/main/resources/icon.icns
 
       - name: Package with jpackage
@@ -173,7 +173,7 @@ jobs:
       - name: Convert icon to png
         run: |
           sudo apt-get install -y imagemagick
-          convert src/main/resources/icon.ico[0] -resize 256x256 src/main/resources/icon.png
+          magick src/main/resources/icon.ico[0] -resize 256x256 src/main/resources/icon.png
 
       - name: Download distribution lib
         uses: actions/download-artifact@v4
