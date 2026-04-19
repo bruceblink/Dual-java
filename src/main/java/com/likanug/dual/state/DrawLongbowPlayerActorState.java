@@ -1,6 +1,7 @@
 package com.likanug.dual.state;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.arrow.LongbowArrowHead;
 import com.likanug.dual.actor.arrow.LongbowArrowShaft;
 import com.likanug.dual.actor.player.PlayerActor;
@@ -12,11 +13,11 @@ import static processing.core.PApplet.*;
 
 public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
 
-    private final float unitAngleSpeed = 0.1F * TWO_PI / FPS;
-    private final int chargeRequiredFrameCount = (int) (0.5 * FPS);
+    private final float unitAngleSpeed = GameConstants.LONGBOW_AIM_SPEED_RATIO * TWO_PI / FPS;
+    private final int chargeRequiredFrameCount = (int) (GameConstants.LONGBOW_CHARGE_SEC * FPS);
     private final int effectColor = app.color(192, 64, 64);
-    private final int ringSize = 80;
-    private final float ringStrokeWeight = 5;
+    private final int ringSize = GameConstants.LONGBOW_RING_SIZE;
+    private final float ringStrokeWeight = GameConstants.LONGBOW_RING_STROKE;
 
     public DrawLongbowPlayerActorState(App app) {
         super(app);
@@ -32,14 +33,14 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     }
 
     public void fire(PlayerActor parentActor) {
-        final float arrowComponentInterval = 24;
-        final int arrowShaftNumber = 5;
+        final float arrowComponentInterval = GameConstants.LONGBOW_COMPONENT_INTERVAL;
+        final int arrowShaftNumber = GameConstants.LONGBOW_SHAFT_COUNT;
         for (int i = 0; i < arrowShaftNumber; i++) {
             LongbowArrowShaft newArrow = new LongbowArrowShaft(app);
             newArrow.setxPosition(parentActor.getxPosition() + i * arrowComponentInterval * cos(parentActor.getAimAngle()));
             newArrow.setyPosition(parentActor.getyPosition() + i * arrowComponentInterval * sin(parentActor.getAimAngle()));
             newArrow.setRotationAngle(parentActor.getAimAngle());
-            newArrow.setVelocity(parentActor.getAimAngle(), 64);
+            newArrow.setVelocity(parentActor.getAimAngle(), GameConstants.LONGBOW_SPEED);
 
             parentActor.getGroup().addArrow(newArrow);
         }
@@ -48,7 +49,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
         newArrow.setxPosition(parentActor.getxPosition() + arrowShaftNumber * arrowComponentInterval * cos(parentActor.getAimAngle()));
         newArrow.setyPosition(parentActor.getyPosition() + arrowShaftNumber * arrowComponentInterval * sin(parentActor.getAimAngle()));
         newArrow.setRotationAngle(parentActor.getAimAngle());
-        newArrow.setVelocity(parentActor.getAimAngle(), 64);
+        newArrow.setVelocity(parentActor.getAimAngle(), GameConstants.LONGBOW_SPEED);
 
         final Particle newParticle = app.getSystem().getCommonParticleSet().getBuilder()
                 .type(2)  // Line

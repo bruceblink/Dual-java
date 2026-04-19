@@ -1,6 +1,7 @@
 package com.likanug.dual.actor.arrow;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.particle.Particle;
 import processing.core.PApplet;
 
@@ -12,14 +13,14 @@ public class ShortbowArrow extends AbstractArrowActor {
 
     private final float terminalSpeed;
 
-    private final float halfHeadLength = 8.0F;
-    private final float halfHeadWidth = 4.0F;
-    private final float halfFeatherWidth = 4.0F;
-    private final float featherLength = 8.0F;
+    private final float halfHeadLength = GameConstants.SHORTBOW_HEAD_HALF_LENGTH;
+    private final float halfHeadWidth = GameConstants.SHORTBOW_HEAD_HALF_WIDTH;
+    private final float halfFeatherWidth = GameConstants.SHORTBOW_FEATHER_HALF_WIDTH;
+    private final float featherLength = GameConstants.SHORTBOW_FEATHER_LENGTH;
 
     public ShortbowArrow(App app) {
-        super(8.0F, 20.0F, app);
-        terminalSpeed = 8.0F;
+        super(GameConstants.SHORTBOW_ARROW_HALF_LENGTH, GameConstants.SHORTBOW_ARROW_HALF_BODY, app);
+        terminalSpeed = GameConstants.SHORTBOW_TERMINAL_SPEED;
     }
 
     public void update() {

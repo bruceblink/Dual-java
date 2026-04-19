@@ -1,6 +1,7 @@
 package com.likanug.dual.state;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.player.PlayerActor;
 
 import static com.likanug.dual.App.FPS;
@@ -8,7 +9,7 @@ import static com.likanug.dual.App.FPS;
 public class DamagedPlayerActorState extends PlayerActorState {
 
     private PlayerActorState moveState;
-    private final int durationFrameCount = (int) (0.75 * FPS);
+    private final int durationFrameCount = (int) (GameConstants.DAMAGED_DURATION_SEC * FPS);
 
     public DamagedPlayerActorState(App app) {
         super(app);

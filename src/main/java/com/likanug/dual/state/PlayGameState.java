@@ -1,6 +1,7 @@
 package com.likanug.dual.state;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.Actor;
 import com.likanug.dual.actor.ActorGroup;
 import com.likanug.dual.actor.arrow.AbstractArrowActor;
@@ -90,23 +91,24 @@ public class PlayGameState extends GameSystemState {
     }
 
     public void killPlayer(AbstractPlayerActor player) {
-        app.getSystem().addSquareParticles(player.getxPosition(), player.getyPosition(), 50, 16, 2, 10, 4);
+        app.getSystem().addSquareParticles(player.getxPosition(), player.getyPosition(),
+                GameConstants.KILL_PARTICLE_COUNT, GameConstants.KILL_PARTICLE_SIZE, 2, 10, 4);
         player.getGroup().setPlayer(new NullPlayerActor(app));
-        app.getSystem().setScreenShakeValue(50);
+        app.getSystem().setScreenShakeValue(GameConstants.SCREEN_SHAKE_ON_KILL);
     }
 
     public void breakArrow(AbstractArrowActor arrow, ActorGroup group) {
-        app.getSystem().addSquareParticles(arrow.getxPosition(), arrow.getyPosition(), 10, 7, 1, 5, 1);
+        app.getSystem().addSquareParticles(arrow.getxPosition(), arrow.getyPosition(),
+                GameConstants.ARROW_BREAK_PARTICLE_COUNT, GameConstants.ARROW_BREAK_PARTICLE_SIZE, 1, 5, 1);
         group.getRemovingArrowList().add(arrow);
     }
 
     public void thrustPlayerActor(Actor referenceActor, PlayerActor targetPlayerActor) {
         final float relativeAngle = atan2(targetPlayerActor.getyPosition() - referenceActor.getyPosition(), targetPlayerActor.getxPosition() - referenceActor.getxPosition());
         final float thrustAngle = relativeAngle + app.random((float) (-0.5 * HALF_PI), (float) (0.5 * HALF_PI));
-        final float thrustSpeed = 8.0f;
-        targetPlayerActor.setxVelocity(cos(thrustAngle) * thrustSpeed);
-        targetPlayerActor.setyVelocity(sin(thrustAngle) * thrustSpeed);
+        targetPlayerActor.setxVelocity(cos(thrustAngle) * GameConstants.PLAYER_THRUST_SPEED);
+        targetPlayerActor.setyVelocity(sin(thrustAngle) * GameConstants.PLAYER_THRUST_SPEED);
         targetPlayerActor.setState(app.getSystem().getDamagedState().entryState(targetPlayerActor));
-        app.getSystem().setScreenShakeValue(app.getSystem().getScreenShakeValue() + 10);
+        app.getSystem().setScreenShakeValue(app.getSystem().getScreenShakeValue() + GameConstants.SCREEN_SHAKE_ON_HIT);
     }
 }

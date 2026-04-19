@@ -11,10 +11,10 @@ public class ComputerPlayerEngine extends PlayerEngine {
 
     public ComputerPlayerEngine(App app) {
         this.app = app;
-        // There shoud be a smarter way!!!
         final MovePlayerPlan move = new MovePlayerPlan(app);
         final JabPlayerPlan jab = new JabPlayerPlan(app);
         final KillPlayerPlan kill = new KillPlayerPlan(app);
+        // Plan transition graph: move ↔ jab ↔ kill → move
         move.setMovePlan(move);
         move.setJabPlan(jab);
         move.setKillPlan(kill);

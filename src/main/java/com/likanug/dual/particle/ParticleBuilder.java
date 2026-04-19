@@ -8,18 +8,18 @@ import static com.likanug.dual.App.FPS;
 public class ParticleBuilder {
 
     private final App app;
-    private int particleTypeNumber;
+    private int particleTypeNumber = 0;
 
-    private float xPosition, yPosition;
-    private float xVelocity, yVelocity;
-    private float directionAngle, speed;
+    private float xPosition = 0, yPosition = 0;
+    private float xVelocity = 0, yVelocity = 0;
+    private float directionAngle = 0, speed = 0;
 
-    private float rotationAngle;
-    private int displayColor;
-    private float strokeWeightValue;
-    private int displaySize;
+    private float rotationAngle = 0;
+    private int displayColor = 0;
+    private float strokeWeightValue = 1;
+    private int displaySize = 10;
 
-    private float lifespanFrameCount;
+    private float lifespanFrameCount = 60;
 
     public ParticleBuilder(App app) {
         this.app = app;

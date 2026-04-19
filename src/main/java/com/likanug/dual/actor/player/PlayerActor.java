@@ -1,6 +1,7 @@
 package com.likanug.dual.actor.player;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.playerEngine.PlayerEngine;
 
 import static com.likanug.dual.App.FPS;
@@ -12,7 +13,7 @@ import static processing.core.PConstants.TWO_PI;
 
 public class PlayerActor extends AbstractPlayerActor {
 
-    private final float bodySize = 32.0F;
+    private final float bodySize = GameConstants.PLAYER_BODY_SIZE;
     private final float halfBodySize = bodySize * 0.5F;
     private final int fillColor;
 
@@ -63,8 +64,8 @@ public class PlayerActor extends AbstractPlayerActor {
 
 
     public void addVelocity(float xAcceleration, float yAcceleration) {
-        xVelocity = constrain(xVelocity + xAcceleration, -10, 10);
-        yVelocity = constrain(yVelocity + yAcceleration, -7, 7);
+        xVelocity = constrain(xVelocity + xAcceleration, -GameConstants.PLAYER_MAX_VX, GameConstants.PLAYER_MAX_VX);
+        yVelocity = constrain(yVelocity + yAcceleration, -GameConstants.PLAYER_MAX_VY, GameConstants.PLAYER_MAX_VY);
     }
 
     public void act() {
@@ -77,23 +78,23 @@ public class PlayerActor extends AbstractPlayerActor {
 
         if (xPosition < halfBodySize) {
             xPosition = halfBodySize;
-            xVelocity = (float) (-0.5 * xVelocity);
+            xVelocity *= -GameConstants.PLAYER_BOUNCE;
         }
         if (xPosition > INTERNAL_CANVAS_SIDE_WIDTH - halfBodySize) {
             xPosition = INTERNAL_CANVAS_SIDE_WIDTH - halfBodySize;
-            xVelocity = (float) (-0.5 * xVelocity);
+            xVelocity *= -GameConstants.PLAYER_BOUNCE;
         }
         if (yPosition < halfBodySize) {
             yPosition = halfBodySize;
-            yVelocity = (float) (-0.5 * yVelocity);
+            yVelocity *= -GameConstants.PLAYER_BOUNCE;
         }
         if (yPosition > INTERNAL_CANVAS_SIDE_HEIGHT - halfBodySize) {
             yPosition = INTERNAL_CANVAS_SIDE_HEIGHT - halfBodySize;
-            yVelocity = (float) (-0.5 * yVelocity);
+            yVelocity *= -GameConstants.PLAYER_BOUNCE;
         }
 
-        xVelocity = (float) (xVelocity * 0.92);
-        yVelocity = (float) (yVelocity * 0.92);
+        xVelocity *= GameConstants.PLAYER_FRICTION;
+        yVelocity *= GameConstants.PLAYER_FRICTION;
 
         rotationAngle += (float) ((0.1 + 0.04 * (sq(xVelocity) + sq(yVelocity))) * TWO_PI / FPS);
     }

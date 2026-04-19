@@ -1,0 +1,47 @@
+package com.likanug.dual;
+
+public final class GameConstants {
+
+    private GameConstants() {}
+
+    // --- 玩家 ---
+    public static final float PLAYER_BODY_SIZE = 32.0F;
+    public static final float PLAYER_COLLISION_RADIUS = 16.0F;
+    public static final float PLAYER_MAX_VX = 10.0F;
+    public static final float PLAYER_MAX_VY = 7.0F;
+    public static final float PLAYER_FRICTION = 0.92F;
+    public static final float PLAYER_BOUNCE = 0.5F;
+    public static final float PLAYER_THRUST_SPEED = 8.0F;
+    public static final float DAMAGED_DURATION_SEC = 0.75F;
+
+    // --- 短弓箭 ---
+    public static final float SHORTBOW_ARROW_HALF_LENGTH = 8.0F;
+    public static final float SHORTBOW_ARROW_HALF_BODY = 20.0F;
+    public static final float SHORTBOW_TERMINAL_SPEED = 8.0F;
+    public static final float SHORTBOW_HEAD_HALF_LENGTH = 8.0F;
+    public static final float SHORTBOW_HEAD_HALF_WIDTH = 4.0F;
+    public static final float SHORTBOW_FEATHER_HALF_WIDTH = 4.0F;
+    public static final float SHORTBOW_FEATHER_LENGTH = 8.0F;
+
+    // --- 长弓箭 ---
+    public static final float LONGBOW_SPEED = 64.0F;
+    public static final float LONGBOW_COMPONENT_INTERVAL = 24.0F;
+    public static final int LONGBOW_SHAFT_COUNT = 5;
+    public static final float LONGBOW_CHARGE_SEC = 0.5F;
+    public static final float LONGBOW_AIM_SPEED_RATIO = 0.1F;
+    public static final int LONGBOW_RING_SIZE = 80;
+    public static final float LONGBOW_RING_STROKE = 5.0F;
+
+    // --- 粒子 ---
+    public static final float PARTICLE_FRICTION = 0.98F;
+    public static final float PARTICLE_SQUARE_ROT_SPEED = 1.5F;
+    public static final float PARTICLE_LINE_LENGTH = 800.0F;
+
+    // --- 游戏事件 ---
+    public static final int KILL_PARTICLE_COUNT = 50;
+    public static final int KILL_PARTICLE_SIZE = 16;
+    public static final int ARROW_BREAK_PARTICLE_COUNT = 10;
+    public static final int ARROW_BREAK_PARTICLE_SIZE = 7;
+    public static final int SCREEN_SHAKE_ON_KILL = 50;
+    public static final int SCREEN_SHAKE_ON_HIT = 10;
+}

@@ -1,6 +1,7 @@
 package com.likanug.dual.particle;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.common.GameObject;
 import com.likanug.dual.pool.ObjectPool;
 import com.likanug.dual.pool.Poolable;
@@ -77,15 +78,15 @@ public class Particle extends GameObject implements Poolable<Particle> {
     public void update() {
         super.update();
 
-        xVelocity = xVelocity * 0.98F;
-        yVelocity = yVelocity * 0.98F;
+        xVelocity *= GameConstants.PARTICLE_FRICTION;
+        yVelocity *= GameConstants.PARTICLE_FRICTION;
 
         properFrameCount++;
         if (properFrameCount > lifespanFrameCount)
             app.getSystem().getCommonParticleSet().getRemovingParticleList().add(this);
 
         if (particleTypeNumber == 1) {    // Square
-            rotationAngle += 1.5F * TWO_PI / FPS;
+            rotationAngle += GameConstants.PARTICLE_SQUARE_ROT_SPEED * TWO_PI / FPS;
         }
     }
 
@@ -113,7 +114,9 @@ public class Particle extends GameObject implements Poolable<Particle> {
             case 2 -> {  // Line
                 app.stroke(displayColor, 128 * getFadeRatio());
                 app.strokeWeight(strokeWeightValue * PApplet.pow(getFadeRatio(), 4));
-                app.line(xPosition, yPosition, xPosition + 800 * cos(rotationAngle), yPosition + 800 * sin(rotationAngle));
+                app.line(xPosition, yPosition,
+                        xPosition + GameConstants.PARTICLE_LINE_LENGTH * cos(rotationAngle),
+                        yPosition + GameConstants.PARTICLE_LINE_LENGTH * sin(rotationAngle));
                 app.strokeWeight(1);
             }
             case 3 -> {  // Ring
