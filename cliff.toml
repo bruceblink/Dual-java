@@ -13,12 +13,12 @@ body = """
     ## [unreleased]
 {% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
-    ### &nbsp;&nbsp;&nbsp;{{ group }}
+    ### {{ group }}
     {% for commit in commits %}
         - {% if commit.scope %}**{{ commit.scope }}**: {% endif %}\
           {{ commit.message | upper_first }} \
-          &nbsp;-&nbsp; by @{% if commit.remote.username %}{{ commit.remote.username }}{% else %}{{ commit.author.name }}{% endif %} \
-          [<samp>({{ commit.id | truncate(length=7, end="") }})</samp>](https://github.com/bruceblink/Dual-java/commit/{{ commit.id }})
+          - by @{% if commit.remote.username %}{{ commit.remote.username }}{% else %}{{ commit.author.name }}{% endif %} \
+          ([`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/bruceblink/Dual-java/commit/{{ commit.id }}))
     {%- endfor %}
 {% endfor %}
 
@@ -28,7 +28,7 @@ trim = true
 # changelog footer
 footer = """
 {% if previous.tag and version %}\
-##### &nbsp;&nbsp;&nbsp;&nbsp;[View changes on GitHub](https://github.com/bruceblink/Dual-java/compare/{{ previous.tag }}...{{ version }})
+[View changes on GitHub](https://github.com/bruceblink/Dual-java/compare/{{ previous.tag }}...{{ version }})
 {% endif %}\
 """
 # postprocessors
