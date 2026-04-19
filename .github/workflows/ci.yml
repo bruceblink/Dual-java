@@ -118,15 +118,17 @@ jobs:
 
       - name: Convert icon to icns
         run: |
+          brew install imagemagick
           mkdir -p build/icons/Dual.iconset
-          sips -z 16 16   src/main/resources/icon.ico --out build/icons/Dual.iconset/icon_16x16.png   2>/dev/null || \
-            convert src/main/resources/icon.ico[0] -resize 16x16   build/icons/Dual.iconset/icon_16x16.png
-          sips -z 32 32   src/main/resources/icon.ico --out build/icons/Dual.iconset/icon_16x16@2x.png 2>/dev/null || \
-            convert src/main/resources/icon.ico[0] -resize 32x32   build/icons/Dual.iconset/icon_16x16@2x.png
-          sips -z 128 128 src/main/resources/icon.ico --out build/icons/Dual.iconset/icon_128x128.png 2>/dev/null || \
-            convert src/main/resources/icon.ico[0] -resize 128x128 build/icons/Dual.iconset/icon_128x128.png
-          sips -z 256 256 src/main/resources/icon.ico --out build/icons/Dual.iconset/icon_128x128@2x.png 2>/dev/null || \
-            convert src/main/resources/icon.ico[0] -resize 256x256 build/icons/Dual.iconset/icon_128x128@2x.png
+          convert 'src/main/resources/icon.ico[0]' -resize 16x16   build/icons/Dual.iconset/icon_16x16.png
+          convert 'src/main/resources/icon.ico[0]' -resize 32x32   build/icons/Dual.iconset/icon_16x16@2x.png
+          convert 'src/main/resources/icon.ico[0]' -resize 32x32   build/icons/Dual.iconset/icon_32x32.png
+          convert 'src/main/resources/icon.ico[0]' -resize 64x64   build/icons/Dual.iconset/icon_32x32@2x.png
+          convert 'src/main/resources/icon.ico[0]' -resize 128x128 build/icons/Dual.iconset/icon_128x128.png
+          convert 'src/main/resources/icon.ico[0]' -resize 256x256 build/icons/Dual.iconset/icon_128x128@2x.png
+          convert 'src/main/resources/icon.ico[0]' -resize 256x256 build/icons/Dual.iconset/icon_256x256.png
+          convert 'src/main/resources/icon.ico[0]' -resize 512x512 build/icons/Dual.iconset/icon_256x256@2x.png
+          convert 'src/main/resources/icon.ico[0]' -resize 512x512 build/icons/Dual.iconset/icon_512x512.png
           iconutil -c icns build/icons/Dual.iconset -o src/main/resources/icon.icns
 
       - name: Package with jpackage
