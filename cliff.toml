@@ -17,7 +17,7 @@ body = """
     {% for commit in commits %}
         - {% if commit.scope %}**{{ commit.scope }}**: {% endif %}\
           {{ commit.message | upper_first }} \
-          &nbsp;-&nbsp; by @bruceblink \
+          &nbsp;-&nbsp; by @{% if commit.remote.username %}{{ commit.remote.username }}{% else %}{{ commit.author.name }}{% endif %} \
           [<samp>({{ commit.id | truncate(length=7, end="") }})</samp>](https://github.com/bruceblink/Dual-java/commit/{{ commit.id }})
     {%- endfor %}
 {% endfor %}
@@ -33,6 +33,10 @@ footer = """
 """
 # postprocessors
 postprocessors = []
+
+[remote.github]
+owner = "bruceblink"
+repo = "Dual-java"
 
 [git]
 # parse the commits based on https://www.conventionalcommits.org
