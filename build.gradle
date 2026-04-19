@@ -47,10 +47,22 @@ def jpackageExe = """${javaToolchains.launcherFor {
 tasks.register('packageApp', Exec) {
     dependsOn 'installDist'
 
+    def appName = application.applicationName
+    def appVersion = project.version.toString()
+    def destDir = layout.buildDirectory.dir("dist")
+
     doFirst {
-        def oldExe = layout.buildDirectory.dir("dist").get().asFile.toPath()
-            .resolve("${application.applicationName}-${project.version}.exe").toFile()
-        if (oldExe.exists()) oldExe.delete()
+        def oldExe = destDir.get().asFile.toPath()
+            .resolve("${appName}-${appVersion}.exe").toFile()
+        if (oldExe.exists()) {
+            // 若游戏正在运行则先结束进程，避免文件被锁定
+            def procName = "${appName}-${appVersion}"
+            ['taskkill', '/F', '/IM', "${procName}.exe"].execute().waitFor()
+            Thread.sleep(500)
+            if (!oldExe.delete()) {
+                throw new GradleException("无法删除旧的安装包: ${oldExe}，请关闭正在运行的游戏后重试")
+            }
+        }
     }
 
     commandLine = [
