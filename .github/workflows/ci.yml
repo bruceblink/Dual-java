@@ -26,10 +26,17 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build and test
-        run: ./gradlew build --no-daemon
+      - name: Build, test and create distribution
+        run: ./gradlew build installDist --no-daemon
         env:
           DISPLAY: ':99'   # 供 Processing/AWT headless 环境使用
+
+      - name: Upload distribution lib
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dual-dist-lib
+          path: build/install/Dual/lib/
 
   package:
     name: Package Windows Installer
@@ -52,8 +59,31 @@ jobs:
         run: choco upgrade wixtoolset -y
         shell: cmd
 
-      - name: Build installer
-        run: .\gradlew.bat packageApp --no-daemon
+      - name: Download distribution lib
+        uses: actions/download-artifact@v4
+        with:
+          name: Dual-dist-lib
+          path: build/install/Dual/lib/
+
+      - name: Package with jpackage
+        run: |
+          mkdir build\dist 2>nul
+          jpackage ^
+            --type exe ^
+            --input build\install\Dual\lib ^
+            --dest build\dist ^
+            --name Dual ^
+            --main-class com.likanug.dual.App ^
+            --main-jar Dual-1.0.jar ^
+            --java-options -Djava.awt.headless=false ^
+            --java-options -Djava.library.path=$APPDIR ^
+            --icon src\main\resources\icon.ico ^
+            --win-shortcut ^
+            --win-menu ^
+            --win-menu-group Games ^
+            --win-dir-chooser ^
+            --win-upgrade-uuid a1b2c3d4-e5f6-7890-abcd-ef1234567890 ^
+            --resource-dir src\main\jpackage
         shell: cmd
 
       - name: Upload installer artifact
