@@ -83,6 +83,8 @@ tasks.register('packageApp', Exec) {
         '--win-menu',
         '--win-menu-group', 'Games',
         '--win-dir-chooser',
-        '--win-upgrade-uuid', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+        '--win-upgrade-uuid', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+
+        '--resource-dir', layout.projectDirectory.dir("src/main/jpackage").asFile.absolutePath
     ]
 }
