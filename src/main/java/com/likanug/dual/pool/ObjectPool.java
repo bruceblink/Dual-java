@@ -60,9 +60,7 @@ public class ObjectPool<T extends Poolable<T>> {
 
     public T allocate() {
         if (!isAllocatable()) {
-            println("Object pool allocation failed. Too many objects created!");
-            // Need exception handling
-            return null;
+            throw new IllegalStateException("Object pool allocation failed: pool is exhausted (size=" + poolSize + ")");
         }
         T allocatedInstance = pool.get(index);
 
@@ -82,8 +80,7 @@ public class ObjectPool<T extends Poolable<T>> {
 
     public void storeObject(T obj) {
         if (pool.size() >= poolSize) {
-            println("Failed to store a new instance to object pool. Object pool is already full.");
-            // Need exception handling
+            throw new IllegalStateException("Failed to store a new instance to object pool: pool is already full (size=" + poolSize + ")");
         }
         pool.add(obj);
         obj.setBelongingPool(this);

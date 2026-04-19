@@ -67,6 +67,7 @@ public class ActorGroup {
 
     public void setPlayer(AbstractPlayerActor player) {
         this.player = player;
+        player.group = this;
     }
 
     public ArrayList<AbstractArrowActor> getArrowList() {

@@ -11,6 +11,8 @@ import com.likanug.dual.game.GameSystem;
 
 import static com.likanug.dual.App.FPS;
 import static processing.core.PApplet.atan2;
+import static processing.core.PApplet.cos;
+import static processing.core.PApplet.sin;
 import static processing.core.PConstants.HALF_PI;
 
 public class PlayGameState extends GameSystemState {
@@ -101,8 +103,9 @@ public class PlayGameState extends GameSystemState {
     public void thrustPlayerActor(Actor referenceActor, PlayerActor targetPlayerActor) {
         final float relativeAngle = atan2(targetPlayerActor.getyPosition() - referenceActor.getyPosition(), targetPlayerActor.getxPosition() - referenceActor.getxPosition());
         final float thrustAngle = relativeAngle + app.random((float) (-0.5 * HALF_PI), (float) (0.5 * HALF_PI));
-        targetPlayerActor.setxVelocity(targetPlayerActor.getxVelocity() * 20);
-        targetPlayerActor.setyVelocity(targetPlayerActor.getyVelocity() * 20);
+        final float thrustSpeed = 8.0f;
+        targetPlayerActor.setxVelocity(cos(thrustAngle) * thrustSpeed);
+        targetPlayerActor.setyVelocity(sin(thrustAngle) * thrustSpeed);
         targetPlayerActor.setState(app.getSystem().getDamagedState().entryState(targetPlayerActor));
         app.getSystem().setScreenShakeValue(app.getSystem().getScreenShakeValue() + 10);
     }

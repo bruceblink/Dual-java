@@ -4,6 +4,7 @@ import com.likanug.dual.App;
 import com.likanug.dual.playerEngine.PlayerEngine;
 
 import static com.likanug.dual.App.FPS;
+import static com.likanug.dual.App.INTERNAL_CANVAS_SIDE_HEIGHT;
 import static com.likanug.dual.App.INTERNAL_CANVAS_SIDE_WIDTH;
 import static processing.core.PApplet.constrain;
 import static processing.core.PApplet.sq;
@@ -86,8 +87,8 @@ public class PlayerActor extends AbstractPlayerActor {
             yPosition = halfBodySize;
             yVelocity = (float) (-0.5 * yVelocity);
         }
-        if (yPosition > INTERNAL_CANVAS_SIDE_WIDTH - halfBodySize) {
-            yPosition = INTERNAL_CANVAS_SIDE_WIDTH - halfBodySize;
+        if (yPosition > INTERNAL_CANVAS_SIDE_HEIGHT - halfBodySize) {
+            yPosition = INTERNAL_CANVAS_SIDE_HEIGHT - halfBodySize;
             yVelocity = (float) (-0.5 * yVelocity);
         }
 
