@@ -38,7 +38,7 @@ jobs:
           name: Dual-dist-lib
           path: build/install/Dual/lib/
 
-  package:
+  package-windows:
     name: Package Windows Installer
     runs-on: windows-latest
     needs: build
@@ -86,17 +86,126 @@ jobs:
             --resource-dir src\main\jpackage
         shell: cmd
 
-      - name: Upload installer artifact
+      - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Dual-installer
+          name: Dual-windows
           path: build/dist/*.exe
+          if-no-files-found: error
+
+  package-macos:
+    name: Package macOS Installer
+    runs-on: macos-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Download distribution lib
+        uses: actions/download-artifact@v4
+        with:
+          name: Dual-dist-lib
+          path: build/install/Dual/lib/
+
+      - name: Convert icon to icns
+        run: |
+          mkdir -p build/icons/Dual.iconset
+          sips -z 16 16   src/main/resources/icon.ico --out build/icons/Dual.iconset/icon_16x16.png   2>/dev/null || \
+            convert src/main/resources/icon.ico[0] -resize 16x16   build/icons/Dual.iconset/icon_16x16.png
+          sips -z 32 32   src/main/resources/icon.ico --out build/icons/Dual.iconset/icon_16x16@2x.png 2>/dev/null || \
+            convert src/main/resources/icon.ico[0] -resize 32x32   build/icons/Dual.iconset/icon_16x16@2x.png
+          sips -z 128 128 src/main/resources/icon.ico --out build/icons/Dual.iconset/icon_128x128.png 2>/dev/null || \
+            convert src/main/resources/icon.ico[0] -resize 128x128 build/icons/Dual.iconset/icon_128x128.png
+          sips -z 256 256 src/main/resources/icon.ico --out build/icons/Dual.iconset/icon_128x128@2x.png 2>/dev/null || \
+            convert src/main/resources/icon.ico[0] -resize 256x256 build/icons/Dual.iconset/icon_128x128@2x.png
+          iconutil -c icns build/icons/Dual.iconset -o src/main/resources/icon.icns
+
+      - name: Package with jpackage
+        run: |
+          mkdir -p build/dist
+          jpackage \
+            --type dmg \
+            --input build/install/Dual/lib \
+            --dest build/dist \
+            --name Dual \
+            --main-class com.likanug.dual.App \
+            --main-jar Dual-1.0.jar \
+            --java-options -Djava.awt.headless=false \
+            --java-options '-Djava.library.path=$APPDIR' \
+            --icon src/main/resources/icon.icns \
+            --mac-package-name Dual
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dual-macos
+          path: build/dist/*.dmg
+          if-no-files-found: error
+
+  package-linux:
+    name: Package Linux Installer
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Convert icon to png
+        run: |
+          sudo apt-get install -y imagemagick
+          convert src/main/resources/icon.ico[0] -resize 256x256 src/main/resources/icon.png
+
+      - name: Download distribution lib
+        uses: actions/download-artifact@v4
+        with:
+          name: Dual-dist-lib
+          path: build/install/Dual/lib/
+
+      - name: Package with jpackage
+        run: |
+          mkdir -p build/dist
+          jpackage \
+            --type deb \
+            --input build/install/Dual/lib \
+            --dest build/dist \
+            --name Dual \
+            --main-class com.likanug.dual.App \
+            --main-jar Dual-1.0.jar \
+            --java-options -Djava.awt.headless=false \
+            --java-options '-Djava.library.path=$APPDIR' \
+            --icon src/main/resources/icon.png \
+            --linux-shortcut \
+            --linux-menu-group Game
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dual-linux
+          path: build/dist/*.deb
           if-no-files-found: error
 
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [build, package]
+    needs: [build, package-windows, package-macos, package-linux]
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
@@ -118,16 +227,17 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download installer artifact
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: Dual-installer
+          pattern: Dual-*
           path: dist/
+          merge-multiple: true
 
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           body_path: CHANGELOG_RELEASE.md
-          files: dist/*.exe
+          files: dist/*
           token: ${{ secrets.GITHUB_TOKEN }}
 
