@@ -40,9 +40,9 @@ test {
 /**
  * 使用 JDK 自带 jpackage
  */
-def jpackageExe = "${javaToolchains.launcherFor {
+def jpackageExe = """${javaToolchains.launcherFor {
     languageVersion = JavaLanguageVersion.of(21)
-}.get().metadata.installationPath}/bin/jpackage"
+}.get().metadata.installationPath}/bin/jpackage"""
 
 tasks.register('packageApp', Exec) {
     dependsOn 'installDist'
