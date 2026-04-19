@@ -47,16 +47,28 @@ def jpackageExe = """${javaToolchains.launcherFor {
 tasks.register('packageApp', Exec) {
     dependsOn 'installDist'
 
+    doFirst {
+        def oldExe = layout.buildDirectory.dir("dist").get().asFile.toPath()
+            .resolve("${application.applicationName}-${project.version}.exe").toFile()
+        if (oldExe.exists()) oldExe.delete()
+    }
+
     commandLine = [
         jpackageExe,
         '--type', 'exe',
         '--input', layout.buildDirectory.dir("install/${application.applicationName}/lib").get().asFile.absolutePath,
         '--dest', layout.buildDirectory.dir("dist").get().asFile.absolutePath,
         '--name', application.applicationName,
-        '--main-class', application.mainClass,
+        '--main-class', application.mainClass.get(),
         '--main-jar', "${application.applicationName}-${project.version}.jar",
 
         '--java-options', '-Djava.awt.headless=false',
-        '--java-options', '-Djava.library.path=$APPDIR'
+        '--java-options', '-Djava.library.path=$APPDIR',
+
+        '--win-shortcut',
+        '--win-menu',
+        '--win-menu-group', 'Games',
+        '--win-dir-chooser',
+        '--win-upgrade-uuid', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
     ]
 }
