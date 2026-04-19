@@ -43,6 +43,10 @@
 
     <Media Id="1" Cabinet="Data.cab" EmbedCab="yes" />
 
+    <!-- 在安装序列中强制启用桌面快捷方式和开始菜单快捷方式（不询问用户） -->
+    <SetProperty Id="JP_INSTALL_DESKTOP_SHORTCUT" Value="1" Sequence="both" Before="CostInitialize" />
+    <SetProperty Id="JP_INSTALL_STARTMENU_SHORTCUT" Value="1" Sequence="both" Before="CostInitialize" />
+
     <Upgrade Id="$(var.JpProductUpgradeCode)">
       <UpgradeVersion
         OnlyDetect="no"
