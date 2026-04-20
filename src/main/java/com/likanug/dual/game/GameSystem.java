@@ -220,16 +220,18 @@ public class GameSystem {
         app.textLeading(26);
         app.textAlign(RIGHT, BASELINE);
         app.fill(0);
-        app.text("Z key:", 280, 180);
-        app.text("X key:", 280, 250);
-        app.text("Arrow key:", 280, 345);
+        app.text("Z key:", 280, 160);
+        app.text("X key:", 280, 225);
+        app.text("Arrow key:", 280, 310);
+        app.text("N key:", 280, 390);
         app.textAlign(LEFT);
-        app.text("Weak shot\n (auto aiming)", 300, 180);
-        app.text("Lethal shot\n (manual aiming,\n  requires charge)", 300, 250);
-        app.text("Move\n (or aim lethal shot)", 300, 345);
+        app.text("Weak shot\n (auto aiming)", 300, 160);
+        app.text("Lethal shot\n (manual aiming,\n  requires charge)", 300, 225);
+        app.text("Move\n (or aim lethal shot)", 300, 310);
+        app.text("Online multiplayer\n (open lobby)", 300, 390);
         app.textAlign(CENTER);
-        app.text("- Press Z key to start -", INTERNAL_CANVAS_SIDE_WIDTH * 0.5F, 430);
-        app.text("(Click to hide this window)", INTERNAL_CANVAS_SIDE_WIDTH * 0.5F, 475);
+        app.text("- Press Z key to start -", INTERNAL_CANVAS_SIDE_WIDTH * 0.5F, 455);
+        app.text("(Click to hide this window)", INTERNAL_CANVAS_SIDE_WIDTH * 0.5F, 490);
         app.popStyle();
 
         app.strokeWeight(1);
