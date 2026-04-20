@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.likanug.dual'
+version = '1.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+// No external dependencies — pure Java NIO relay server
+
+application {
+    applicationName = 'DualServer'
+    mainClass = 'com.likanug.dual.server.ServerApp'
+}
+
+// Fat JAR: embed everything into a single executable jar
+tasks.register('fatJar', Jar) {
+    group = 'build'
+    description = 'Assembles an executable fat JAR for the relay server.'
+    archiveBaseName = 'dual-server'
+    archiveClassifier = 'all'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes 'Main-Class': application.mainClass
+    }
+
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}

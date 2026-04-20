@@ -105,7 +105,9 @@ public class PlayGameState extends GameSystemState {
 
     public void thrustPlayerActor(Actor referenceActor, PlayerActor targetPlayerActor) {
         final float relativeAngle = atan2(targetPlayerActor.getyPosition() - referenceActor.getyPosition(), targetPlayerActor.getxPosition() - referenceActor.getxPosition());
-        final float thrustAngle = relativeAngle + app.random((float) (-0.5 * HALF_PI), (float) (0.5 * HALF_PI));
+        // 使用 gameRandom 保证联机双端物理一致
+        final float variation = (app.getSystem().getGameRandom().nextFloat() - 0.5f) * HALF_PI;
+        final float thrustAngle = relativeAngle + variation;
         targetPlayerActor.setxVelocity(cos(thrustAngle) * GameConstants.PLAYER_THRUST_SPEED);
         targetPlayerActor.setyVelocity(sin(thrustAngle) * GameConstants.PLAYER_THRUST_SPEED);
         targetPlayerActor.setState(app.getSystem().getDamagedState().entryState(targetPlayerActor));
