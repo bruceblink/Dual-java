@@ -147,13 +147,13 @@ public class App extends PApplet {
         textFont(smallFont, 28);
 
         fill(0);
-        text("联机对战", 0, -120);
+        text("Online Multiplayer", 0, -120);
 
         textFont(smallFont, 22);
         fill(50);
-        text("H  -  开房（等待对方连接）", 0, -30);
-        text("J  -  加入（输入对方 IP）",  0,  20);
-        text("ESC - 返回",                0,  90);
+        text("H  -  Host (wait for opponent)", 0, -30);
+        text("J  -  Join (enter host IP)",      0,  20);
+        text("ESC - Back",                       0,  90);
 
         popStyle();
         popMatrix();
@@ -180,25 +180,25 @@ public class App extends PApplet {
         pushStyle();
         textFont(smallFont, 22);
         fill(0);
-        text("等待对方连接…", 0, -100);
+        text("Waiting for opponent...", 0, -100);
 
         textFont(smallFont, 18);
         fill(60);
-        text("端口：" + DEFAULT_PORT, 0, -50);
+        text("Port: " + DEFAULT_PORT, 0, -50);
         if (localIPs.isEmpty()) {
-            text("本机 IP：（无法获取）", 0, -10);
+            text("Your IP: (unavailable)", 0, -10);
         } else {
             int yOff = -10;
             for (String ip : localIPs) {
-                text("本机 IP：" + ip, 0, yOff);
+                text("Your IP: " + ip, 0, yOff);
                 yOff += 26;
             }
         }
-        text("（将本机 IP 告诉对方）", 0, 80);
+        text("(Share your IP with opponent)", 0, 80);
 
         textFont(smallFont, 16);
         fill(100);
-        text("ESC - 取消", 0, 130);
+        text("ESC - Cancel", 0, 130);
 
         popStyle();
         popMatrix();
@@ -210,24 +210,24 @@ public class App extends PApplet {
         pushStyle();
         textFont(smallFont, 22);
         fill(0);
-        text("加入游戏", 0, -120);
+        text("Join Game", 0, -120);
 
         textFont(smallFont, 18);
         fill(50);
 
-        // IP 输入框
-        String ipLabel = "IP 地址：" + joinIP.toString() + (editingIP ? "_" : "");
+        // IP input field
+        String ipLabel = "IP: " + joinIP.toString() + (editingIP ? "_" : "");
         fill(editingIP ? color(0) : color(120));
         text(ipLabel, 0, -50);
 
-        // Port 输入框
-        String portLabel = "端 口：" + joinPortStr.toString() + (!editingIP ? "_" : "");
+        // Port input field
+        String portLabel = "Port: " + joinPortStr.toString() + (!editingIP ? "_" : "");
         fill(!editingIP ? color(0) : color(120));
         text(portLabel, 0, 0);
 
         textFont(smallFont, 16);
         fill(80);
-        text("Tab - 切换输入框 | Enter - 连接 | ESC - 返回", 0, 60);
+        text("Tab - switch field | Enter - connect | ESC - back", 0, 60);
 
         popStyle();
         popMatrix();
@@ -254,12 +254,12 @@ public class App extends PApplet {
         pushStyle();
         textFont(smallFont, 22);
         fill(0);
-        text("正在连接…", 0, -40);
+        text("Connecting...", 0, -40);
 
         if (connectError != null) {
             textFont(smallFont, 16);
             fill(200, 0, 0);
-            text("连接失败：" + connectError, 0, 20);
+            text("Connection failed: " + connectError, 0, 20);
         }
 
         popStyle();
