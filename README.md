@@ -1,13 +1,10 @@
 # Dual — 双人弓箭对战游戏
 
-一款用 Java + [Processing 4](https://processing.org/) 编写的本地双人（或人机）弓箭对战小游戏。两名角色在 640×640 的竞技场内互相射箭，用短弓快速骚扰、用长弓蓄力致命一击，先击杀对手者获胜。
+一款用 Java + [Processing 4](https://processing.org/) 编写的**本地 / 联机**双人（或人机）弓箭对战小游戏。两名角色在 640×640 的竞技场内互相射箭，用短弓快速骚扰、用长弓蓄力致命一击，先击杀对手者获胜。支持通过 Relay 服务器进行互联网联机对战。
 
 ## 游戏界面
 
-![初始界面](picture/pic1)
-
-<!-- 如有 GIF 截图可取消下一行注释 -->
-<!-- ![游戏界面](picture/pic2.gif) -->
+![游戏界面](picture/pic2.gif)
 
 ## 游戏玩法
 
@@ -18,6 +15,7 @@
 | ↑ ↓ ← →   | 移动角色 / 蓄力长弓时调整瞄准方向                    |
 | `Z`       | 发射**短弓箭**（自动瞄准，即时射出）                 |
 | `X`       | **蓄力**长弓；松开后射出**长弓箭**（需蓄力约 0.5 秒） |
+| `N`       | 打开**联机大厅**（开房 / 加入房间）                   |
 | `P`       | 暂停 / 继续                                        |
 | 鼠标点击  | 显示 / 隐藏操作说明窗口                              |
 
@@ -31,6 +29,35 @@
 1. 启动后进入**演示模式**（双方均为 AI 对战）。
 2. 按 `Z` 键开始正式对局（玩家控制白色角色，AI 控制黑色角色）。
 3. 任意一方被击杀后显示胜负结果，片刻后自动返回演示模式。
+4. 按 `N` 键打开联机大厅，选择 **Host**（开房等待）或 **Join**（输入对方 IP 加入）。
+
+## 联机对战
+
+### 快速开始（局域网 / 互联网）
+
+**方式一：直连（同一局域网）**
+
+1. 一方按 `N → H` 开房，记下显示的本机 IP。
+2. 另一方按 `N → J`，输入对方 IP（端口默认 `7777`）后按 Enter。
+3. 连接建立后自动进入联机对战。
+
+**方式二：通过 Relay 服务器（跨网络）**
+
+1. 在公网机器上启动 Relay 服务：
+   ```bash
+   java -jar server/build/libs/dual-server-1.0-all.jar [port]
+   # 默认端口 7777
+   ```
+2. 双方均按 `N → J`，输入 **Relay 服务器的公网 IP** 与端口，依次连接即可配对。
+
+### 构建 Relay 服务器
+
+```cmd
+./gradlew :server:fatJar
+# 输出：server/build/libs/dual-server-1.0-all.jar
+```
+
+> Relay 服务器无图形界面，不依赖 Processing，可部署到任意 JDK 21+ 环境。
 
 ## 环境要求
 
@@ -45,8 +72,14 @@
 ## 运行方式
 
 ```cmd
-# 直接运行（开发调试）
+# 直接运行游戏（开发调试）
 ./gradlew run
+
+# 构建 Relay 服务器 fat JAR
+./gradlew :server:fatJar
+
+# 启动 Relay 服务器
+java -jar server/build/libs/dual-server-1.0-all.jar [port]
 
 # 打包为 Windows 安装包（.exe，需要 WiX 3.x）
 ./gradlew packageApp
@@ -71,7 +104,7 @@
 
 ```txt
 src/main/java/com/likanug/dual/
-├── App.java                    # Processing 入口，键盘事件处理
+├── App.java                    # Processing 入口，键盘事件 / 联机大厅 UI
 ├── GameConstants.java          # 所有游戏数值常量
 ├── actor/                      # 角色与箭矢实体
 │   ├── ActorGroup.java         # 一方阵营（玩家 + 箭矢列表）
@@ -82,8 +115,14 @@ src/main/java/com/likanug/dual/
 │   ├── GameSystem.java         # 游戏主循环、屏幕震动、粒子生成
 │   └── GameBackground.java     # 背景线条渲染
 ├── inputDevice/                # 输入设备抽象（KeyInput, InputDevice）
+├── network/                    # 联机网络层
+│   ├── NetworkMessage.java     # 协议编解码
+│   ├── GameNetwork.java        # P2P 网络基类（发送 / 接收输入）
+│   ├── NetworkServer.java      # Host 模式（监听连接）
+│   └── NetworkClient.java      # Join 模式（连接到 Host）
 ├── particle/                   # 粒子系统（对象池复用）
-├── playerEngine/               # 玩家行为引擎（人类 / AI）
+├── playerEngine/               # 玩家行为引擎（人类 / AI / 网络）
+│   ├── NetworkPlayerEngine.java# 联机远端玩家驱动
 │   └── *PlayerPlan.java        # AI 决策计划（移动、点射、蓄力击杀）
 ├── pool/                       # 泛型对象池（ObjectPool, Poolable）
 └── state/                      # 状态机
@@ -92,6 +131,12 @@ src/main/java/com/likanug/dual/
     ├── PlayGameState.java      # 对战状态（碰撞检测、胜负判定）
     ├── GameResultState.java    # 结果展示状态
     └── *PlayerActorState.java  # 玩家状态（移动、拉弓、受伤）
+
+server/src/main/java/com/likanug/dual/server/
+├── ServerApp.java              # Relay 服务器入口
+├── RelayServer.java            # TCP accept 循环，多房间管理
+├── RelayRoom.java              # 单个房间：握手 + 双向消息转发
+└── NetworkProtocol.java        # 服务端协议常量
 ```
 
 ## 技术栈
