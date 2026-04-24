@@ -125,7 +125,6 @@ public class RelayServer {
             room = pendingRoom;
             side = Side.B;
             pendingRoom = null;
-            room.startHandshake();
             log.info("[Room " + room.getRoomId() + "] Full. Starting handshake.");
         }
 
@@ -133,6 +132,10 @@ public class RelayServer {
         SelectionKey key = channel.register(selector, SelectionKey.OP_READ, ctx);
         ctx.key = key;
         room.attach(side, ctx);
+
+        if (side == Side.B) {
+            room.startHandshake();
+        }
 
         if (room.isHandshakeReady()) {
             enqueueStart(room.playerA);
