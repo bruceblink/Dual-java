@@ -2,8 +2,9 @@ package com.likanug.dual.network;
 
 import com.likanug.dual.inputDevice.KeyInput;
 
-import java.io.*;
-import java.net.Socket;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 /**
  * P2P 网络连接基类。
@@ -13,11 +14,11 @@ import java.net.Socket;
  */
 public abstract class GameNetwork {
 
-    protected volatile Socket socket;
-    protected volatile DataOutputStream out;
-    protected volatile DataInputStream in;
+    protected volatile SocketChannel channel;
     protected volatile boolean connected    = false;
     protected volatile boolean disconnected = false;
+
+    private final Object writeLock = new Object();
 
     /** 最新收到的对方按键状态（后台线程写，主线程读，volatile 保证可见性） */
     private volatile byte remoteInputFlags = 0;
@@ -31,14 +32,15 @@ public abstract class GameNetwork {
 
     /** 发送本地 KeyInput 到对端（每帧调用） */
     public void sendInput(KeyInput keyInput) {
-        if (!connected || out == null) return;
+        if (!connected || channel == null || disconnected) return;
+        byte flags = NetworkMessage.encodeInput(
+                keyInput.isUpPressed, keyInput.isDownPressed,
+                keyInput.isLeftPressed, keyInput.isRightPressed,
+                keyInput.isZPressed, keyInput.isXPressed);
         try {
-            out.writeByte(NetworkMessage.TYPE_INPUT);
-            out.writeByte(NetworkMessage.encodeInput(
-                    keyInput.isUpPressed, keyInput.isDownPressed,
-                    keyInput.isLeftPressed, keyInput.isRightPressed,
-                    keyInput.isZPressed, keyInput.isXPressed));
-            out.flush();
+            synchronized (writeLock) {
+                writeFully(ByteBuffer.wrap(new byte[]{NetworkMessage.TYPE_INPUT, flags}));
+            }
         } catch (IOException e) {
             disconnected = true;
         }
@@ -62,12 +64,15 @@ public abstract class GameNetwork {
         if (disconnected) return;
         disconnected = true;
         try {
-            if (out != null) {
-                out.writeByte(NetworkMessage.TYPE_DISCONNECT);
-                out.flush();
+            if (channel != null && channel.isOpen()) {
+                synchronized (writeLock) {
+                    writeFully(ByteBuffer.wrap(new byte[]{NetworkMessage.TYPE_DISCONNECT}));
+                }
             }
-        } catch (IOException ignored) {}
-        try { if (socket != null) socket.close(); } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        } finally {
+            closeChannelQuietly();
+        }
     }
 
     public boolean isConnected()    { return connected && !disconnected; }
@@ -80,28 +85,71 @@ public abstract class GameNetwork {
 
     protected void setSharedSeed(int seed) { this.sharedSeed = seed; }
 
+    protected void writeFully(ByteBuffer buffer) throws IOException {
+        while (buffer.hasRemaining()) {
+            int written = channel.write(buffer);
+            if (written < 0) throw new IOException("channel closed");
+            if (written == 0) {
+                Thread.onSpinWait();
+            }
+        }
+    }
+
+    protected static boolean readFullyWithDeadline(SocketChannel channel, ByteBuffer buffer, long deadlineNanos) throws IOException {
+        while (buffer.hasRemaining()) {
+            if (System.nanoTime() >= deadlineNanos) return false;
+            int read = channel.read(buffer);
+            if (read < 0) throw new IOException("channel closed");
+            if (read == 0) {
+                Thread.onSpinWait();
+            }
+        }
+        return true;
+    }
+
+    protected void closeChannelQuietly() {
+        try {
+            if (channel != null) channel.close();
+        } catch (IOException ignored) {
+        }
+    }
+
     /** 启动后台接收线程（握手完成后调用） */
     protected void startReceiverThread() {
         Thread t = new Thread(() -> {
+            ByteBuffer oneByte = ByteBuffer.allocate(1);
             try {
                 while (!disconnected) {
-                    int type = in.read();
-                    if (type < 0) break; // EOF
-                    switch ((byte) type) {
-                        case NetworkMessage.TYPE_INPUT:
-                            remoteInputFlags = in.readByte();
-                            break;
-                        case NetworkMessage.TYPE_DISCONNECT:
+                    oneByte.clear();
+                    int read = channel.read(oneByte);
+                    if (read < 0) break;
+                    if (read == 0) {
+                        Thread.onSpinWait();
+                        continue;
+                    }
+
+                    byte type = oneByte.get(0);
+                    switch (type) {
+                        case NetworkMessage.TYPE_INPUT -> {
+                            oneByte.clear();
+                            if (!readFullyWithDeadline(channel, oneByte, System.nanoTime() + 5_000_000_000L)) {
+                                continue;
+                            }
+                            remoteInputFlags = oneByte.get(0);
+                        }
+                        case NetworkMessage.TYPE_DISCONNECT -> {
                             return;
-                        default:
+                        }
+                        default -> {
                             // 忽略未知消息
-                            break;
+                        }
                     }
                 }
             } catch (IOException ignored) {
                 // 连接关闭
             } finally {
                 disconnected = true;
+                closeChannelQuietly();
             }
         }, "network-receiver");
         t.setDaemon(true);
