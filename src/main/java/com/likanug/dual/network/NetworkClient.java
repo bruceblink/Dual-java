@@ -9,6 +9,9 @@ import java.net.*;
  */
 public class NetworkClient extends GameNetwork {
 
+    private static final int CONNECT_TIMEOUT_MS = 5000;
+    private static final int HANDSHAKE_TIMEOUT_MS = 5000;
+
     private volatile boolean connecting  = false;
     private volatile String  errorMessage = null;
 
@@ -20,8 +23,10 @@ public class NetworkClient extends GameNetwork {
         connecting = true;
         Thread t = new Thread(() -> {
             try {
-                socket = new Socket(host, port);
+                socket = new Socket();
+                socket.connect(new InetSocketAddress(host, port), CONNECT_TIMEOUT_MS);
                 socket.setTcpNoDelay(true);
+                socket.setSoTimeout(HANDSHAKE_TIMEOUT_MS);
 
                 out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                 in  = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
@@ -36,12 +41,15 @@ public class NetworkClient extends GameNetwork {
                     out.writeByte(NetworkMessage.TYPE_START_ACK);
                     out.flush();
 
+                    socket.setSoTimeout(0);
                     connected = true;
                     startReceiverThread();
                 } else {
                     errorMessage = "握手失败（意外消息: " + type + "）";
                 }
 
+            } catch (SocketTimeoutException e) {
+                errorMessage = "连接或握手超时";
             } catch (IOException e) {
                 errorMessage = e.getMessage();
             } finally {

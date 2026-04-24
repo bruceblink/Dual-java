@@ -11,6 +11,8 @@ import java.util.Random;
  */
 public class NetworkServer extends GameNetwork {
 
+    private static final int HANDSHAKE_TIMEOUT_MS = 5000;
+
     private volatile ServerSocket serverSocket;
     private volatile boolean      waiting      = false;
     private volatile String       errorMessage = null;
@@ -26,6 +28,7 @@ public class NetworkServer extends GameNetwork {
                 serverSocket = new ServerSocket(port);
                 socket = serverSocket.accept();           // 阻塞直到有客户端连接
                 socket.setTcpNoDelay(true);               // 关闭 Nagle，降低延迟
+                socket.setSoTimeout(HANDSHAKE_TIMEOUT_MS);
 
                 out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                 in  = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
@@ -40,12 +43,15 @@ public class NetworkServer extends GameNetwork {
                 // 等待客户端确认
                 int ack = in.read();
                 if (ack == NetworkMessage.TYPE_START_ACK) {
+                    socket.setSoTimeout(0);
                     connected = true;
                     startReceiverThread();
                 } else {
                     errorMessage = "握手失败（意外响应: " + ack + "）";
                 }
 
+            } catch (SocketTimeoutException e) {
+                if (!disconnected) errorMessage = "连接或握手超时";
             } catch (IOException e) {
                 if (!disconnected) errorMessage = e.getMessage();
             } finally {
