@@ -26,7 +26,15 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build, test and create distribution
+      - name: Run client tests
+        run: ./gradlew test --no-daemon
+        env:
+          DISPLAY: ':99'   # 供 Processing/AWT headless 环境使用
+
+      - name: Run server tests
+        run: ./gradlew :server:test --no-daemon
+
+      - name: Build and create distribution
         run: ./gradlew build installDist --no-daemon
         env:
           DISPLAY: ':99'   # 供 Processing/AWT headless 环境使用
