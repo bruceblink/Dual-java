@@ -103,11 +103,13 @@ public class PlayGameState extends GameSystemState {
         group.getRemovingArrowList().add(arrow);
     }
 
+    static float calculateThrustAngle(float relativeAngle, float randomUnit) {
+        return relativeAngle + (randomUnit - 0.5f) * HALF_PI;
+    }
+
     public void thrustPlayerActor(Actor referenceActor, PlayerActor targetPlayerActor) {
         final float relativeAngle = atan2(targetPlayerActor.getyPosition() - referenceActor.getyPosition(), targetPlayerActor.getxPosition() - referenceActor.getxPosition());
-        // 使用 gameRandom 保证联机双端物理一致
-        final float variation = (app.getSystem().getGameRandom().nextFloat() - 0.5f) * HALF_PI;
-        final float thrustAngle = relativeAngle + variation;
+        final float thrustAngle = calculateThrustAngle(relativeAngle, app.getSystem().getGameRandom().nextFloat());
         targetPlayerActor.setxVelocity(cos(thrustAngle) * GameConstants.PLAYER_THRUST_SPEED);
         targetPlayerActor.setyVelocity(sin(thrustAngle) * GameConstants.PLAYER_THRUST_SPEED);
         targetPlayerActor.setState(app.getSystem().getDamagedState().entryState(targetPlayerActor));
