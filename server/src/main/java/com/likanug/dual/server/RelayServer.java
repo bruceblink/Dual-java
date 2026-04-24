@@ -76,13 +76,13 @@ public class RelayServer {
                 if (!key.isValid()) continue;
 
                 try {
-                    if (key.isAcceptable()) {
+                    if (key.isValid() && key.isAcceptable()) {
                         handleAccept();
                     }
-                    if (key.isReadable()) {
+                    if (key.isValid() && key.isReadable()) {
                         handleRead(key);
                     }
-                    if (key.isWritable()) {
+                    if (key.isValid() && key.isWritable()) {
                         handleWrite(key);
                     }
                 } catch (IOException e) {
@@ -238,6 +238,7 @@ public class RelayServer {
         ctx.pendingWrites.add(frame);
         if (ctx.key != null && ctx.key.isValid()) {
             ctx.key.interestOps(ctx.key.interestOps() | SelectionKey.OP_WRITE);
+            selector.wakeup();
         }
     }
 
