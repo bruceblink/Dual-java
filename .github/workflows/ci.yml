@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build & Test
@@ -26,10 +30,30 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build, test and create distribution
+      - name: Run client tests
+        run: ./gradlew test --no-daemon
+        env:
+          DISPLAY: ':99'   # 供 Processing/AWT headless 环境使用
+
+      - name: Run server tests
+        run: ./gradlew :server:test --no-daemon
+
+      - name: Build and create distribution
         run: ./gradlew build installDist --no-daemon
         env:
           DISPLAY: ':99'   # 供 Processing/AWT headless 环境使用
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dual-test-reports
+          path: |
+            build/test-results/test/**/*.xml
+            build/reports/tests/test/**/*
+            server/build/test-results/test/**/*.xml
+            server/build/reports/tests/test/**/*
+          if-no-files-found: warn
 
       - name: Upload distribution lib
         if: startsWith(github.ref, 'refs/tags/v')
@@ -129,7 +153,7 @@ jobs:
           magick 'src/main/resources/icon.ico[0]' -resize 256x256 build/icons/Dual.iconset/icon_256x256.png
           magick 'src/main/resources/icon.ico[0]' -resize 512x512 build/icons/Dual.iconset/icon_256x256@2x.png
           magick 'src/main/resources/icon.ico[0]' -resize 512x512 build/icons/Dual.iconset/icon_512x512.png
-          iconutil -c icns build/icons/Dual.iconset -o src/main/resources/icon.icns
+          iconutil -c icns build/icons/Dual.iconset -o build/icons/icon.icns
 
       - name: Package with jpackage
         run: |
@@ -143,7 +167,7 @@ jobs:
             --main-jar Dual-1.0.jar \
             --java-options -Djava.awt.headless=false \
             --java-options '-Djava.library.path=$APPDIR' \
-            --icon src/main/resources/icon.icns \
+            --icon build/icons/icon.icns \
             --mac-package-name Dual
 
       - name: Upload macOS artifact
@@ -173,7 +197,8 @@ jobs:
       - name: Convert icon to png
         run: |
           sudo apt-get install -y imagemagick
-          convert src/main/resources/icon.ico[0] -resize 256x256 src/main/resources/icon.png
+          mkdir -p build/icons
+          convert src/main/resources/icon.ico[0] -resize 256x256 build/icons/icon.png
 
       - name: Download distribution lib
         uses: actions/download-artifact@v4
@@ -193,7 +218,7 @@ jobs:
             --main-jar Dual-1.0.jar \
             --java-options -Djava.awt.headless=false \
             --java-options '-Djava.library.path=$APPDIR' \
-            --icon src/main/resources/icon.png \
+            --icon build/icons/icon.png \
             --linux-shortcut \
             --linux-menu-group Game
 

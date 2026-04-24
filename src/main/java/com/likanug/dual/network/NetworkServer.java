@@ -1,7 +1,10 @@
 package com.likanug.dual.network;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.Random;
 
 /**
@@ -11,9 +14,11 @@ import java.util.Random;
  */
 public class NetworkServer extends GameNetwork {
 
-    private volatile ServerSocket serverSocket;
-    private volatile boolean      waiting      = false;
-    private volatile String       errorMessage = null;
+    private static final int HANDSHAKE_TIMEOUT_MS = 5000;
+
+    private volatile ServerSocketChannel serverSocketChannel;
+    private volatile boolean             waiting      = false;
+    private volatile String              errorMessage = null;
 
     /**
      * 在后台线程开始监听指定端口。
@@ -23,34 +28,60 @@ public class NetworkServer extends GameNetwork {
         waiting = true;
         Thread t = new Thread(() -> {
             try {
-                serverSocket = new ServerSocket(port);
-                socket = serverSocket.accept();           // 阻塞直到有客户端连接
-                socket.setTcpNoDelay(true);               // 关闭 Nagle，降低延迟
+                serverSocketChannel = ServerSocketChannel.open();
+                serverSocketChannel.configureBlocking(false);
+                serverSocketChannel.bind(new InetSocketAddress(port));
 
-                out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                in  = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+                long handshakeDeadline = System.nanoTime() + HANDSHAKE_TIMEOUT_MS * 1_000_000L;
+                SocketChannel acceptedChannel;
+                while (true) {
+                    if (disconnected) return;
+                    if (System.nanoTime() >= handshakeDeadline) {
+                        throw new IOException("连接或握手超时");
+                    }
+                    acceptedChannel = serverSocketChannel.accept();
+                    if (acceptedChannel != null) break;
+                    Thread.onSpinWait();
+                }
 
-                // 握手：Server 生成种子并发送 TYPE_START + 4字节种子
+                channel = acceptedChannel;
+                channel.configureBlocking(false);
+                channel.socket().setTcpNoDelay(true);
+
                 int seed = new Random().nextInt();
                 setSharedSeed(seed);
-                out.writeByte(NetworkMessage.TYPE_START);
-                out.writeInt(seed);
-                out.flush();
 
-                // 等待客户端确认
-                int ack = in.read();
+                ByteBuffer startMessage = ByteBuffer.allocate(5);
+                startMessage.put(NetworkMessage.TYPE_START);
+                startMessage.putInt(seed);
+                startMessage.flip();
+                writeFully(startMessage);
+
+                ByteBuffer ackBuffer = ByteBuffer.allocate(1);
+                if (!readFullyWithDeadline(channel, ackBuffer, handshakeDeadline)) {
+                    throw new IOException("连接或握手超时");
+                }
+
+                int ack = ackBuffer.get(0) & 0xFF;
                 if (ack == NetworkMessage.TYPE_START_ACK) {
                     connected = true;
                     startReceiverThread();
                 } else {
                     errorMessage = "握手失败（意外响应: " + ack + "）";
+                    disconnected = true;
+                    closeChannelQuietly();
                 }
 
             } catch (IOException e) {
                 if (!disconnected) errorMessage = e.getMessage();
+                disconnected = true;
+                closeChannelQuietly();
             } finally {
                 waiting = false;
-                try { if (serverSocket != null) serverSocket.close(); } catch (IOException ignored) {}
+                try {
+                    if (serverSocketChannel != null) serverSocketChannel.close();
+                } catch (IOException ignored) {
+                }
             }
         }, "network-server");
         t.setDaemon(true);
@@ -60,7 +91,11 @@ public class NetworkServer extends GameNetwork {
     /** 取消等待（在 HOSTING 界面按 ESC 时调用） */
     public void stopListening() {
         disconnected = true;
-        try { if (serverSocket != null) serverSocket.close(); } catch (IOException ignored) {}
+        closeChannelQuietly();
+        try {
+            if (serverSocketChannel != null) serverSocketChannel.close();
+        } catch (IOException ignored) {
+        }
     }
 
     public boolean isWaiting()      { return waiting; }
