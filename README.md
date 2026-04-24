@@ -31,6 +31,10 @@
 3. 任意一方被击杀后显示胜负结果，片刻后自动返回演示模式。
 4. 按 `N` 键打开联机大厅，选择 **Host**（开房等待）或 **Join**（输入对方 IP 加入）。
 
+## 开发文档
+
+- [开发文档（联机 NIO / Relay Reactor）](DEVELOPMENT.md)
+
 ## 联机对战
 
 ### 快速开始（局域网 / 互联网）
@@ -96,6 +100,9 @@ java -jar server/build/libs/dual-server-1.0-all.jar [port]
 # 仅运行测试
 ./gradlew test
 
+# 仅运行服务端测试
+./gradlew :server:test
+
 # 清理构建产物
 ./gradlew clean
 ```
@@ -134,8 +141,8 @@ src/main/java/com/likanug/dual/
 
 server/src/main/java/com/likanug/dual/server/
 ├── ServerApp.java              # Relay 服务器入口
-├── RelayServer.java            # TCP accept 循环，多房间管理
-├── RelayRoom.java              # 单个房间：握手 + 双向消息转发
+├── RelayServer.java            # Selector Reactor 主循环与多房间管理
+├── RelayRoom.java              # 房间状态机：握手 + 双向消息转发
 └── NetworkProtocol.java        # 服务端协议常量
 ```
 
