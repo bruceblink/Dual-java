@@ -7,9 +7,8 @@ group = 'com.likanug.dual'
 version = '1.0'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
@@ -20,7 +19,6 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.google.guava:guava:32.0.0-android'
     implementation 'org.processing:core:4.5.0'
 
     testImplementation platform('org.junit:junit-bom:5.9.1')
@@ -40,8 +38,10 @@ test {
 /**
  * 使用 JDK 自带 jpackage，自动适配当前操作系统
  */
-def javaHome = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(21) }.get().metadata.installationPath
-def jpackageExe = "${javaHome}/bin/jpackage"
+def jpackageExe = providers.provider {
+    def executable = org.gradle.internal.os.OperatingSystem.current().isWindows() ? 'jpackage.exe' : 'jpackage'
+    new File(System.getProperty('java.home'), "bin/${executable}").absolutePath
+}
 
 tasks.register('packageApp', Exec) {
     dependsOn 'installDist'
@@ -69,7 +69,7 @@ tasks.register('packageApp', Exec) {
     }
 
     def cmd = [
-        jpackageExe,
+        jpackageExe.get(),
         '--type', packageType,
         '--input', layout.buildDirectory.dir("install/${application.applicationName}/lib").get().asFile.absolutePath,
         '--dest', layout.buildDirectory.dir("dist").get().asFile.absolutePath,

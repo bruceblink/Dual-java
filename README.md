@@ -48,7 +48,7 @@
    java -jar server/build/libs/dual-server-1.0-all.jar [port]
    # 默认端口 7777
    ```
-2. 双方均按 `N → J`，输入 **Relay 服务器的公网 IP** 与端口，依次连接即可配对。
+2. 双方均按 `N → J`，输入 **Relay 服务器的公网 IP / 域名** 与端口，依次连接即可配对。
 
 ### 构建 Relay 服务器
 
@@ -63,11 +63,11 @@
 
 | 依赖    | 版本                              |
 | ------- | --------------------------------- |
-| JDK     | **21**（推荐 Oracle JDK 21）      |
+| JDK     | **21+**（编译目标为 Java 21）     |
 | Gradle  | 无需手动安装，使用内置 Wrapper    |
 
-> **关于 JDK 路径**：`gradle.properties` 中的 `org.gradle.java.installations.paths` 指向本机 JDK 21 安装路径。
-> 换台机器时，请将该路径改为实际路径，或删除该行并将 `JAVA_HOME` 环境变量指向 JDK 21。
+> **关于 JDK 路径**：项目不绑定本机 JDK 绝对路径，使用当前运行 Gradle 的 JDK 编译 Java 21 目标。
+> 请确保 `JAVA_HOME` 或命令行上的 `java` 来自 JDK 21 或更高版本。
 
 ## 运行方式
 
@@ -142,6 +142,5 @@ server/src/main/java/com/likanug/dual/server/
 ## 技术栈
 
 - **Processing 4.5.0**：渲染与窗口管理
-- **Guava 32**：工具库
 - **JUnit 5**：单元测试
 - **jpackage + WiX 3**：Windows 安装包打包
