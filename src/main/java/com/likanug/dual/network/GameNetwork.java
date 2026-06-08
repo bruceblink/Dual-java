@@ -5,6 +5,7 @@ import com.likanug.dual.inputDevice.KeyInput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * P2P 网络连接基类。
@@ -13,6 +14,8 @@ import java.nio.channels.SocketChannel;
  * 主线程通过 {@link #getRemoteInput} 取得最新远端输入。
  */
 public abstract class GameNetwork {
+
+    private static final long NON_BLOCKING_WAIT_NANOS = 1_000_000L;
 
     protected volatile SocketChannel channel;
     protected volatile boolean connected    = false;
@@ -90,7 +93,7 @@ public abstract class GameNetwork {
             int written = channel.write(buffer);
             if (written < 0) throw new IOException("channel closed");
             if (written == 0) {
-                Thread.onSpinWait();
+                waitForNonBlockingIO();
             }
         }
     }
@@ -101,10 +104,14 @@ public abstract class GameNetwork {
             int read = channel.read(buffer);
             if (read < 0) throw new IOException("channel closed");
             if (read == 0) {
-                Thread.onSpinWait();
+                waitForNonBlockingIO();
             }
         }
         return true;
+    }
+
+    protected static void waitForNonBlockingIO() {
+        LockSupport.parkNanos(NON_BLOCKING_WAIT_NANOS);
     }
 
     protected void closeChannelQuietly() {
@@ -124,7 +131,7 @@ public abstract class GameNetwork {
                     int read = channel.read(oneByte);
                     if (read < 0) break;
                     if (read == 0) {
-                        Thread.onSpinWait();
+                        waitForNonBlockingIO();
                         continue;
                     }
 

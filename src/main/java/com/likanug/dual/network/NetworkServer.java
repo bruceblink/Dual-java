@@ -41,7 +41,7 @@ public class NetworkServer extends GameNetwork {
                     }
                     acceptedChannel = serverSocketChannel.accept();
                     if (acceptedChannel != null) break;
-                    Thread.onSpinWait();
+                    waitForNonBlockingIO();
                 }
 
                 channel = acceptedChannel;

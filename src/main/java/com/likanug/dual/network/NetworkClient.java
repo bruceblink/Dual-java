@@ -34,7 +34,7 @@ public class NetworkClient extends GameNetwork {
                     if (System.nanoTime() >= connectDeadline) {
                         throw new IOException("连接或握手超时");
                     }
-                    Thread.onSpinWait();
+                    waitForNonBlockingIO();
                 }
 
                 channel.socket().setTcpNoDelay(true);
