@@ -20,16 +20,23 @@ import java.util.logging.Logger;
 public class RelayRoom {
 
     private static final Logger log = Logger.getLogger(RelayRoom.class.getName());
+    private static final int DEFAULT_HANDSHAKE_TIMEOUT_MS = 5000;
 
     private final int roomId;
     private final Socket playerA;
+    private final int handshakeTimeoutMs;
     private Socket playerB;
 
     private volatile boolean closed = false;
 
     public RelayRoom(int roomId, Socket playerA) {
+        this(roomId, playerA, DEFAULT_HANDSHAKE_TIMEOUT_MS);
+    }
+
+    RelayRoom(int roomId, Socket playerA, int handshakeTimeoutMs) {
         this.roomId  = roomId;
         this.playerA = playerA;
+        this.handshakeTimeoutMs = handshakeTimeoutMs;
     }
 
     public boolean isFull() { return playerB != null; }
@@ -58,6 +65,8 @@ public class RelayRoom {
              DataOutputStream outB = new DataOutputStream(new BufferedOutputStream(playerB.getOutputStream()));
              DataInputStream  inB  = new DataInputStream(new BufferedInputStream(playerB.getInputStream()))) {
 
+            setHandshakeTimeouts();
+
             // Generate shared seed and send TYPE_START to both players simultaneously
             int seed = new Random().nextInt();
             log.info("[Room " + roomId + "] Sending TYPE_START with seed=" + seed);
@@ -68,6 +77,7 @@ public class RelayRoom {
             // Wait for TYPE_START_ACK from both
             waitAck(inA, "A");
             waitAck(inB, "B");
+            clearReadTimeouts();
             log.info("[Room " + roomId + "] Handshake complete. Entering relay mode.");
 
             // Start bidirectional relay (one thread each direction)
@@ -105,6 +115,16 @@ public class RelayRoom {
         log.fine("[Room " + roomId + "] Got ACK from player " + label);
     }
 
+    private void setHandshakeTimeouts() throws IOException {
+        playerA.setSoTimeout(handshakeTimeoutMs);
+        playerB.setSoTimeout(handshakeTimeoutMs);
+    }
+
+    private void clearReadTimeouts() throws IOException {
+        playerA.setSoTimeout(0);
+        playerB.setSoTimeout(0);
+    }
+
     /**
      * Reads messages from {@code in} and forwards them to {@code out}.
      * Stops on any read error or TYPE_DISCONNECT message.
@@ -113,7 +133,11 @@ public class RelayRoom {
         try {
             while (!closed) {
                 int type = in.read();
-                if (type < 0) break; // EOF
+                if (type < 0) {
+                    log.info("[Room " + roomId + "] [" + direction + "] Peer reached EOF.");
+                    notifyDisconnect(out);
+                    return;
+                }
 
                 byte typeByte = (byte) type;
 
@@ -126,11 +150,7 @@ public class RelayRoom {
                     }
                     case NetworkProtocol.TYPE_DISCONNECT -> {
                         log.info("[Room " + roomId + "] [" + direction + "] Disconnect received.");
-                        // Forward disconnect to the other side
-                        try {
-                            out.writeByte(NetworkProtocol.TYPE_DISCONNECT);
-                            out.flush();
-                        } catch (IOException ignored) {}
+                        notifyDisconnect(out);
                         return;
                     }
                     default -> log.fine("[Room " + roomId + "] [" + direction + "] Unknown message type: " + type);
@@ -139,7 +159,18 @@ public class RelayRoom {
         } catch (IOException e) {
             if (!closed) {
                 log.info("[Room " + roomId + "] [" + direction + "] Connection lost: " + e.getMessage());
+                notifyDisconnect(out);
             }
+        } finally {
+            close();
+        }
+    }
+
+    private void notifyDisconnect(DataOutputStream out) {
+        try {
+            out.writeByte(NetworkProtocol.TYPE_DISCONNECT);
+            out.flush();
+        } catch (IOException ignored) {
         }
     }
 
