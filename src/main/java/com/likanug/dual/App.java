@@ -26,6 +26,9 @@ public class App extends PApplet {
     public static PFont smallFont, largeFont;
 
     static final int DEFAULT_PORT = 7777;
+    static final int MIN_PORT = 1;
+    static final int MAX_PORT = 65535;
+    private static final int MAX_HOST_LENGTH = 253;
 
     // ──────────────────────────────────────────────
     // 游戏核心状态
@@ -216,7 +219,7 @@ public class App extends PApplet {
         fill(50);
 
         // IP input field
-        String ipLabel = "IP: " + joinIP.toString() + (editingIP ? "_" : "");
+        String ipLabel = "Host: " + joinIP.toString() + (editingIP ? "_" : "");
         fill(editingIP ? color(0) : color(120));
         text(ipLabel, 0, -50);
 
@@ -228,6 +231,11 @@ public class App extends PApplet {
         textFont(smallFont, 16);
         fill(80);
         text("Tab - switch field | Enter - connect | ESC - back", 0, 60);
+
+        if (connectError != null) {
+            fill(200, 0, 0);
+            text(connectError, 0, 100);
+        }
 
         popStyle();
         popMatrix();
@@ -351,7 +359,10 @@ public class App extends PApplet {
     private void handleKeyLobbyMenu() {
         if (key == ESC)           { key = 0; networkMode = NetworkMode.NONE; return; }
         if (key == 'h' || key == 'H') startHosting();
-        if (key == 'j' || key == 'J') networkMode = NetworkMode.JOINING;
+        if (key == 'j' || key == 'J') {
+            connectError = null;
+            networkMode = NetworkMode.JOINING;
+        }
     }
 
     private void handleKeyJoining() {
@@ -370,6 +381,7 @@ public class App extends PApplet {
             return;
         }
         if (key == BACKSPACE) {
+            connectError = null;
             if (editingIP && joinIP.length() > 0)
                 joinIP.deleteCharAt(joinIP.length() - 1);
             else if (!editingIP && joinPortStr.length() > 0)
@@ -378,8 +390,9 @@ public class App extends PApplet {
         }
         // 仅允许可见 ASCII 字符
         if (key >= 32 && key < 127) {
+            connectError = null;
             if (editingIP) {
-                if (joinIP.length() < 15) joinIP.append(key);
+                if (key > 32 && joinIP.length() < MAX_HOST_LENGTH) joinIP.append(key);
             } else {
                 // Port 只允许数字，最多 5 位
                 if (Character.isDigit(key) && joinPortStr.length() < 5)
@@ -408,16 +421,38 @@ public class App extends PApplet {
 
     private void startConnecting() {
         String host = joinIP.toString().trim();
+        if (host.isEmpty()) {
+            connectError = "Host is required.";
+            editingIP = true;
+            networkMode = NetworkMode.JOINING;
+            return;
+        }
+
         int port;
         try {
-            port = Integer.parseInt(joinPortStr.toString().trim());
-        } catch (NumberFormatException e) {
-            port = DEFAULT_PORT;
+            port = parsePort(joinPortStr.toString());
+        } catch (IllegalArgumentException e) {
+            connectError = e.getMessage();
+            editingIP = false;
+            networkMode = NetworkMode.JOINING;
+            return;
         }
         connectError  = null;
         networkClient = new NetworkClient();
         networkClient.connect(host, port);
         networkMode = NetworkMode.CONNECTING;
+    }
+
+    static int parsePort(String value) {
+        try {
+            int port = Integer.parseInt(value.trim());
+            if (port < MIN_PORT || port > MAX_PORT) {
+                throw new IllegalArgumentException("Port must be 1-65535.");
+            }
+            return port;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Port must be 1-65535.", e);
+        }
     }
 
     /** 获取本机所有非回环 IPv4 地址 */
