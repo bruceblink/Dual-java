@@ -27,6 +27,16 @@ public class AppTest {
     }
 
     @Test
+    void canvasScalePreservesTheSquarePlayfield() {
+        app.width = 1280;
+        app.height = 720;
+
+        assertEquals(1.125F, app.canvasScale());
+        assertEquals(280.0F, app.canvasOffsetX());
+        assertEquals(0.0F, app.canvasOffsetY());
+    }
+
+    @Test
     void parsePortAcceptsValidBounds() {
         assertEquals(App.MIN_PORT, App.parsePort("1"));
         assertEquals(App.DEFAULT_PORT, App.parsePort("7777"));

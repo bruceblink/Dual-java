@@ -82,6 +82,7 @@ public class App extends PApplet {
 
     @Override
     public void setup() {
+        surface.setResizable(true);
         frameRate(FPS);
         final String fontFilePath = "Lato-Regular.ttf";
         smallFont = createFont(fontFilePath, 20.0F, true);
@@ -113,7 +114,10 @@ public class App extends PApplet {
 
     @Override
     public void draw() {
-        background(255);
+        background(24);
+        pushMatrix();
+        translate(canvasOffsetX(), canvasOffsetY());
+        scale(canvasScale());
         switch (networkMode) {
             case NONE       -> system.run();
             case LOBBY_MENU -> drawLobbyMenu();
@@ -122,6 +126,22 @@ public class App extends PApplet {
             case CONNECTING -> drawConnecting();
             case ONLINE     -> drawOnlineGame();
         }
+        popMatrix();
+    }
+
+    float canvasScale() {
+        return Math.min(
+                width / (float) INTERNAL_CANVAS_SIDE_WIDTH,
+                height / (float) INTERNAL_CANVAS_SIDE_HEIGHT
+        );
+    }
+
+    float canvasOffsetX() {
+        return (width - INTERNAL_CANVAS_SIDE_WIDTH * canvasScale()) * 0.5F;
+    }
+
+    float canvasOffsetY() {
+        return (height - INTERNAL_CANVAS_SIDE_HEIGHT * canvasScale()) * 0.5F;
     }
 
     // ──────────────────────────────────────────────
