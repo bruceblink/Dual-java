@@ -31,6 +31,14 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
         newArrow.setVelocity(directionAngle, 24);
 
         parentActor.getGroup().addArrow(newArrow);
+        parentActor.setShortbowCooldownFrameCount(fireIntervalFrameCount);
+    }
+
+    @Override
+    public void act(PlayerActor parentActor) {
+        parentActor.setShortbowCooldownFrameCount(
+                tickCooldown(parentActor.getShortbowCooldownFrameCount()));
+        super.act(parentActor);
     }
 
     public void displayEffect(PlayerActor parentActor) {
@@ -48,7 +56,17 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
     }
 
     public boolean triggerPulled(PlayerActor parentActor) {
-        return app.frameCount % fireIntervalFrameCount == 0;
+        return canFire(
+                parentActor.getEngine().getControllingInputDevice().isShotButtonPressed(),
+                parentActor.getShortbowCooldownFrameCount());
+    }
+
+    static boolean canFire(boolean shotButtonPressed, int cooldownFrameCount) {
+        return shotButtonPressed && cooldownFrameCount <= 0;
+    }
+
+    static int tickCooldown(int cooldownFrameCount) {
+        return Math.max(0, cooldownFrameCount - 1);
     }
 
 }

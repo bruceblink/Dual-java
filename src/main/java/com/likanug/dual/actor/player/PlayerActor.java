@@ -20,6 +20,7 @@ public class PlayerActor extends AbstractPlayerActor {
     private float aimAngle;
     private int chargedFrameCount;
     private int damageRemainingFrameCount;
+    private int shortbowCooldownFrameCount;
 
     public PlayerActor(PlayerEngine _engine, int col, App app) {
         super(16, _engine, app);
@@ -60,6 +61,14 @@ public class PlayerActor extends AbstractPlayerActor {
 
     public void setDamageRemainingFrameCount(int damageRemainingFrameCount) {
         this.damageRemainingFrameCount = damageRemainingFrameCount;
+    }
+
+    public int getShortbowCooldownFrameCount() {
+        return shortbowCooldownFrameCount;
+    }
+
+    public void setShortbowCooldownFrameCount(int shortbowCooldownFrameCount) {
+        this.shortbowCooldownFrameCount = shortbowCooldownFrameCount;
     }
 
 

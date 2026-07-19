@@ -81,7 +81,13 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
 
         app.rotate(-HALF_PI);
         app.strokeWeight(ringStrokeWeight);
-        app.arc(0, 0, ringSize, ringSize, 0, TWO_PI * min((int) 1.0, parentActor.getChargedFrameCount() / chargeRequiredFrameCount));
+        final float chargeProgress = calculateChargeProgress(
+                parentActor.getChargedFrameCount(), chargeRequiredFrameCount);
+        app.arc(0, 0, ringSize, ringSize, 0, TWO_PI * chargeProgress);
+        if (chargeProgress >= 1.0F) {
+            app.stroke(effectColor, 128 + (int) (127 * sin(app.frameCount * 0.2F)));
+            app.ellipse(0, 0, ringSize + 14, ringSize + 14);
+        }
         app.strokeWeight(1);
         app.rotate(+HALF_PI);
         parentActor.setChargedFrameCount(parentActor.getChargedFrameCount() + 1);
@@ -118,6 +124,11 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
 
     public boolean triggerPulled(PlayerActor parentActor) {
         return !buttonPressed(parentActor.getEngine().getControllingInputDevice()) && hasCompletedLongBowCharge(parentActor);
+    }
+
+    static float calculateChargeProgress(int chargedFrameCount, int requiredFrameCount) {
+        if (requiredFrameCount <= 0) return 1.0F;
+        return min(1.0F, Math.max(0.0F, (float) chargedFrameCount / requiredFrameCount));
     }
 
 }
