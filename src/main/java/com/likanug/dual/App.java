@@ -305,6 +305,11 @@ public class App extends PApplet {
     }
 
     @Override
+    public void focusLost() {
+        currentKeyInput.clear();
+    }
+
+    @Override
     public void keyPressed() {
         // 联机大厅优先拦截
         switch (networkMode) {

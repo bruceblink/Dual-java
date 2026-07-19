@@ -9,4 +9,13 @@ public class KeyInput {
     public boolean isZPressed = false;
     public boolean isXPressed = false;
 
+    public void clear() {
+        isUpPressed = false;
+        isDownPressed = false;
+        isLeftPressed = false;
+        isRightPressed = false;
+        isZPressed = false;
+        isXPressed = false;
+    }
+
 }
