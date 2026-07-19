@@ -5,7 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AppTest {
 
@@ -34,6 +36,17 @@ public class AppTest {
         assertEquals(1.125F, app.canvasScale());
         assertEquals(280.0F, app.canvasOffsetX());
         assertEquals(0.0F, app.canvasOffsetY());
+    }
+
+    @Test
+    void canvasHitTestingIgnoresLetterboxMargins() {
+        app.width = 1280;
+        app.height = 720;
+
+        assertFalse(app.isInsideCanvas(279.9F, 360.0F));
+        assertTrue(app.isInsideCanvas(280.0F, 360.0F));
+        assertTrue(app.isInsideCanvas(999.9F, 719.9F));
+        assertFalse(app.isInsideCanvas(1000.0F, 360.0F));
     }
 
     @Test

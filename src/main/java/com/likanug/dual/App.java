@@ -144,6 +144,14 @@ public class App extends PApplet {
         return (height - INTERNAL_CANVAS_SIDE_HEIGHT * canvasScale()) * 0.5F;
     }
 
+    boolean isInsideCanvas(float screenX, float screenY) {
+        float scale = canvasScale();
+        return screenX >= canvasOffsetX()
+                && screenX < canvasOffsetX() + INTERNAL_CANVAS_SIDE_WIDTH * scale
+                && screenY >= canvasOffsetY()
+                && screenY < canvasOffsetY() + INTERNAL_CANVAS_SIDE_HEIGHT * scale;
+    }
+
     // ──────────────────────────────────────────────
     // 各模式 draw 方法
     // ──────────────────────────────────────────────
@@ -299,7 +307,7 @@ public class App extends PApplet {
     // ──────────────────────────────────────────────
     @Override
     public void mousePressed() {
-        if (networkMode == NetworkMode.NONE) {
+        if (networkMode == NetworkMode.NONE && isInsideCanvas(mouseX, mouseY)) {
             system.setShowsInstructionWindow(!system.isShowsInstructionWindow());
         }
     }
