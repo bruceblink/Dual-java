@@ -1,8 +1,8 @@
-# Dual Demo — 双人弓箭对战游戏
+# Dual — 双人弓箭对战游戏
 
 一款用 Java + [Processing 4](https://processing.org/) 编写的**本地 / 联机**双人（或人机）弓箭对战小游戏。两名角色在 640×640 的竞技场内互相射箭，用短弓快速骚扰、用长弓蓄力致命一击，先击杀对手者获胜。支持通过 Relay 服务器进行互联网联机对战。
 
-> 本仓库是可运行的玩法 Demo，保留 Java + Processing 客户端与 Java Relay 作为规则和手感参考。正式游戏将使用独立的 Godot 4 客户端和 Go 权威服务端，不与本 Demo 共享构建、发布或网络协议。技术依据与边界见 [技术选型评估](docs/TECHNOLOGY_EVALUATION.md)。
+> `Dual` 会继续使用 Java + Processing 开发，当前 Java 客户端与 Java Relay 都属于本游戏。Godot 项目 `dual-game-client` 是玩法和产品定位均独立的另一款游戏，不是 `Dual` 的正式版、迁移版或替代工程。项目技术边界见 [技术路线说明](docs/TECHNOLOGY_EVALUATION.md)。
 
 ## 游戏界面
 
