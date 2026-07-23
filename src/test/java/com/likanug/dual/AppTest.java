@@ -24,8 +24,28 @@ public class AppTest {
 
     @Test
     void testAppSize() {
-        assertEquals(640, App.INTERNAL_CANVAS_SIDE_WIDTH);
+        assertEquals(1920, App.DEFAULT_WINDOW_WIDTH);
+        assertEquals(1080, App.DEFAULT_WINDOW_HEIGHT);
+        assertEquals(1280, App.INTERNAL_CANVAS_WIDTH);
+        assertEquals(720, App.INTERNAL_CANVAS_HEIGHT);
         assertEquals(60, App.FPS);
+    }
+
+    @Test
+    void fullHdWindowCentersAndScalesThePlayfield() {
+        app.width = App.DEFAULT_WINDOW_WIDTH;
+        app.height = App.DEFAULT_WINDOW_HEIGHT;
+
+        assertEquals(1.5F, app.canvasScale());
+        assertEquals(0.0F, app.canvasOffsetX());
+        assertEquals(0.0F, app.canvasOffsetY());
+        assertTrue(app.isInsideCanvas(0.0F, 0.0F));
+        assertTrue(app.isInsideCanvas(1919.9F, 1079.9F));
+        assertFalse(app.isInsideCanvas(1920.0F, 540.0F));
+
+        App.CanvasPoint center = app.toCanvasPoint(960.0F, 540.0F);
+        assertEquals(640.0F, center.x());
+        assertEquals(360.0F, center.y());
     }
 
     @Test
@@ -33,8 +53,8 @@ public class AppTest {
         app.width = 1280;
         app.height = 720;
 
-        assertEquals(1.125F, app.canvasScale());
-        assertEquals(280.0F, app.canvasOffsetX());
+        assertEquals(1.0F, app.canvasScale());
+        assertEquals(0.0F, app.canvasOffsetX());
         assertEquals(0.0F, app.canvasOffsetY());
     }
 
@@ -43,10 +63,9 @@ public class AppTest {
         app.width = 1280;
         app.height = 720;
 
-        assertFalse(app.isInsideCanvas(279.9F, 360.0F));
-        assertTrue(app.isInsideCanvas(280.0F, 360.0F));
-        assertTrue(app.isInsideCanvas(999.9F, 719.9F));
-        assertFalse(app.isInsideCanvas(1000.0F, 360.0F));
+        assertTrue(app.isInsideCanvas(0.0F, 0.0F));
+        assertTrue(app.isInsideCanvas(1279.9F, 719.9F));
+        assertFalse(app.isInsideCanvas(1280.0F, 360.0F));
     }
 
     @Test
@@ -54,13 +73,13 @@ public class AppTest {
         app.width = 1280;
         app.height = 720;
 
-        App.CanvasPoint topLeft = app.toCanvasPoint(280.0F, 0.0F);
+        App.CanvasPoint topLeft = app.toCanvasPoint(0.0F, 0.0F);
         App.CanvasPoint center = app.toCanvasPoint(640.0F, 360.0F);
 
         assertEquals(0.0F, topLeft.x());
         assertEquals(0.0F, topLeft.y());
-        assertEquals(320.0F, center.x());
-        assertEquals(320.0F, center.y());
+        assertEquals(640.0F, center.x());
+        assertEquals(360.0F, center.y());
     }
 
     @Test

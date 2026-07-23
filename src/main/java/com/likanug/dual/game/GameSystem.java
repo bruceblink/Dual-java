@@ -16,7 +16,8 @@ import com.likanug.dual.state.*;
 import java.util.Random;
 
 import static com.likanug.dual.App.FPS;
-import static com.likanug.dual.App.INTERNAL_CANVAS_SIDE_WIDTH;
+import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
+import static com.likanug.dual.App.INTERNAL_CANVAS_WIDTH;
 import static processing.core.PConstants.*;
 
 public class GameSystem {
@@ -57,13 +58,13 @@ public class GameSystem {
         if (demo) myEngine = new ComputerPlayerEngine(app);
         else myEngine = new HumanPlayerEngine(app.getCurrentKeyInput());
         PlayerActor myPlayer = new PlayerActor(myEngine, 255, app);
-        myPlayer.setxPosition(INTERNAL_CANVAS_SIDE_WIDTH * 0.5F);
-        myPlayer.setyPosition(INTERNAL_CANVAS_SIDE_WIDTH - 100);
+        myPlayer.setxPosition(INTERNAL_CANVAS_WIDTH * 0.5F);
+        myPlayer.setyPosition(INTERNAL_CANVAS_HEIGHT - 100);
         myPlayer.setState(moveState);
         this.myGroup.setPlayer(myPlayer);
         PlayerEngine otherEngine = new ComputerPlayerEngine(app);
         PlayerActor otherPlayer = new PlayerActor(otherEngine, 0, app);
-        otherPlayer.setxPosition((float) (INTERNAL_CANVAS_SIDE_WIDTH * 0.5));
+        otherPlayer.setxPosition(INTERNAL_CANVAS_WIDTH * 0.5F);
         otherPlayer.setyPosition(100);
         otherPlayer.setState(moveState);
         this.otherGroup.setPlayer(otherPlayer);
@@ -102,14 +103,14 @@ public class GameSystem {
 
         // 本地玩家（下方，白色）
         PlayerActor myPlayer = new PlayerActor(new HumanPlayerEngine(app.getCurrentKeyInput()), 255, app);
-        myPlayer.setxPosition(INTERNAL_CANVAS_SIDE_WIDTH * 0.5F);
-        myPlayer.setyPosition(INTERNAL_CANVAS_SIDE_WIDTH - 100);
+        myPlayer.setxPosition(INTERNAL_CANVAS_WIDTH * 0.5F);
+        myPlayer.setyPosition(INTERNAL_CANVAS_HEIGHT - 100);
         myPlayer.setState(moveState);
         this.myGroup.setPlayer(myPlayer);
 
         // 远端玩家（上方，黑色）
         PlayerActor otherPlayer = new PlayerActor(new NetworkPlayerEngine(network), 0, app);
-        otherPlayer.setxPosition(INTERNAL_CANVAS_SIDE_WIDTH * 0.5F);
+        otherPlayer.setxPosition(INTERNAL_CANVAS_WIDTH * 0.5F);
         otherPlayer.setyPosition(100);
         otherPlayer.setState(moveState);
         this.otherGroup.setPlayer(otherPlayer);
@@ -206,32 +207,36 @@ public class GameSystem {
     public void displayDemo() {
         app.pushStyle();
 
+        final float panelCenterX = INTERNAL_CANVAS_WIDTH * 0.5F;
+        final float panelCenterY = INTERNAL_CANVAS_HEIGHT * 0.5F;
+        final float contentOffsetX = panelCenterX - 320.0F;
+
         app.stroke(0);
         app.strokeWeight(2);
         app.fill(255, 240);
         app.rect(
-                INTERNAL_CANVAS_SIDE_WIDTH * 0.5F,
-                INTERNAL_CANVAS_SIDE_WIDTH * 0.5F,
-                INTERNAL_CANVAS_SIDE_WIDTH * 0.7F,
-                INTERNAL_CANVAS_SIDE_WIDTH * 0.6F
+                panelCenterX,
+                panelCenterY,
+                448.0F,
+                432.0F
         );
 
         app.textFont(App.smallFont, 20);
         app.textLeading(26);
         app.textAlign(RIGHT, BASELINE);
         app.fill(0);
-        app.text("Z key:", 280, 160);
-        app.text("X key:", 280, 225);
-        app.text("Arrow key:", 280, 310);
-        app.text("N key:", 280, 390);
+        app.text("WASD / Arrow:", contentOffsetX + 280, 160);
+        app.text("Mouse:", contentOffsetX + 280, 225);
+        app.text("Left / Z:", contentOffsetX + 280, 290);
+        app.text("Right / X:", contentOffsetX + 280, 355);
         app.textAlign(LEFT);
-        app.text("Weak shot\n (auto aiming)", 300, 160);
-        app.text("Lethal shot\n (manual aiming,\n  requires charge)", 300, 225);
-        app.text("Move\n (or aim lethal shot)", 300, 310);
-        app.text("Online multiplayer\n (open lobby)", 300, 390);
+        app.text("Move", contentOffsetX + 300, 160);
+        app.text("Aim", contentOffsetX + 300, 225);
+        app.text("Shortbow", contentOffsetX + 300, 290);
+        app.text("Hold to charge longbow", contentOffsetX + 300, 355);
         app.textAlign(CENTER);
-        app.text("- Press Z key to start -", INTERNAL_CANVAS_SIDE_WIDTH * 0.5F, 455);
-        app.text("(Click to hide this window)", INTERNAL_CANVAS_SIDE_WIDTH * 0.5F, 490);
+        app.text("- Press Z key to start -", panelCenterX, 455);
+        app.text("(Click to hide this window)", panelCenterX, 490);
         app.popStyle();
 
         app.strokeWeight(1);

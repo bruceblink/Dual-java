@@ -6,7 +6,8 @@ import com.likanug.dual.actor.player.AbstractPlayerActor;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.inputDevice.AbstractInputDevice;
 
-import static com.likanug.dual.App.INTERNAL_CANVAS_SIDE_WIDTH;
+import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
+import static com.likanug.dual.App.INTERNAL_CANVAS_WIDTH;
 import static processing.core.PApplet.cos;
 import static processing.core.PApplet.sin;
 import static processing.core.PConstants.QUARTER_PI;
@@ -127,12 +128,12 @@ public class DefaultPlayerPlan extends PlayerPlan {
 
     public void setMoveDirection(PlayerActor player, AbstractPlayerActor enemy) {
         float targetX, targetY;
-        if (enemy.getxPosition() > INTERNAL_CANVAS_SIDE_WIDTH * 0.5)
-            targetX = app.random(0, INTERNAL_CANVAS_SIDE_WIDTH * 0.5F);
-        else targetX = app.random(INTERNAL_CANVAS_SIDE_WIDTH * 0.5F, INTERNAL_CANVAS_SIDE_WIDTH);
-        if (enemy.getyPosition() > INTERNAL_CANVAS_SIDE_WIDTH * 0.5)
-            targetY = app.random(0, INTERNAL_CANVAS_SIDE_WIDTH * 0.5F);
-        else targetY = app.random(INTERNAL_CANVAS_SIDE_WIDTH * 0.5F, INTERNAL_CANVAS_SIDE_WIDTH);
+        if (enemy.getxPosition() > INTERNAL_CANVAS_WIDTH * 0.5F)
+            targetX = app.random(0, INTERNAL_CANVAS_WIDTH * 0.5F);
+        else targetX = app.random(INTERNAL_CANVAS_WIDTH * 0.5F, INTERNAL_CANVAS_WIDTH);
+        if (enemy.getyPosition() > INTERNAL_CANVAS_HEIGHT * 0.5F)
+            targetY = app.random(0, INTERNAL_CANVAS_HEIGHT * 0.5F);
+        else targetY = app.random(INTERNAL_CANVAS_HEIGHT * 0.5F, INTERNAL_CANVAS_HEIGHT);
         setMoveDirection(player, targetX, targetY, 100);
     }
 

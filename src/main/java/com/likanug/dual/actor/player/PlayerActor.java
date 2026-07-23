@@ -5,8 +5,8 @@ import com.likanug.dual.GameConstants;
 import com.likanug.dual.playerEngine.PlayerEngine;
 
 import static com.likanug.dual.App.FPS;
-import static com.likanug.dual.App.INTERNAL_CANVAS_SIDE_HEIGHT;
-import static com.likanug.dual.App.INTERNAL_CANVAS_SIDE_WIDTH;
+import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
+import static com.likanug.dual.App.INTERNAL_CANVAS_WIDTH;
 import static processing.core.PApplet.constrain;
 import static processing.core.PApplet.sq;
 import static processing.core.PConstants.TWO_PI;
@@ -89,16 +89,16 @@ public class PlayerActor extends AbstractPlayerActor {
             xPosition = halfBodySize;
             xVelocity *= -GameConstants.PLAYER_BOUNCE;
         }
-        if (xPosition > INTERNAL_CANVAS_SIDE_WIDTH - halfBodySize) {
-            xPosition = INTERNAL_CANVAS_SIDE_WIDTH - halfBodySize;
+        if (xPosition > INTERNAL_CANVAS_WIDTH - halfBodySize) {
+            xPosition = INTERNAL_CANVAS_WIDTH - halfBodySize;
             xVelocity *= -GameConstants.PLAYER_BOUNCE;
         }
         if (yPosition < halfBodySize) {
             yPosition = halfBodySize;
             yVelocity *= -GameConstants.PLAYER_BOUNCE;
         }
-        if (yPosition > INTERNAL_CANVAS_SIDE_HEIGHT - halfBodySize) {
-            yPosition = INTERNAL_CANVAS_SIDE_HEIGHT - halfBodySize;
+        if (yPosition > INTERNAL_CANVAS_HEIGHT - halfBodySize) {
+            yPosition = INTERNAL_CANVAS_HEIGHT - halfBodySize;
             yVelocity *= -GameConstants.PLAYER_BOUNCE;
         }
 

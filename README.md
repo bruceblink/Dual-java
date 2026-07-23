@@ -1,6 +1,6 @@
 # Dual — 双人弓箭对战游戏
 
-一款用 Java + [Processing 4](https://processing.org/) 编写的**本地 / 联机**双人（或人机）弓箭对战小游戏。两名角色在 640×640 的竞技场内互相射箭，用短弓快速骚扰、用长弓蓄力致命一击，先击杀对手者获胜。支持通过 Relay 服务器进行互联网联机对战。
+一款用 Java + [Processing 4](https://processing.org/) 编写的**本地 / 联机**双人（或人机）弓箭对战小游戏。游戏采用 1280×720 的 16:9 确定性竞技场，默认完整等比输出到 1920×1080；两名角色用短弓快速骚扰、用长弓蓄力致命一击，先击杀对手者获胜。支持通过 Relay 服务器进行互联网联机对战。
 
 > `Dual` 会继续使用 Java + Processing 开发，当前 Java 客户端与 Java Relay 都属于本游戏。Godot 项目 `dual-game-client` 是玩法和产品定位均独立的另一款游戏，不是 `Dual` 的正式版、迁移版或替代工程。玩法方向见 [游戏设计](docs/GAME_DESIGN.md)，操作与规则落地见 [玩法开发指导](docs/GAMEPLAY_IMPLEMENTATION_GUIDE.md)，实施顺序见 [设计开发计划](docs/DEVELOPMENT_PLAN.md)，项目边界见 [技术路线说明](docs/TECHNOLOGY_EVALUATION.md)。
 
@@ -73,6 +73,8 @@
 
 > **关于 JDK 路径**：项目不绑定本机 JDK 绝对路径，使用当前运行 Gradle 的 JDK 编译 Java 21 目标。
 > 请确保 `JAVA_HOME` 或命令行上的 `java` 来自 JDK 21 或更高版本。
+
+默认窗口和游戏区域分辨率为 1920×1080，并支持自由缩放。竞技场保持 16:9 比例；只有窗口比例不同时才加入留白，留白不接收瞄准或攻击输入。
 
 ## 运行方式
 

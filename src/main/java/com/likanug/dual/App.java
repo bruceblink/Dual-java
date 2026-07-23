@@ -21,8 +21,10 @@ public class App extends PApplet {
     // 常量
     // ──────────────────────────────────────────────
     public static final int FPS = 60;
-    public static final int INTERNAL_CANVAS_SIDE_WIDTH  = 640;
-    public static final int INTERNAL_CANVAS_SIDE_HEIGHT = 640;
+    public static final int DEFAULT_WINDOW_WIDTH = 1920;
+    public static final int DEFAULT_WINDOW_HEIGHT = 1080;
+    public static final int INTERNAL_CANVAS_WIDTH = 1280;
+    public static final int INTERNAL_CANVAS_HEIGHT = 720;
     public static PFont smallFont, largeFont;
 
     static final int DEFAULT_PORT = 7777;
@@ -77,7 +79,7 @@ public class App extends PApplet {
     // ──────────────────────────────────────────────
     @Override
     public void settings() {
-        size(INTERNAL_CANVAS_SIDE_WIDTH, INTERNAL_CANVAS_SIDE_HEIGHT);
+        size(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
     }
 
     @Override
@@ -131,29 +133,29 @@ public class App extends PApplet {
 
     float canvasScale() {
         return Math.min(
-                width / (float) INTERNAL_CANVAS_SIDE_WIDTH,
-                height / (float) INTERNAL_CANVAS_SIDE_HEIGHT
+                width / (float) INTERNAL_CANVAS_WIDTH,
+                height / (float) INTERNAL_CANVAS_HEIGHT
         );
     }
 
     float canvasOffsetX() {
-        return (width - INTERNAL_CANVAS_SIDE_WIDTH * canvasScale()) * 0.5F;
+        return (width - INTERNAL_CANVAS_WIDTH * canvasScale()) * 0.5F;
     }
 
     float canvasOffsetY() {
-        return (height - INTERNAL_CANVAS_SIDE_HEIGHT * canvasScale()) * 0.5F;
+        return (height - INTERNAL_CANVAS_HEIGHT * canvasScale()) * 0.5F;
     }
 
     boolean isInsideCanvas(float screenX, float screenY) {
         float scale = canvasScale();
         return screenX >= canvasOffsetX()
-                && screenX < canvasOffsetX() + INTERNAL_CANVAS_SIDE_WIDTH * scale
+                && screenX < canvasOffsetX() + INTERNAL_CANVAS_WIDTH * scale
                 && screenY >= canvasOffsetY()
-                && screenY < canvasOffsetY() + INTERNAL_CANVAS_SIDE_HEIGHT * scale;
+                && screenY < canvasOffsetY() + INTERNAL_CANVAS_HEIGHT * scale;
     }
 
     /**
-     * 将窗口坐标换算为固定 640 x 640 竞技场坐标；调用方应先确认鼠标位于画布内。
+     * 将窗口坐标换算为固定 1280 x 720 竞技场坐标；调用方应先确认鼠标位于画布内。
      */
     CanvasPoint toCanvasPoint(float screenX, float screenY) {
         float scale = canvasScale();
@@ -186,7 +188,7 @@ public class App extends PApplet {
 
     private void drawLobbyMenu() {
         pushMatrix();
-        translate(INTERNAL_CANVAS_SIDE_WIDTH * 0.5f, INTERNAL_CANVAS_SIDE_HEIGHT * 0.5f);
+        translate(INTERNAL_CANVAS_WIDTH * 0.5f, INTERNAL_CANVAS_HEIGHT * 0.5f);
         pushStyle();
         textFont(smallFont, 28);
 
@@ -220,7 +222,7 @@ public class App extends PApplet {
         List<String> localIPs = getLocalIPv4Addresses();
 
         pushMatrix();
-        translate(INTERNAL_CANVAS_SIDE_WIDTH * 0.5f, INTERNAL_CANVAS_SIDE_HEIGHT * 0.5f);
+        translate(INTERNAL_CANVAS_WIDTH * 0.5f, INTERNAL_CANVAS_HEIGHT * 0.5f);
         pushStyle();
         textFont(smallFont, 22);
         fill(0);
@@ -250,7 +252,7 @@ public class App extends PApplet {
 
     private void drawJoining() {
         pushMatrix();
-        translate(INTERNAL_CANVAS_SIDE_WIDTH * 0.5f, INTERNAL_CANVAS_SIDE_HEIGHT * 0.5f);
+        translate(INTERNAL_CANVAS_WIDTH * 0.5f, INTERNAL_CANVAS_HEIGHT * 0.5f);
         pushStyle();
         textFont(smallFont, 22);
         fill(0);
@@ -299,7 +301,7 @@ public class App extends PApplet {
         }
 
         pushMatrix();
-        translate(INTERNAL_CANVAS_SIDE_WIDTH * 0.5f, INTERNAL_CANVAS_SIDE_HEIGHT * 0.5f);
+        translate(INTERNAL_CANVAS_WIDTH * 0.5f, INTERNAL_CANVAS_HEIGHT * 0.5f);
         pushStyle();
         textFont(smallFont, 22);
         fill(0);

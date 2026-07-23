@@ -3,7 +3,8 @@ package com.likanug.dual.actor.arrow;
 import com.likanug.dual.App;
 import com.likanug.dual.actor.Actor;
 
-import static com.likanug.dual.App.INTERNAL_CANVAS_SIDE_WIDTH;
+import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
+import static com.likanug.dual.App.INTERNAL_CANVAS_WIDTH;
 
 public abstract class AbstractArrowActor extends Actor {
 
@@ -18,9 +19,9 @@ public abstract class AbstractArrowActor extends Actor {
         super.update();
         if (
                 xPosition < -halfLength ||
-                        xPosition > INTERNAL_CANVAS_SIDE_WIDTH + halfLength ||
+                        xPosition > INTERNAL_CANVAS_WIDTH + halfLength ||
                         yPosition < -halfLength ||
-                        yPosition > INTERNAL_CANVAS_SIDE_WIDTH + halfLength
+                        yPosition > INTERNAL_CANVAS_HEIGHT + halfLength
         ) {
             group.getRemovingArrowList().add(this);
         }
