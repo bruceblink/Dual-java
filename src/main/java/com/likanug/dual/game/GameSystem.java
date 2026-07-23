@@ -197,9 +197,11 @@ public class GameSystem {
         }
         currentBackground.update();
         currentBackground.display();
-        currentState.run(this);
+        currentState.runWorld(this);
 
         app.popMatrix();
+        currentState.displayInterface(this);
+        currentState.finishFrame(this);
         if (demoPlay && showsInstructionWindow)
             displayDemo();
     }
