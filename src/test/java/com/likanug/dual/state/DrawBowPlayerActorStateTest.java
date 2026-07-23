@@ -1,5 +1,7 @@
 package com.likanug.dual.state;
 
+import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,5 +27,13 @@ class DrawBowPlayerActorStateTest {
         assertEquals(1.0F, DrawLongbowPlayerActorState.calculateChargeProgress(30, 30));
         assertEquals(1.0F, DrawLongbowPlayerActorState.calculateChargeProgress(31, 30));
         assertEquals(1.0F, DrawLongbowPlayerActorState.calculateChargeProgress(0, 0));
+    }
+
+    @Test
+    void longbowChargeUsesTheApprovedHalfSpeedMovementRatio() {
+        DrawLongbowPlayerActorState state = new DrawLongbowPlayerActorState(new App());
+
+        assertEquals(0.5F, GameConstants.LONGBOW_CHARGE_MOVE_RATIO);
+        assertEquals(GameConstants.LONGBOW_CHARGE_MOVE_RATIO, state.getMoveRatio());
     }
 }

@@ -130,6 +130,11 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
         return !buttonPressed(parentActor.getEngine().getControllingInputDevice()) && hasCompletedLongBowCharge(parentActor);
     }
 
+    @Override
+    protected float getMoveRatio() {
+        return GameConstants.LONGBOW_CHARGE_MOVE_RATIO;
+    }
+
     static float calculateChargeProgress(int chargedFrameCount, int requiredFrameCount) {
         if (requiredFrameCount <= 0) return 1.0F;
         return min(1.0F, Math.max(0.0F, (float) chargedFrameCount / requiredFrameCount));
