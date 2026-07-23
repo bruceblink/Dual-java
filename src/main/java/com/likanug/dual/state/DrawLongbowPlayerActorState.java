@@ -29,7 +29,11 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     }
 
     public void aim(PlayerActor parentActor, AbstractInputDevice input) {
-        parentActor.setAimAngle(parentActor.getAimAngle() + input.getHorizontalMoveButton() * unitAngleSpeed);
+        if (input.hasAimAngle()) {
+            parentActor.setAimAngle(input.getAimAngle());
+        } else {
+            parentActor.setAimAngle(parentActor.getAimAngle() + input.getHorizontalMoveButton() * unitAngleSpeed);
+        }
     }
 
     public void fire(PlayerActor parentActor) {

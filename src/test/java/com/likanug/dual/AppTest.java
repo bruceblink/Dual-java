@@ -50,6 +50,20 @@ public class AppTest {
     }
 
     @Test
+    void screenCoordinatesConvertToTheInternalCanvas() {
+        app.width = 1280;
+        app.height = 720;
+
+        App.CanvasPoint topLeft = app.toCanvasPoint(280.0F, 0.0F);
+        App.CanvasPoint center = app.toCanvasPoint(640.0F, 360.0F);
+
+        assertEquals(0.0F, topLeft.x());
+        assertEquals(0.0F, topLeft.y());
+        assertEquals(320.0F, center.x());
+        assertEquals(320.0F, center.y());
+    }
+
+    @Test
     void parsePortAcceptsValidBounds() {
         assertEquals(App.MIN_PORT, App.parsePort("1"));
         assertEquals(App.DEFAULT_PORT, App.parsePort("7777"));

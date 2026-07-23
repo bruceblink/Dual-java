@@ -152,6 +152,19 @@ public class App extends PApplet {
                 && screenY < canvasOffsetY() + INTERNAL_CANVAS_SIDE_HEIGHT * scale;
     }
 
+    /**
+     * 将窗口坐标换算为固定 640 x 640 竞技场坐标；调用方应先确认鼠标位于画布内。
+     */
+    CanvasPoint toCanvasPoint(float screenX, float screenY) {
+        float scale = canvasScale();
+        return new CanvasPoint(
+                (screenX - canvasOffsetX()) / scale,
+                (screenY - canvasOffsetY()) / scale
+        );
+    }
+
+    record CanvasPoint(float x, float y) {}
+
     // ──────────────────────────────────────────────
     // 各模式 draw 方法
     // ──────────────────────────────────────────────
@@ -307,9 +320,43 @@ public class App extends PApplet {
     // ──────────────────────────────────────────────
     @Override
     public void mousePressed() {
-        if (networkMode == NetworkMode.NONE && isInsideCanvas(mouseX, mouseY)) {
+        if (networkMode != NetworkMode.NONE || !isInsideCanvas(mouseX, mouseY)) return;
+
+        if (system.isDemoPlay()) {
             system.setShowsInstructionWindow(!system.isShowsInstructionWindow());
+            return;
         }
+
+        updateMouseAim();
+        if (mouseButton == LEFT) currentKeyInput.setMouseShotPressed(true);
+        if (mouseButton == RIGHT) currentKeyInput.setMouseLongShotPressed(true);
+    }
+
+    @Override
+    public void mouseReleased() {
+        if (mouseButton == LEFT) currentKeyInput.setMouseShotPressed(false);
+        if (mouseButton == RIGHT) currentKeyInput.setMouseLongShotPressed(false);
+    }
+
+    @Override
+    public void mouseMoved() {
+        updateMouseAim();
+    }
+
+    @Override
+    public void mouseDragged() {
+        if (!isInsideCanvas(mouseX, mouseY)) {
+            currentKeyInput.releaseMouseButtons();
+            return;
+        }
+        updateMouseAim();
+    }
+
+    /** 只接受本地竞技场内的鼠标位置，避免边框区域改变瞄准方向。 */
+    private void updateMouseAim() {
+        if (networkMode != NetworkMode.NONE || !isInsideCanvas(mouseX, mouseY)) return;
+        CanvasPoint point = toCanvasPoint(mouseX, mouseY);
+        currentKeyInput.updateMouseAim(point.x(), point.y());
     }
 
     @Override
@@ -338,6 +385,7 @@ public class App extends PApplet {
         if (key != CODED) {
             if (key == 'z' || key == 'Z') { currentKeyInput.isZPressed = false; return; }
             if (key == 'x' || key == 'X') { currentKeyInput.isXPressed = false; return; }
+            setWasdKey(key, false);
         } else {
             switch (keyCode) {
                 case UP    -> currentKeyInput.isUpPressed    = false;
@@ -361,6 +409,7 @@ public class App extends PApplet {
         if (key != CODED) {
             if (key == 'z' || key == 'Z') { currentKeyInput.isZPressed = true; return; }
             if (key == 'x' || key == 'X') { currentKeyInput.isXPressed = true; return; }
+            if (setWasdKey(key, true)) return;
             if (key == 'p') {
                 if (paused) loop(); else noLoop();
                 paused = !paused;
@@ -396,6 +445,18 @@ public class App extends PApplet {
             connectError = null;
             networkMode = NetworkMode.JOINING;
         }
+    }
+
+    /** 更新 WASD 的独立物理键状态，保证它们可与方向键同时按住和释放。 */
+    private boolean setWasdKey(char pressedKey, boolean pressed) {
+        switch (Character.toLowerCase(pressedKey)) {
+            case 'w' -> currentKeyInput.isWPressed = pressed;
+            case 'a' -> currentKeyInput.isAPressed = pressed;
+            case 's' -> currentKeyInput.isSPressed = pressed;
+            case 'd' -> currentKeyInput.isDPressed = pressed;
+            default -> { return false; }
+        }
+        return true;
     }
 
     private void handleKeyJoining() {
