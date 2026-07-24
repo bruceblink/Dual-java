@@ -13,6 +13,12 @@ import static processing.core.PApplet.*;
 
 public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
 
+    enum ReleaseOutcome {
+        KEEP_CHARGING,
+        CANCEL,
+        FIRE
+    }
+
     private final float unitAngleSpeed = GameConstants.LONGBOW_AIM_SPEED_RATIO * TWO_PI / FPS;
     private final int chargeRequiredFrameCount = (int) (GameConstants.LONGBOW_CHARGE_SEC * FPS);
     private final int effectColor = app.color(192, 64, 64);
@@ -127,7 +133,29 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     }
 
     public boolean triggerPulled(PlayerActor parentActor) {
-        return !buttonPressed(parentActor.getEngine().getControllingInputDevice()) && hasCompletedLongBowCharge(parentActor);
+        return releaseOutcome(
+                buttonPressed(parentActor.getEngine().getControllingInputDevice()),
+                parentActor.getChargedFrameCount(),
+                chargeRequiredFrameCount
+        ) == ReleaseOutcome.FIRE;
+    }
+
+    @Override
+    protected void onButtonReleased(PlayerActor parentActor) {
+        if (releaseOutcome(false, parentActor.getChargedFrameCount(), chargeRequiredFrameCount)
+                != ReleaseOutcome.CANCEL) return;
+
+        parentActor.setChargedFrameCount(0);
+        final Particle cancelParticle = app.getSystem().getCommonParticleSet().getBuilder()
+                .type(3)
+                .position(parentActor.getxPosition(), parentActor.getyPosition())
+                .polarVelocity(0, 0)
+                .particleSize(ringSize)
+                .particleColor(app.color(96))
+                .weight(3)
+                .lifespanSecond(0.2F)
+                .build();
+        app.getSystem().getCommonParticleSet().getParticleList().add(cancelParticle);
     }
 
     @Override
@@ -138,6 +166,12 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     static float calculateChargeProgress(int chargedFrameCount, int requiredFrameCount) {
         if (requiredFrameCount <= 0) return 1.0F;
         return min(1.0F, Math.max(0.0F, (float) chargedFrameCount / requiredFrameCount));
+    }
+
+    /** 根据按钮与蓄力帧数决定本帧继续、取消还是发射，避免状态层靠副作用猜测松开结果。 */
+    static ReleaseOutcome releaseOutcome(boolean buttonPressed, int chargedFrameCount, int requiredFrameCount) {
+        if (buttonPressed) return ReleaseOutcome.KEEP_CHARGING;
+        return chargedFrameCount >= requiredFrameCount ? ReleaseOutcome.FIRE : ReleaseOutcome.CANCEL;
     }
 
 }

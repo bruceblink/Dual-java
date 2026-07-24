@@ -36,4 +36,20 @@ class DrawBowPlayerActorStateTest {
         assertEquals(0.5F, GameConstants.LONGBOW_CHARGE_MOVE_RATIO);
         assertEquals(GameConstants.LONGBOW_CHARGE_MOVE_RATIO, state.getMoveRatio());
     }
+
+    @Test
+    void longbowReleaseCancelsBeforeMinimumChargeAndFiresAfterIt() {
+        assertEquals(
+                DrawLongbowPlayerActorState.ReleaseOutcome.KEEP_CHARGING,
+                DrawLongbowPlayerActorState.releaseOutcome(true, 0, 30)
+        );
+        assertEquals(
+                DrawLongbowPlayerActorState.ReleaseOutcome.CANCEL,
+                DrawLongbowPlayerActorState.releaseOutcome(false, 29, 30)
+        );
+        assertEquals(
+                DrawLongbowPlayerActorState.ReleaseOutcome.FIRE,
+                DrawLongbowPlayerActorState.releaseOutcome(false, 30, 30)
+        );
+    }
 }

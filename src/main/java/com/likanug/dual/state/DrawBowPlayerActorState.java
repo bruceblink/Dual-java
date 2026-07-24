@@ -19,9 +19,11 @@ public abstract class DrawBowPlayerActorState extends PlayerActorState {
         final float moveRatio = getMoveRatio();
         parentActor.addVelocity(moveRatio * input.getHorizontalMoveButton(), moveRatio * input.getVerticalMoveButton());
 
-        if (triggerPulled(parentActor)) fire(parentActor);
+        final boolean fired = triggerPulled(parentActor);
+        if (fired) fire(parentActor);
 
         if (!buttonPressed(input)) {
+            if (!fired) onButtonReleased(parentActor);
             parentActor.setState(moveState.entryState(parentActor));
         }
     }
@@ -33,6 +35,10 @@ public abstract class DrawBowPlayerActorState extends PlayerActorState {
     protected abstract boolean buttonPressed(AbstractInputDevice input);
 
     protected abstract boolean triggerPulled(PlayerActor parentActor);
+
+    /** 处理未触发射击的松开动作；默认武器无需额外副作用。 */
+    protected void onButtonReleased(PlayerActor parentActor) {
+    }
 
     /** 返回当前拉弓状态的移动加速度倍率；长弓可单独调节手感而不改变短弓规则。 */
     protected float getMoveRatio() {
