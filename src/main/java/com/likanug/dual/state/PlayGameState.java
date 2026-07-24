@@ -17,8 +17,14 @@ import static processing.core.PApplet.atan2;
 import static processing.core.PApplet.cos;
 import static processing.core.PApplet.sin;
 import static processing.core.PConstants.HALF_PI;
+import static processing.core.PConstants.CENTER;
 
 public class PlayGameState extends GameSystemState {
+
+    static final float SHORTBOW_HUD_X = 72.0F;
+    static final float SHORTBOW_HUD_Y = INTERNAL_CANVAS_HEIGHT - 42.0F;
+    private static final float SHORTBOW_HUD_DOT_SIZE = 16.0F;
+    private static final float SHORTBOW_HUD_DOT_GAP = 24.0F;
 
     public PlayGameState(App app) {
         super(app);
@@ -41,10 +47,43 @@ public class PlayGameState extends GameSystemState {
     }
 
     public void displayMessage(GameSystem system) {
+        displayShortbowAmmo(system);
+
         int messageDurationFrameCount = FPS;
         if (properFrameCount >= messageDurationFrameCount) return;
         app.fill(0, (float) (255.0 * (1.0 - (float) properFrameCount / messageDurationFrameCount)));
         app.text("Go", INTERNAL_CANVAS_WIDTH * 0.5F, INTERNAL_CANVAS_HEIGHT * 0.5F);
+    }
+
+    /** Draws the local player's current shortbow reserve outside the shake transform for reliable combat feedback. */
+    private void displayShortbowAmmo(GameSystem system) {
+        if (system.getMyGroup().getPlayer().isNull()) return;
+
+        final PlayerActor player = (PlayerActor) system.getMyGroup().getPlayer();
+        final int availableAmmo = player.getShortbowAmmo().getAvailableAmmo();
+        final int maximumAmmo = player.getShortbowAmmo().getMaximumAmmo();
+
+        app.pushStyle();
+        app.textAlign(CENTER, CENTER);
+        app.textFont(App.smallFont, 16);
+        app.fill(0, 176);
+        app.text(shortbowAmmoDisplayLabel(availableAmmo, maximumAmmo), SHORTBOW_HUD_X, SHORTBOW_HUD_Y - 22.0F);
+        app.stroke(0, 176);
+        for (int index = 0; index < maximumAmmo; index++) {
+            if (index < availableAmmo) app.fill(255);
+            else app.fill(0, 48);
+            app.ellipse(
+                    SHORTBOW_HUD_X + (index - (maximumAmmo - 1) * 0.5F) * SHORTBOW_HUD_DOT_GAP,
+                    SHORTBOW_HUD_Y,
+                    SHORTBOW_HUD_DOT_SIZE,
+                    SHORTBOW_HUD_DOT_SIZE);
+        }
+        app.popStyle();
+    }
+
+    /** Produces the textual reserve value so the same numbers remain available beyond the dot indicator. */
+    static String shortbowAmmoDisplayLabel(int availableAmmo, int maximumAmmo) {
+        return "Shortbow " + availableAmmo + " / " + maximumAmmo;
     }
 
     public void checkStateTransition(GameSystem system) {

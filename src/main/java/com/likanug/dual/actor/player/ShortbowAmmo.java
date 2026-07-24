@@ -24,6 +24,10 @@ public final class ShortbowAmmo {
         return availableAmmo;
     }
 
+    public int getMaximumAmmo() {
+        return maximumAmmo;
+    }
+
     public boolean canFire() {
         return availableAmmo > 0;
     }

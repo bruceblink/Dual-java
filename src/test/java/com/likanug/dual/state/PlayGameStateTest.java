@@ -8,6 +8,12 @@ import static processing.core.PConstants.HALF_PI;
 class PlayGameStateTest {
 
     @Test
+    void shortbowAmmoHudKeepsTheAvailableAndMaximumValuesReadable() {
+        assertEquals("Shortbow 3 / 3", PlayGameState.shortbowAmmoDisplayLabel(3, 3));
+        assertEquals("Shortbow 0 / 3", PlayGameState.shortbowAmmoDisplayLabel(0, 3));
+    }
+
+    @Test
     void calculateThrustAngleUsesCenteredRandomOffset() {
         float base = 1.25f;
 
