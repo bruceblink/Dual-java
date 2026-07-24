@@ -4,6 +4,7 @@ import com.likanug.dual.App;
 import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.arrow.LongbowArrowHead;
 import com.likanug.dual.actor.arrow.LongbowArrowShaft;
+import com.likanug.dual.actor.player.AbstractPlayerActor;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.inputDevice.AbstractInputDevice;
 import com.likanug.dual.particle.Particle;
@@ -22,6 +23,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     private final float unitAngleSpeed = GameConstants.LONGBOW_AIM_SPEED_RATIO * TWO_PI / FPS;
     private final int chargeRequiredFrameCount = (int) (GameConstants.LONGBOW_CHARGE_SEC * FPS);
     private final int effectColor = app.color(192, 64, 64);
+    private final int lockColor = app.color(64, 176, 128);
     private final int ringSize = GameConstants.LONGBOW_RING_SIZE;
     private final float ringStrokeWeight = GameConstants.LONGBOW_RING_STROKE;
 
@@ -31,10 +33,21 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
 
     public PlayerActorState entryState(PlayerActor parentActor) {
         parentActor.setChargedFrameCount(0);
+        aim(parentActor, parentActor.getEngine().getControllingInputDevice());
         return this;
     }
 
+    /**
+     * Locks onto a living enemy inside the assist radius; outside it, mouse aim or the keyboard fallback remains active.
+     * Re-evaluating every frame lets players move during the charge without losing a valid nearby target.
+     */
     public void aim(PlayerActor parentActor, AbstractInputDevice input) {
+        final AbstractPlayerActor enemyPlayer = getEnemyPlayer(parentActor);
+        if (isAutoAimTargetAvailable(parentActor, enemyPlayer, GameConstants.LONGBOW_AUTO_AIM_RANGE)) {
+            parentActor.setAimAngle(getEnemyPlayerActorAngle(parentActor));
+            return;
+        }
+
         if (input.hasAimAngle()) {
             parentActor.setAimAngle(input.getAimAngle());
         } else {
@@ -78,6 +91,10 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     }
 
     public void displayEffect(PlayerActor parentActor) {
+        final AbstractPlayerActor enemyPlayer = getEnemyPlayer(parentActor);
+        final boolean targetLocked = isAutoAimTargetAvailable(
+                parentActor, enemyPlayer, GameConstants.LONGBOW_AUTO_AIM_RANGE);
+
         app.noFill();
         app.stroke(0);
         app.arc(0, 0, 100, 100, parentActor.getAimAngle() - QUARTER_PI, parentActor.getAimAngle() + QUARTER_PI);
@@ -88,6 +105,17 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
             app.stroke(0, 128);
 
         app.line(0, 0, 800 * cos(parentActor.getAimAngle()), 800 * sin(parentActor.getAimAngle()));
+
+        if (targetLocked) {
+            app.stroke(lockColor);
+            app.strokeWeight(2);
+            app.ellipse(
+                    enemyPlayer.getxPosition() - parentActor.getxPosition(),
+                    enemyPlayer.getyPosition() - parentActor.getyPosition(),
+                    48,
+                    48);
+            app.strokeWeight(1);
+        }
 
         app.rotate(-HALF_PI);
         app.strokeWeight(ringStrokeWeight);
@@ -166,6 +194,20 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     static float calculateChargeProgress(int chargedFrameCount, int requiredFrameCount) {
         if (requiredFrameCount <= 0) return 1.0F;
         return min(1.0F, Math.max(0.0F, (float) chargedFrameCount / requiredFrameCount));
+    }
+
+    /** Returns whether a living target is close enough for deterministic longbow aim assistance. */
+    static boolean isAutoAimTargetAvailable(
+            PlayerActor player, AbstractPlayerActor target, float maximumRange) {
+        if (target == null || target.isNull() || maximumRange < 0.0F) return false;
+        final float deltaX = target.getxPosition() - player.getxPosition();
+        final float deltaY = target.getyPosition() - player.getyPosition();
+        return deltaX * deltaX + deltaY * deltaY <= maximumRange * maximumRange;
+    }
+
+    private AbstractPlayerActor getEnemyPlayer(PlayerActor parentActor) {
+        if (parentActor.getGroup() == null || parentActor.getGroup().getEnemyGroup() == null) return null;
+        return parentActor.getGroup().getEnemyGroup().getPlayer();
     }
 
     /** 根据按钮与蓄力帧数决定本帧继续、取消还是发射，避免状态层靠副作用猜测松开结果。 */

@@ -240,7 +240,7 @@ public class GameSystem {
         app.text("Right / X:", contentOffsetX + 280, 355);
         app.textAlign(LEFT);
         app.text("Move", contentOffsetX + 300, 160);
-        app.text("Aim", contentOffsetX + 300, 225);
+        app.text("Aim outside lock range", contentOffsetX + 300, 225);
         app.text("Shortbow", contentOffsetX + 300, 290);
         app.text("Hold to charge longbow", contentOffsetX + 300, 355);
         app.textAlign(CENTER);

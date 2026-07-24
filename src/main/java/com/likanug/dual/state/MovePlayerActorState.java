@@ -40,7 +40,6 @@ public class MovePlayerActorState extends PlayerActorState {
         }
         if (input.isLongShotButtonPressed()) {
             parentActor.setState(drawLongbowState.entryState(parentActor));
-            parentActor.setAimAngle(input.hasAimAngle() ? input.getAimAngle() : getEnemyPlayerActorAngle(parentActor));
         }
     }
 

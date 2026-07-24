@@ -33,6 +33,7 @@ public final class GameConstants {
     public static final float LONGBOW_CHARGE_SEC = 0.5F;
     public static final float LONGBOW_CHARGE_MOVE_RATIO = 0.5F;
     public static final float LONGBOW_AIM_SPEED_RATIO = 0.1F;
+    public static final float LONGBOW_AUTO_AIM_RANGE = 520.0F;
     public static final int LONGBOW_RING_SIZE = 80;
     public static final float LONGBOW_RING_STROKE = 5.0F;
 
