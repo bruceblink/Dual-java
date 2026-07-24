@@ -15,9 +15,9 @@ public class GameResultState extends GameSystemState {
     private final String resultMessage;
     private final int durationFrameCount = FPS;
     static final float RESULT_MESSAGE_X = INTERNAL_CANVAS_WIDTH * 0.5F;
-    static final float RESULT_MESSAGE_Y = INTERNAL_CANVAS_HEIGHT * 0.5F;
+    static final float RESULT_MESSAGE_Y = INTERNAL_CANVAS_HEIGHT * 0.5F - 40.0F;
     static final float RESET_PROMPT_X = RESULT_MESSAGE_X;
-    static final float RESET_PROMPT_Y = RESULT_MESSAGE_Y + 80.0F;
+    static final float RESET_PROMPT_Y = INTERNAL_CANVAS_HEIGHT * 0.5F + 40.0F;
 
     public GameResultState(App app, String msg) {
         super(app);
@@ -34,9 +34,8 @@ public class GameResultState extends GameSystemState {
         system.getCommonParticleSet().display();
     }
 
+    /** 在固定画布中心绘制结算层；演示对局也展示结果，但不显示人工重置提示。 */
     public void displayMessage(GameSystem system) {
-        if (system.isDemoPlay()) return;
-
         app.pushStyle();
         app.textAlign(CENTER, CENTER);
         app.noStroke();
@@ -51,7 +50,7 @@ public class GameResultState extends GameSystemState {
         app.fill(255);
         app.textFont(largeFont, 72);
         app.text(resultMessage, RESULT_MESSAGE_X, RESULT_MESSAGE_Y);
-        if (shouldShowResetPrompt()) {
+        if (!system.isDemoPlay() && shouldShowResetPrompt()) {
             app.textFont(smallFont, 20);
             app.fill(224);
             app.text("Press X key to reset.", RESET_PROMPT_X, RESET_PROMPT_Y);
@@ -74,6 +73,11 @@ public class GameResultState extends GameSystemState {
     /** 重置提示延迟一秒出现，避免玩家误按跳过结算画面。 */
     boolean shouldShowResetPrompt() {
         return properFrameCount > durationFrameCount;
+    }
+
+    /** 返回标题和提示的组合中心，用于确保完整结算内容垂直居中。 */
+    static float resultGroupCenterY() {
+        return (RESULT_MESSAGE_Y + RESET_PROMPT_Y) * 0.5F;
     }
 
 }
