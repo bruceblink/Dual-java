@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,6 +30,11 @@ public class AppTest {
         assertEquals(1280, App.INTERNAL_CANVAS_WIDTH);
         assertEquals(720, App.INTERNAL_CANVAS_HEIGHT);
         assertEquals(60, App.FPS);
+    }
+
+    @Test
+    void focusLossBeforeSetupDoesNotCrashTheWindow() {
+        assertDoesNotThrow(app::focusLost);
     }
 
     @Test

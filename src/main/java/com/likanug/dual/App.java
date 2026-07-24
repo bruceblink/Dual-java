@@ -363,7 +363,8 @@ public class App extends PApplet {
 
     @Override
     public void focusLost() {
-        currentKeyInput.clear();
+        // AWT 可能在 setup() 创建输入对象前发送失焦事件；此时没有按键状态需要释放。
+        if (currentKeyInput != null) currentKeyInput.clear();
     }
 
     @Override
