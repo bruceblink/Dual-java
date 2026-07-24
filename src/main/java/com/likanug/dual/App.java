@@ -116,7 +116,7 @@ public class App extends PApplet {
 
     @Override
     public void draw() {
-        background(24);
+        background(GameConstants.ARENA_BACKGROUND_COLOR);
         pushMatrix();
         translate(canvasOffsetX(), canvasOffsetY());
         scale(canvasScale());

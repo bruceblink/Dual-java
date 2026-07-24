@@ -1,6 +1,7 @@
 package com.likanug.dual.game;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 
 import java.util.ArrayList;
 
@@ -15,10 +16,10 @@ public class GameBackground {
         this.app = app;
         lineColor = col;
         maxAccelerationMagnitude = maxAcc;
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < GameConstants.ARENA_GRID_LINES_PER_AXIS; i++) {
             lineList.add(new HorizontalLine(app));
         }
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < GameConstants.ARENA_GRID_LINES_PER_AXIS; i++) {
             lineList.add(new VerticalLine(app));
         }
     }

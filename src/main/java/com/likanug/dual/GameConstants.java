@@ -36,6 +36,12 @@ public final class GameConstants {
     public static final int LONGBOW_RING_SIZE = 80;
     public static final float LONGBOW_RING_STROKE = 5.0F;
 
+    // --- 竞技场背景 ---
+    public static final int ARENA_BACKGROUND_COLOR = 96;
+    public static final int ARENA_GRID_COLOR = 112;
+    public static final int ARENA_GRID_LINES_PER_AXIS = 6;
+    public static final float ARENA_GRID_MAX_ACCELERATION = 0.025F;
+
     // --- 粒子 ---
     public static final float PARTICLE_FRICTION = 0.98F;
     public static final float PARTICLE_SQUARE_ROT_SPEED = 1.5F;

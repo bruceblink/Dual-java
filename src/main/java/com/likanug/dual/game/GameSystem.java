@@ -1,6 +1,7 @@
 package com.likanug.dual.game;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.ActorGroup;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.network.GameNetwork;
@@ -72,7 +73,10 @@ public class GameSystem {
         // other
         this.commonParticleSet = new ParticleSet(2048, app);
         this.currentState = new StartGameState(app);
-        this.currentBackground = new GameBackground(224, 0.1F, app);
+        this.currentBackground = new GameBackground(
+                GameConstants.ARENA_GRID_COLOR,
+                GameConstants.ARENA_GRID_MAX_ACCELERATION,
+                app);
         this.demoPlay = demo;
         this.showsInstructionWindow = instruction;
         this.gameRandom = new Random();
@@ -117,7 +121,10 @@ public class GameSystem {
 
         this.commonParticleSet = new ParticleSet(2048, app);
         this.currentState = new StartGameState(app);
-        this.currentBackground = new GameBackground(224, 0.1F, app);
+        this.currentBackground = new GameBackground(
+                GameConstants.ARENA_GRID_COLOR,
+                GameConstants.ARENA_GRID_MAX_ACCELERATION,
+                app);
         this.demoPlay = false;
         this.showsInstructionWindow = false;
         this.gameRandom = new Random(network.getSharedSeed());
