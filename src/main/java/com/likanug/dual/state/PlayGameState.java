@@ -11,6 +11,8 @@ import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.game.GameSystem;
 
 import static com.likanug.dual.App.FPS;
+import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
+import static com.likanug.dual.App.INTERNAL_CANVAS_WIDTH;
 import static processing.core.PApplet.atan2;
 import static processing.core.PApplet.cos;
 import static processing.core.PApplet.sin;
@@ -42,7 +44,7 @@ public class PlayGameState extends GameSystemState {
         int messageDurationFrameCount = FPS;
         if (properFrameCount >= messageDurationFrameCount) return;
         app.fill(0, (float) (255.0 * (1.0 - (float) properFrameCount / messageDurationFrameCount)));
-        app.text("Go", 0.0F, 0.0F);
+        app.text("Go", INTERNAL_CANVAS_WIDTH * 0.5F, INTERNAL_CANVAS_HEIGHT * 0.5F);
     }
 
     public void checkStateTransition(GameSystem system) {

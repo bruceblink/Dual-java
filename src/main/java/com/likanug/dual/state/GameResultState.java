@@ -14,8 +14,10 @@ public class GameResultState extends GameSystemState {
 
     private final String resultMessage;
     private final int durationFrameCount = FPS;
-    static final float RESULT_MESSAGE_Y = -40.0F;
-    static final float RESET_PROMPT_Y = 40.0F;
+    static final float RESULT_MESSAGE_X = INTERNAL_CANVAS_WIDTH * 0.5F;
+    static final float RESULT_MESSAGE_Y = INTERNAL_CANVAS_HEIGHT * 0.5F;
+    static final float RESET_PROMPT_X = RESULT_MESSAGE_X;
+    static final float RESET_PROMPT_Y = RESULT_MESSAGE_Y + 80.0F;
 
     public GameResultState(App app, String msg) {
         super(app);
@@ -39,15 +41,20 @@ public class GameResultState extends GameSystemState {
         app.textAlign(CENTER, CENTER);
         app.noStroke();
         app.fill(0, 176);
-        app.rect(0, 0, INTERNAL_CANVAS_WIDTH, INTERNAL_CANVAS_HEIGHT);
+        app.rect(
+                INTERNAL_CANVAS_WIDTH * 0.5F,
+                INTERNAL_CANVAS_HEIGHT * 0.5F,
+                INTERNAL_CANVAS_WIDTH,
+                INTERNAL_CANVAS_HEIGHT
+        );
 
         app.fill(255);
         app.textFont(largeFont, 72);
-        app.text(resultMessage, 0, RESULT_MESSAGE_Y);
+        app.text(resultMessage, RESULT_MESSAGE_X, RESULT_MESSAGE_Y);
         if (shouldShowResetPrompt()) {
             app.textFont(smallFont, 20);
             app.fill(224);
-            app.text("Press X key to reset.", 0, RESET_PROMPT_Y);
+            app.text("Press X key to reset.", RESET_PROMPT_X, RESET_PROMPT_Y);
         }
         app.popStyle();
     }
@@ -69,8 +76,4 @@ public class GameResultState extends GameSystemState {
         return properFrameCount > durationFrameCount;
     }
 
-    /** 返回标题与操作提示的组合中点，确保结算内容整体位于竞技场中心。 */
-    static float resultGroupCenterY() {
-        return (RESULT_MESSAGE_Y + RESET_PROMPT_Y) * 0.5F;
-    }
 }

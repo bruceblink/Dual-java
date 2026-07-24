@@ -1,5 +1,6 @@
 package com.likanug.dual.state;
 
+import com.likanug.dual.App;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -7,8 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class GameResultStateTest {
 
     @Test
-    void resultAndResetPromptAreCenteredAsAGroup() {
-        assertEquals(0.0F, GameResultState.resultGroupCenterY());
-        assertEquals(-GameResultState.RESULT_MESSAGE_Y, GameResultState.RESET_PROMPT_Y);
+    void resultTitleUsesTheExactCanvasCenter() {
+        assertEquals(App.INTERNAL_CANVAS_WIDTH * 0.5F, GameResultState.RESULT_MESSAGE_X);
+        assertEquals(App.INTERNAL_CANVAS_HEIGHT * 0.5F, GameResultState.RESULT_MESSAGE_Y);
+        assertEquals(GameResultState.RESULT_MESSAGE_X, GameResultState.RESET_PROMPT_X);
+        assertEquals(App.INTERNAL_CANVAS_HEIGHT * 0.5F + 80.0F, GameResultState.RESET_PROMPT_Y);
     }
 }

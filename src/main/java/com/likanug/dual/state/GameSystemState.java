@@ -3,9 +3,6 @@ package com.likanug.dual.state;
 import com.likanug.dual.App;
 import com.likanug.dual.game.GameSystem;
 
-import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
-import static com.likanug.dual.App.INTERNAL_CANVAS_WIDTH;
-
 public abstract class GameSystemState {
 
     protected final App app;
@@ -20,10 +17,9 @@ public abstract class GameSystemState {
         runSystem(system);
     }
 
-    /** 在震动矩阵之外，以竞技场中心为原点绘制固定界面。 */
+    /** 在震动矩阵之外绘制固定界面；各状态使用明确的画布坐标定位。 */
     public void displayInterface(GameSystem system) {
         app.pushMatrix();
-        app.translate(INTERNAL_CANVAS_WIDTH * 0.5F, INTERNAL_CANVAS_HEIGHT * 0.5F);
         displayMessage(system);
         app.popMatrix();
     }

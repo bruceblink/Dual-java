@@ -34,13 +34,19 @@ public class StartGameState extends GameSystemState {
 
         float ringColor = 0;
         app.fill(ringColor);
-        app.text(displayNumber, 0, 0);
+        app.text(displayNumber, INTERNAL_CANVAS_WIDTH * 0.5F, INTERNAL_CANVAS_HEIGHT * 0.5F);
 
-        app.rotate(-HALF_PI);
         app.strokeWeight(3);
         app.stroke(ringColor);
         app.noFill();
-        app.arc(0, 0, ringSize, ringSize, 0, TWO_PI * (properFrameCount % frameCountPerNumber) / frameCountPerNumber);
+        app.arc(
+                INTERNAL_CANVAS_WIDTH * 0.5F,
+                INTERNAL_CANVAS_HEIGHT * 0.5F,
+                ringSize,
+                ringSize,
+                -HALF_PI,
+                -HALF_PI + TWO_PI * (properFrameCount % frameCountPerNumber) / frameCountPerNumber
+        );
         app.strokeWeight(1);
     }
 
