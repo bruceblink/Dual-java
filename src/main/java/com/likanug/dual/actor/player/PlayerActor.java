@@ -21,6 +21,9 @@ public class PlayerActor extends AbstractPlayerActor {
     private int chargedFrameCount;
     private int damageRemainingFrameCount;
     private int shortbowCooldownFrameCount;
+    private final ShortbowAmmo shortbowAmmo = new ShortbowAmmo(
+            GameConstants.SHORTBOW_MAX_AMMO,
+            Math.round(GameConstants.SHORTBOW_AMMO_RECOVERY_SEC * FPS));
 
     public PlayerActor(PlayerEngine _engine, int col, App app) {
         super(16, _engine, app);
@@ -71,6 +74,10 @@ public class PlayerActor extends AbstractPlayerActor {
         this.shortbowCooldownFrameCount = shortbowCooldownFrameCount;
     }
 
+    public ShortbowAmmo getShortbowAmmo() {
+        return shortbowAmmo;
+    }
+
 
     public void addVelocity(float xAcceleration, float yAcceleration) {
         xVelocity = constrain(xVelocity + xAcceleration, -GameConstants.PLAYER_MAX_VX, GameConstants.PLAYER_MAX_VX);
@@ -84,6 +91,7 @@ public class PlayerActor extends AbstractPlayerActor {
 
     public void update() {
         super.update();
+        shortbowAmmo.tickRecovery();
 
         if (xPosition < halfBodySize) {
             xPosition = halfBodySize;

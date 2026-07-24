@@ -1,6 +1,7 @@
 package com.likanug.dual.state;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.arrow.ShortbowArrow;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.inputDevice.AbstractInputDevice;
@@ -12,7 +13,7 @@ import static processing.core.PConstants.QUARTER_PI;
 
 public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
 
-    private final int fireIntervalFrameCount = (int) (FPS * 0.2);
+    private final int fireIntervalFrameCount = (int) (FPS * GameConstants.SHORTBOW_FIRE_INTERVAL_SEC);
 
     public DrawShortbowPlayerActorState(App app) {
         super(app);
@@ -23,6 +24,8 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
     }
 
     public void fire(PlayerActor parentActor) {
+        if (!parentActor.getShortbowAmmo().consume()) return;
+
         ShortbowArrow newArrow = new ShortbowArrow(app);
         final float directionAngle = parentActor.getAimAngle();
         newArrow.setxPosition(parentActor.getxPosition() + 24 * cos(directionAngle));
@@ -58,11 +61,17 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
     public boolean triggerPulled(PlayerActor parentActor) {
         return canFire(
                 parentActor.getEngine().getControllingInputDevice().isShotButtonPressed(),
-                parentActor.getShortbowCooldownFrameCount());
+                parentActor.getShortbowCooldownFrameCount(),
+                parentActor.getShortbowAmmo().canFire());
     }
 
     static boolean canFire(boolean shotButtonPressed, int cooldownFrameCount) {
-        return shotButtonPressed && cooldownFrameCount <= 0;
+        return canFire(shotButtonPressed, cooldownFrameCount, true);
+    }
+
+    /** Requires button intent, a ready cadence timer, and an arrow in the player's shared reserve. */
+    static boolean canFire(boolean shotButtonPressed, int cooldownFrameCount, boolean hasAmmo) {
+        return shotButtonPressed && cooldownFrameCount <= 0 && hasAmmo;
     }
 
     static int tickCooldown(int cooldownFrameCount) {

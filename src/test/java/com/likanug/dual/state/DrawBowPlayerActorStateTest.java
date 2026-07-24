@@ -15,6 +15,7 @@ class DrawBowPlayerActorStateTest {
         assertTrue(DrawShortbowPlayerActorState.canFire(true, 0));
         assertFalse(DrawShortbowPlayerActorState.canFire(false, 0));
         assertFalse(DrawShortbowPlayerActorState.canFire(true, 1));
+        assertFalse(DrawShortbowPlayerActorState.canFire(true, 0, false));
 
         assertEquals(11, DrawShortbowPlayerActorState.tickCooldown(12));
         assertEquals(0, DrawShortbowPlayerActorState.tickCooldown(0));
