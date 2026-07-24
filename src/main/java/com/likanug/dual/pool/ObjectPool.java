@@ -2,8 +2,6 @@ package com.likanug.dual.pool;
 
 import java.util.ArrayList;
 
-import static processing.core.PApplet.println;
-
 public class ObjectPool<T extends Poolable<T>> {
     private final int poolSize;
     private final ArrayList<T> pool;
