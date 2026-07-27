@@ -5,6 +5,7 @@ public abstract class AbstractInputDevice {
     protected int horizontalMoveButton;
     protected int verticalMoveButton;
     protected boolean shotButtonPressed;
+    protected boolean shotButtonJustPressed;
     protected boolean longShotButtonPressed;
     protected boolean longShotButtonJustPressed;
     protected boolean longShotButtonJustReleased;
@@ -32,6 +33,7 @@ public abstract class AbstractInputDevice {
     }
 
     public void setShotButtonPressed(boolean shotButtonPressed) {
+        shotButtonJustPressed = shotButtonPressed && !this.shotButtonPressed;
         this.shotButtonPressed = shotButtonPressed;
     }
 
@@ -49,7 +51,12 @@ public abstract class AbstractInputDevice {
     }
 
     public void operateShotButton(boolean pressed) {
+        shotButtonJustPressed = pressed && !shotButtonPressed;
         shotButtonPressed = pressed;
+    }
+
+    public boolean isShotButtonJustPressed() {
+        return shotButtonJustPressed;
     }
 
     public void operateLongShotButton(boolean pressed) {

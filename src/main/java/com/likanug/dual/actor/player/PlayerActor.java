@@ -92,6 +92,8 @@ public class PlayerActor extends AbstractPlayerActor {
     public void update() {
         super.update();
         shortbowAmmo.tickRecovery();
+        // Cooldown advances during every movement state so a released shortbow cannot leave it frozen.
+        shortbowCooldownFrameCount = Math.max(0, shortbowCooldownFrameCount - 1);
 
         if (xPosition < halfBodySize) {
             xPosition = halfBodySize;

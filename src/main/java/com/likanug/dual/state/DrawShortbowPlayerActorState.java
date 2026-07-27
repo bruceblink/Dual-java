@@ -37,13 +37,6 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
         parentActor.setShortbowCooldownFrameCount(fireIntervalFrameCount);
     }
 
-    @Override
-    public void act(PlayerActor parentActor) {
-        parentActor.setShortbowCooldownFrameCount(
-                tickCooldown(parentActor.getShortbowCooldownFrameCount()));
-        super.act(parentActor);
-    }
-
     public void displayEffect(PlayerActor parentActor) {
         app.line(0, 0, 70 * cos(parentActor.getAimAngle()), 70 * sin(parentActor.getAimAngle()));
         app.noFill();
@@ -60,7 +53,7 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
 
     public boolean triggerPulled(PlayerActor parentActor) {
         return canFire(
-                parentActor.getEngine().getControllingInputDevice().isShotButtonPressed(),
+                parentActor.getEngine().getControllingInputDevice().isShotButtonJustPressed(),
                 parentActor.getShortbowCooldownFrameCount(),
                 parentActor.getShortbowAmmo().canFire());
     }
@@ -72,10 +65,6 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
     /** Requires button intent, a ready cadence timer, and an arrow in the player's shared reserve. */
     static boolean canFire(boolean shotButtonPressed, int cooldownFrameCount, boolean hasAmmo) {
         return shotButtonPressed && cooldownFrameCount <= 0 && hasAmmo;
-    }
-
-    static int tickCooldown(int cooldownFrameCount) {
-        return Math.max(0, cooldownFrameCount - 1);
     }
 
 }

@@ -51,7 +51,7 @@ public class GameSystem {
 
         // prepare PlayerActorState
         final MovePlayerActorState moveState = new MovePlayerActorState(app);
-        final DrawBowPlayerActorState drawShortbowState = new DrawShortbowPlayerActorState(app);
+        final DrawShortbowPlayerActorState drawShortbowState = new DrawShortbowPlayerActorState(app);
         final DrawBowPlayerActorState drawLongbowState = new DrawLongbowPlayerActorState(app);
         this.damagedState = new DamagedPlayerActorState(app);
         moveState.setDrawShortbowState(drawShortbowState);
@@ -102,7 +102,7 @@ public class GameSystem {
         this.otherGroup.setEnemyGroup(myGroup);
 
         final MovePlayerActorState moveState = new MovePlayerActorState(app);
-        final DrawBowPlayerActorState drawShortbowState = new DrawShortbowPlayerActorState(app);
+        final DrawShortbowPlayerActorState drawShortbowState = new DrawShortbowPlayerActorState(app);
         final DrawBowPlayerActorState drawLongbowState = new DrawLongbowPlayerActorState(app);
         this.damagedState = new DamagedPlayerActorState(app);
         moveState.setDrawShortbowState(drawShortbowState);

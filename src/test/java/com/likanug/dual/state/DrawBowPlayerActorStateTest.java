@@ -5,6 +5,7 @@ import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.ActorGroup;
 import com.likanug.dual.actor.player.NullPlayerActor;
 import com.likanug.dual.actor.player.PlayerActor;
+import com.likanug.dual.inputDevice.InputDevice;
 import com.likanug.dual.playerEngine.PlayerEngine;
 import org.junit.jupiter.api.Test;
 
@@ -15,14 +16,43 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DrawBowPlayerActorStateTest {
 
     @Test
-    void shortbowFiresImmediatelyOnAPressAndRespectsItsOwnCooldown() {
+    void shortbowFiresOnlyOnAPressEdgeAndRespectsItsOwnCooldown() {
         assertTrue(DrawShortbowPlayerActorState.canFire(true, 0));
         assertFalse(DrawShortbowPlayerActorState.canFire(false, 0));
         assertFalse(DrawShortbowPlayerActorState.canFire(true, 1));
         assertFalse(DrawShortbowPlayerActorState.canFire(true, 0, false));
 
-        assertEquals(11, DrawShortbowPlayerActorState.tickCooldown(12));
-        assertEquals(0, DrawShortbowPlayerActorState.tickCooldown(0));
+    }
+
+    @Test
+    void holdingTheShortbowButtonDoesNotCreateASecondArrow() {
+        App app = new App();
+        PlayerEngine engine = new PlayerEngine() {
+            @Override
+            public void run(PlayerActor player) {
+            }
+        };
+        InputDevice input = (InputDevice) engine.getControllingInputDevice();
+        PlayerActor player = new PlayerActor(engine, 255, app);
+        PlayerActor target = new PlayerActor(engine, 0, app);
+        ActorGroup playerGroup = new ActorGroup();
+        ActorGroup targetGroup = new ActorGroup();
+        playerGroup.setEnemyGroup(targetGroup);
+        targetGroup.setEnemyGroup(playerGroup);
+        playerGroup.setPlayer(player);
+        targetGroup.setPlayer(target);
+        MovePlayerActorState moveState = new MovePlayerActorState(app);
+        DrawShortbowPlayerActorState shortbowState = new DrawShortbowPlayerActorState(app);
+        moveState.setDrawShortbowState(shortbowState);
+        shortbowState.setMoveState(moveState);
+
+        input.operateShotButton(true);
+        moveState.act(player);
+        assertEquals(1, playerGroup.getArrowList().size());
+
+        input.operateShotButton(true);
+        shortbowState.act(player);
+        assertEquals(1, playerGroup.getArrowList().size());
     }
 
     @Test

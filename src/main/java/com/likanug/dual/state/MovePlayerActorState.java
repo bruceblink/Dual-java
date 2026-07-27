@@ -6,18 +6,18 @@ import com.likanug.dual.inputDevice.AbstractInputDevice;
 
 public class MovePlayerActorState extends PlayerActorState {
 
-    private PlayerActorState drawShortbowState;
+    private DrawShortbowPlayerActorState drawShortbowState;
     private PlayerActorState drawLongbowState;
 
     public MovePlayerActorState(App app) {
         super(app);
     }
 
-    public PlayerActorState getDrawShortbowState() {
+    public DrawShortbowPlayerActorState getDrawShortbowState() {
         return drawShortbowState;
     }
 
-    public void setDrawShortbowState(PlayerActorState drawShortbowState) {
+    public void setDrawShortbowState(DrawShortbowPlayerActorState drawShortbowState) {
         this.drawShortbowState = drawShortbowState;
     }
 
@@ -33,9 +33,12 @@ public class MovePlayerActorState extends PlayerActorState {
         final AbstractInputDevice input = parentActor.getEngine().getControllingInputDevice();
         parentActor.addVelocity(input.getHorizontalMoveButton(), input.getVerticalMoveButton());
 
-        if (input.isShotButtonPressed()) {
+        if (input.isShotButtonJustPressed()) {
             parentActor.setState(drawShortbowState.entryState(parentActor));
             parentActor.setAimAngle(getEnemyPlayerActorAngle(parentActor));
+            if (drawShortbowState.triggerPulled(parentActor)) {
+                drawShortbowState.fire(parentActor);
+            }
             return;
         }
         if (input.isLongShotButtonPressed()) {
