@@ -2,12 +2,14 @@ package com.likanug.dual.game;
 
 import com.likanug.dual.App;
 import com.likanug.dual.actor.player.PlayerActor;
+import com.likanug.dual.inputDevice.KeyInput;
 import com.likanug.dual.state.DrawLongbowPlayerActorState;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameSystemTacticalEventTest {
@@ -51,5 +53,20 @@ class GameSystemTacticalEventTest {
 
         assertEquals(1, system.drainTacticalEvents().size());
         assertTrue(system.drainTacticalEvents().isEmpty());
+    }
+
+    @Test
+    void startingFromDemoClearsTheZKeyBeforeEnteringTheHumanMatch() {
+        App app = new App();
+        KeyInput input = new KeyInput();
+        input.isZPressed = true;
+        app.setCurrentKeyInput(input);
+        GameSystem demo = new GameSystem(true, true, app);
+        app.setSystem(demo);
+
+        demo.run();
+
+        assertFalse(input.isZPressed);
+        assertFalse(app.getSystem().isDemoPlay());
     }
 }
