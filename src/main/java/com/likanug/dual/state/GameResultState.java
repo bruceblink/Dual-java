@@ -2,6 +2,8 @@ package com.likanug.dual.state;
 
 import com.likanug.dual.App;
 import com.likanug.dual.game.GameSystem;
+import com.likanug.dual.game.TacticalEvent;
+import com.likanug.dual.game.TacticalEventType;
 
 import static com.likanug.dual.App.FPS;
 import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
@@ -18,10 +20,23 @@ public class GameResultState extends GameSystemState {
     static final float RESULT_MESSAGE_Y = INTERNAL_CANVAS_HEIGHT * 0.5F - 40.0F;
     static final float RESET_PROMPT_X = RESULT_MESSAGE_X;
     static final float RESET_PROMPT_Y = INTERNAL_CANVAS_HEIGHT * 0.5F + 40.0F;
+    static final float TACTICAL_RESULT_MESSAGE_Y = INTERNAL_CANVAS_HEIGHT * 0.5F - 80.0F;
+    static final float TACTICAL_FINISH_Y = INTERNAL_CANVAS_HEIGHT * 0.5F;
+    static final float TACTICAL_RESET_PROMPT_Y = INTERNAL_CANVAS_HEIGHT * 0.5F + 80.0F;
+    private final TacticalEvent finishFeedback;
 
     public GameResultState(App app, String msg) {
+        this(app, msg, null);
+    }
+
+    /** Keeps a confirmed tactical finish visible after the play state hands control to the result overlay. */
+    public GameResultState(App app, String msg, TacticalEvent finishFeedback) {
         super(app);
+        if (finishFeedback != null && finishFeedback.type() != TacticalEventType.FINISH) {
+            throw new IllegalArgumentException("Result feedback must be a FINISH event.");
+        }
         resultMessage = msg;
+        this.finishFeedback = finishFeedback;
     }
 
     public void runSystem(GameSystem system) {
@@ -49,11 +64,17 @@ public class GameResultState extends GameSystemState {
 
         app.fill(255);
         app.textFont(largeFont, 72);
-        app.text(resultMessage, RESULT_MESSAGE_X, RESULT_MESSAGE_Y);
+        app.text(resultMessage, RESULT_MESSAGE_X, resultMessageY());
+        if (finishFeedback != null) {
+            app.textFont(smallFont, 28);
+            app.fill(192, 64, 64);
+            app.text(PlayGameState.tacticalFeedbackLabel(finishFeedback.attacker(), finishFeedback.type()),
+                    RESULT_MESSAGE_X, TACTICAL_FINISH_Y);
+        }
         if (!system.isDemoPlay() && shouldShowResetPrompt()) {
             app.textFont(smallFont, 20);
             app.fill(224);
-            app.text("Press X key to reset.", RESET_PROMPT_X, RESET_PROMPT_Y);
+            app.text("Press X key to reset.", RESET_PROMPT_X, resetPromptY());
         }
         app.popStyle();
     }
@@ -75,9 +96,26 @@ public class GameResultState extends GameSystemState {
         return properFrameCount > durationFrameCount;
     }
 
+    TacticalEvent getFinishFeedback() {
+        return finishFeedback;
+    }
+
+    private float resultMessageY() {
+        return finishFeedback == null ? RESULT_MESSAGE_Y : TACTICAL_RESULT_MESSAGE_Y;
+    }
+
+    private float resetPromptY() {
+        return finishFeedback == null ? RESET_PROMPT_Y : TACTICAL_RESET_PROMPT_Y;
+    }
+
     /** 返回标题和提示的组合中心，用于确保完整结算内容垂直居中。 */
     static float resultGroupCenterY() {
         return (RESULT_MESSAGE_Y + RESET_PROMPT_Y) * 0.5F;
+    }
+
+    /** Confirms that tactical and normal result layouts both keep their complete content centered. */
+    static float tacticalResultGroupCenterY() {
+        return (TACTICAL_RESULT_MESSAGE_Y + TACTICAL_RESET_PROMPT_Y) * 0.5F;
     }
 
 }

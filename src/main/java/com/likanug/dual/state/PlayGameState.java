@@ -135,10 +135,16 @@ public class PlayGameState extends GameSystemState {
 
     public void checkStateTransition(GameSystem system) {
         if (system.getMyGroup().getPlayer().isNull()) {
-            system.setCurrentState(new GameResultState(app, "You lose."));
+            system.setCurrentState(new GameResultState(app, "You lose.", getFinishFeedback()));
         } else if (system.getOtherGroup().getPlayer().isNull()) {
-            system.setCurrentState(new GameResultState(app, "You win."));
+            system.setCurrentState(new GameResultState(app, "You win.", getFinishFeedback()));
         }
+    }
+
+    /** Passes only the completed tactical sequence into the next state, not transient pressure or opening notices. */
+    private TacticalEvent getFinishFeedback() {
+        if (tacticalFeedbackEvent == null || tacticalFeedbackEvent.type() != TacticalEventType.FINISH) return null;
+        return tacticalFeedbackEvent;
     }
 
     /** Retains the original state-owned entry point while production calls pass the active system explicitly. */
