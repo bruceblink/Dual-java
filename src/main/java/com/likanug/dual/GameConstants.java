@@ -54,6 +54,10 @@ public final class GameConstants {
     public static final int KILL_PARTICLE_SIZE = 16;
     public static final int ARROW_BREAK_PARTICLE_COUNT = 10;
     public static final int ARROW_BREAK_PARTICLE_SIZE = 7;
+    public static final int INTERCEPT_PARTICLE_COUNT = 12;
+    public static final int INTERCEPT_PARTICLE_SIZE = 5;
+    public static final int INTERCEPT_RING_SIZE = 48;
+    public static final float INTERCEPT_RING_STROKE = 3.0F;
     public static final int SCREEN_SHAKE_ON_KILL = 50;
     public static final int SCREEN_SHAKE_ON_HIT = 10;
 }

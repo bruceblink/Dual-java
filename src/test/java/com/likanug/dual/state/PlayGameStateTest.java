@@ -1,6 +1,7 @@
 package com.likanug.dual.state;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.arrow.ShortbowArrow;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.game.GameSystem;
@@ -70,5 +71,28 @@ class PlayGameStateTest {
     void tacticalFeedbackLabelsIdentifyBothThePlayerAndEventType() {
         assertEquals("P1 OPENING", PlayGameState.tacticalFeedbackLabel(PlayerSide.ONE, TacticalEventType.OPENING));
         assertEquals("P2 FINISH", PlayGameState.tacticalFeedbackLabel(PlayerSide.TWO, TacticalEventType.FINISH));
+    }
+
+    @Test
+    void arrowInterceptionUsesAMidpointAndDedicatedFeedbackParticles() {
+        App app = new App();
+        GameSystem system = new GameSystem(true, false, app);
+        app.setSystem(system);
+        PlayGameState state = new PlayGameState(app);
+        ShortbowArrow myArrow = new ShortbowArrow(app);
+        ShortbowArrow otherArrow = new ShortbowArrow(app);
+        myArrow.setxPosition(200.0F);
+        myArrow.setyPosition(100.0F);
+        otherArrow.setxPosition(208.0F);
+        otherArrow.setyPosition(100.0F);
+        system.getMyGroup().addArrow(myArrow);
+        system.getOtherGroup().addArrow(otherArrow);
+
+        state.checkCollision(system);
+
+        assertEquals(204.0F, PlayGameState.collisionMidpoint(200.0F, 208.0F));
+        assertEquals(
+                GameConstants.ARROW_BREAK_PARTICLE_COUNT * 2 + GameConstants.INTERCEPT_PARTICLE_COUNT + 1,
+                system.getCommonParticleSet().getParticleList().size());
     }
 }

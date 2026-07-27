@@ -153,6 +153,9 @@ public class PlayGameState extends GameSystemState {
         for (AbstractArrowActor eachMyArrow : myGroup.getArrowList()) {
             for (AbstractArrowActor eachEnemyArrow : otherGroup.getArrowList()) {
                 if (eachMyArrow.isNotCollided(eachEnemyArrow)) continue;
+                system.addInterceptParticles(
+                        collisionMidpoint(eachMyArrow.getxPosition(), eachEnemyArrow.getxPosition()),
+                        collisionMidpoint(eachMyArrow.getyPosition(), eachEnemyArrow.getyPosition()));
                 breakArrow(eachMyArrow, myGroup);
                 breakArrow(eachEnemyArrow, otherGroup);
             }
@@ -210,6 +213,11 @@ public class PlayGameState extends GameSystemState {
 
     static float calculateThrustAngle(float relativeAngle, float randomUnit) {
         return relativeAngle + (randomUnit - 0.5f) * HALF_PI;
+    }
+
+    /** Calculates the visual interception point halfway between the two arrows that destroyed each other. */
+    static float collisionMidpoint(float firstPosition, float secondPosition) {
+        return (firstPosition + secondPosition) * 0.5F;
     }
 
     public void thrustPlayerActor(Actor referenceActor, PlayerActor targetPlayerActor) {

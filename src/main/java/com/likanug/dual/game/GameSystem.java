@@ -327,4 +327,30 @@ public class GameSystem {
             commonParticleSet.getParticleList().add(newParticle);
         }
     }
+
+    /** Creates a cyan burst and ring at an arrow interception so it reads differently from a player hit. */
+    public void addInterceptParticles(float x, float y) {
+        final int interceptColor = app.color(96, 208, 232);
+        final ParticleBuilder builder = commonParticleSet.getBuilder()
+                .initialize()
+                .position(x, y)
+                .particleColor(interceptColor);
+        final Particle ring = builder
+                .type(3)
+                .particleSize(GameConstants.INTERCEPT_RING_SIZE)
+                .weight(GameConstants.INTERCEPT_RING_STROKE)
+                .lifespanSecond(0.35F)
+                .build();
+        commonParticleSet.getParticleList().add(ring);
+
+        for (int index = 0; index < GameConstants.INTERCEPT_PARTICLE_COUNT; index++) {
+            Particle shard = builder
+                    .type(1)
+                    .polarVelocity(app.random(TWO_PI), app.random(2.0F, 6.0F))
+                    .particleSize(GameConstants.INTERCEPT_PARTICLE_SIZE)
+                    .lifespanSecond(0.3F)
+                    .build();
+            commonParticleSet.getParticleList().add(shard);
+        }
+    }
 }
