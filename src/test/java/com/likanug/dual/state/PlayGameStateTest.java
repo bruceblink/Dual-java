@@ -69,8 +69,8 @@ class PlayGameStateTest {
 
     @Test
     void tacticalFeedbackLabelsIdentifyBothThePlayerAndEventType() {
-        assertEquals("P1 OPENING", PlayGameState.tacticalFeedbackLabel(PlayerSide.ONE, TacticalEventType.OPENING));
-        assertEquals("P2 FINISH", PlayGameState.tacticalFeedbackLabel(PlayerSide.TWO, TacticalEventType.FINISH));
+        assertEquals("YOU: OPENING", PlayGameState.tacticalFeedbackLabel(PlayerSide.ONE, TacticalEventType.OPENING));
+        assertEquals("RIVAL: FINISH", PlayGameState.tacticalFeedbackLabel(PlayerSide.TWO, TacticalEventType.FINISH));
     }
 
     @Test

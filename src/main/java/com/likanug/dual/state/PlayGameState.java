@@ -129,8 +129,8 @@ public class PlayGameState extends GameSystemState {
 
     /** Formats the compact state label displayed for the two-player tactical sequence. */
     static String tacticalFeedbackLabel(PlayerSide attacker, TacticalEventType type) {
-        String playerLabel = attacker == PlayerSide.ONE ? "P1" : "P2";
-        return playerLabel + " " + type;
+        String playerLabel = attacker == PlayerSide.ONE ? "YOU" : "RIVAL";
+        return playerLabel + ": " + type;
     }
 
     public void checkStateTransition(GameSystem system) {
