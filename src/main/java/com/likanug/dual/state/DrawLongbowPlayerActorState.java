@@ -24,6 +24,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     private final int chargeRequiredFrameCount = (int) (GameConstants.LONGBOW_CHARGE_SEC * FPS);
     private final int effectColor = app.color(192, 64, 64);
     private final int lockColor = app.color(64, 176, 128);
+    private final int openingColor = app.color(232, 192, 96);
     private final int ringSize = GameConstants.LONGBOW_RING_SIZE;
     private final float ringStrokeWeight = GameConstants.LONGBOW_RING_STROKE;
 
@@ -95,6 +96,8 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
         final AbstractPlayerActor enemyPlayer = getEnemyPlayer(parentActor);
         final boolean targetLocked = isAutoAimTargetAvailable(
                 parentActor, enemyPlayer, GameConstants.LONGBOW_AUTO_AIM_RANGE);
+        final boolean tacticalOpening = app.getSystem() != null
+                && app.getSystem().hasTacticalOpening(parentActor);
 
         app.noFill();
         app.stroke(0);
@@ -108,7 +111,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
         app.line(0, 0, 800 * cos(parentActor.getAimAngle()), 800 * sin(parentActor.getAimAngle()));
 
         if (targetLocked) {
-            app.stroke(lockColor);
+            app.stroke(tacticalOpening ? openingColor : lockColor);
             app.strokeWeight(2);
             app.ellipse(
                     enemyPlayer.getxPosition() - parentActor.getxPosition(),
@@ -123,6 +126,10 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
         final float chargeProgress = calculateChargeProgress(
                 parentActor.getChargedFrameCount(), chargeRequiredFrameCount);
         app.arc(0, 0, ringSize, ringSize, 0, TWO_PI * chargeProgress);
+        if (tacticalOpening) {
+            app.stroke(openingColor, 192);
+            app.ellipse(0, 0, ringSize + 8, ringSize + 8);
+        }
         if (chargeProgress >= 1.0F) {
             app.stroke(effectColor, 128 + (int) (127 * sin(app.frameCount * 0.2F)));
             app.ellipse(0, 0, ringSize + 14, ringSize + 14);

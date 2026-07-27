@@ -69,4 +69,14 @@ class TacticalEventRecorderTest {
         assertFalse(recorder.recordLongbowChargeStarted(PlayerSide.ONE, 20).isPresent());
         assertThrows(IllegalArgumentException.class, () -> recorder.recordPressure(PlayerSide.ONE, -1));
     }
+
+    @Test
+    void openingRemainsActiveOnlyUntilTheOriginalPressureWindowExpires() {
+        TacticalEventRecorder recorder = new TacticalEventRecorder(90);
+        recorder.recordPressure(PlayerSide.ONE, 10);
+        recorder.recordLongbowChargeStarted(PlayerSide.ONE, 20);
+
+        assertTrue(recorder.hasActiveOpening(PlayerSide.ONE, 100));
+        assertFalse(recorder.hasActiveOpening(PlayerSide.ONE, 101));
+    }
 }

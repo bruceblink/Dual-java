@@ -207,6 +207,13 @@ public class GameSystem {
         return List.copyOf(tacticalEventLog);
     }
 
+    /** Delivers each new tactical fact once so interface feedback does not replay old combat events. */
+    public List<TacticalEvent> drainTacticalEvents() {
+        List<TacticalEvent> events = List.copyOf(tacticalEventLog);
+        tacticalEventLog.clear();
+        return events;
+    }
+
     /** Records the confirmed shortbow hit that begins one player's tactical opportunity. */
     public void recordPressure(ActorGroup attackerGroup) {
         tacticalEventLog.add(tacticalEventRecorder.recordPressure(resolvePlayerSide(attackerGroup), combatFrameCount));
@@ -222,6 +229,12 @@ public class GameSystem {
     public void recordLongbowFinish(ActorGroup attackerGroup) {
         tacticalEventRecorder.recordLongbowFinish(resolvePlayerSide(attackerGroup), combatFrameCount)
                 .ifPresent(tacticalEventLog::add);
+    }
+
+    /** Returns whether a charging player is still converting a recent shortbow hit into an opening. */
+    public boolean hasTacticalOpening(PlayerActor attacker) {
+        return tacticalEventRecorder.hasActiveOpening(
+                resolvePlayerSide(attacker.getGroup()), combatFrameCount);
     }
 
     /** Clears both recorded facts and incomplete windows when a round or match is reset. */

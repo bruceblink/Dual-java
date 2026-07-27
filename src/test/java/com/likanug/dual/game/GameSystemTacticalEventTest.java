@@ -42,4 +42,14 @@ class GameSystemTacticalEventTest {
 
         assertTrue(system.getTacticalEventLog().isEmpty());
     }
+
+    @Test
+    void drainingTacticalEventsDeliversFactsOnlyOnce() {
+        App app = new App();
+        GameSystem system = new GameSystem(true, false, app);
+        system.recordPressure(system.getMyGroup());
+
+        assertEquals(1, system.drainTacticalEvents().size());
+        assertTrue(system.drainTacticalEvents().isEmpty());
+    }
 }

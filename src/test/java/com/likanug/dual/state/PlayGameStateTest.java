@@ -65,4 +65,10 @@ class PlayGameStateTest {
 
         assertEquals(0, system.getTacticalEventLog().size());
     }
+
+    @Test
+    void tacticalFeedbackLabelsIdentifyBothThePlayerAndEventType() {
+        assertEquals("P1 OPENING", PlayGameState.tacticalFeedbackLabel(PlayerSide.ONE, TacticalEventType.OPENING));
+        assertEquals("P2 FINISH", PlayGameState.tacticalFeedbackLabel(PlayerSide.TWO, TacticalEventType.FINISH));
+    }
 }

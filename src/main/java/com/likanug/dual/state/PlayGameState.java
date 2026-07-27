@@ -9,6 +9,11 @@ import com.likanug.dual.actor.player.AbstractPlayerActor;
 import com.likanug.dual.actor.player.NullPlayerActor;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.game.GameSystem;
+import com.likanug.dual.game.PlayerSide;
+import com.likanug.dual.game.TacticalEvent;
+import com.likanug.dual.game.TacticalEventType;
+
+import java.util.List;
 
 import static com.likanug.dual.App.FPS;
 import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
@@ -25,6 +30,9 @@ public class PlayGameState extends GameSystemState {
     static final float SHORTBOW_HUD_Y = INTERNAL_CANVAS_HEIGHT - 42.0F;
     private static final float SHORTBOW_HUD_DOT_SIZE = 16.0F;
     private static final float SHORTBOW_HUD_DOT_GAP = 24.0F;
+    private static final int TACTICAL_FEEDBACK_DURATION_FRAMES = (int) (FPS * 0.75F);
+    private TacticalEvent tacticalFeedbackEvent;
+    private int tacticalFeedbackStartFrame;
 
     public PlayGameState(App app) {
         super(app);
@@ -49,6 +57,7 @@ public class PlayGameState extends GameSystemState {
 
     public void displayMessage(GameSystem system) {
         displayShortbowAmmo(system);
+        displayTacticalFeedback(system);
 
         int messageDurationFrameCount = FPS;
         if (properFrameCount >= messageDurationFrameCount) return;
@@ -85,6 +94,43 @@ public class PlayGameState extends GameSystemState {
     /** Produces the textual reserve value so the same numbers remain available beyond the dot indicator. */
     static String shortbowAmmoDisplayLabel(int availableAmmo, int maximumAmmo) {
         return "Shortbow " + availableAmmo + " / " + maximumAmmo;
+    }
+
+    /** Consumes new combat facts and shows the most recent tactical state without moving with screen shake. */
+    private void displayTacticalFeedback(GameSystem system) {
+        List<TacticalEvent> newEvents = system.drainTacticalEvents();
+        if (!newEvents.isEmpty()) {
+            tacticalFeedbackEvent = newEvents.getLast();
+            tacticalFeedbackStartFrame = system.getCombatFrameCount();
+        }
+        if (tacticalFeedbackEvent == null) return;
+
+        int elapsedFrames = system.getCombatFrameCount() - tacticalFeedbackStartFrame;
+        if (elapsedFrames >= TACTICAL_FEEDBACK_DURATION_FRAMES) {
+            tacticalFeedbackEvent = null;
+            return;
+        }
+
+        app.pushStyle();
+        app.textAlign(CENTER, CENTER);
+        app.textFont(App.smallFont, 24);
+        int alpha = (int) (255.0F * (1.0F - (float) elapsedFrames / TACTICAL_FEEDBACK_DURATION_FRAMES));
+        switch (tacticalFeedbackEvent.type()) {
+            case PRESSURE -> app.fill(232, 192, 96, alpha);
+            case OPENING -> app.fill(64, 176, 128, alpha);
+            case FINISH -> app.fill(192, 64, 64, alpha);
+        }
+        app.text(
+                tacticalFeedbackLabel(tacticalFeedbackEvent.attacker(), tacticalFeedbackEvent.type()),
+                INTERNAL_CANVAS_WIDTH * 0.5F,
+                52.0F);
+        app.popStyle();
+    }
+
+    /** Formats the compact state label displayed for the two-player tactical sequence. */
+    static String tacticalFeedbackLabel(PlayerSide attacker, TacticalEventType type) {
+        String playerLabel = attacker == PlayerSide.ONE ? "P1" : "P2";
+        return playerLabel + " " + type;
     }
 
     public void checkStateTransition(GameSystem system) {

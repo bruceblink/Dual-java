@@ -50,6 +50,13 @@ public final class TacticalEventRecorder {
         return Optional.of(new TacticalEvent(attacker, TacticalEventType.FINISH, frame));
     }
 
+    /** Reports whether the player is still in the valid opening created by their earlier shortbow pressure. */
+    public boolean hasActiveOpening(PlayerSide attacker, int frame) {
+        validateFrame(frame);
+        PendingSequence sequence = pendingSequences.get(attacker);
+        return sequence != null && sequence.openingRecorded && isInWindow(sequence.pressureFrame, frame);
+    }
+
     /** Clears incomplete tactical sequences when a round or match is reset. */
     public void reset() {
         pendingSequences.clear();
