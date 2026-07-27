@@ -31,6 +31,7 @@ public class PlayGameState extends GameSystemState {
     }
 
     public void runSystem(GameSystem system) {
+        system.advanceCombatFrame();
         system.getMyGroup().update();
         system.getMyGroup().act();
         system.getOtherGroup().update();
@@ -40,7 +41,7 @@ public class PlayGameState extends GameSystemState {
         system.getMyGroup().displayArrows();
         system.getOtherGroup().displayArrows();
 
-        checkCollision();
+        checkCollision(system);
 
         system.getCommonParticleSet().update();
         system.getCommonParticleSet().display();
@@ -94,9 +95,14 @@ public class PlayGameState extends GameSystemState {
         }
     }
 
+    /** Retains the original state-owned entry point while production calls pass the active system explicitly. */
     public void checkCollision() {
-        final ActorGroup myGroup = app.getSystem().getMyGroup();
-        final ActorGroup otherGroup = app.getSystem().getOtherGroup();
+        checkCollision(app.getSystem());
+    }
+
+    public void checkCollision(GameSystem system) {
+        final ActorGroup myGroup = system.getMyGroup();
+        final ActorGroup otherGroup = system.getOtherGroup();
 
         for (AbstractArrowActor eachMyArrow : myGroup.getArrowList()) {
             for (AbstractArrowActor eachEnemyArrow : otherGroup.getArrowList()) {
@@ -108,12 +114,18 @@ public class PlayGameState extends GameSystemState {
 
         if (!otherGroup.getPlayer().isNull()) {
             for (AbstractArrowActor eachMyArrow : myGroup.getArrowList()) {
+                if (myGroup.getRemovingArrowList().contains(eachMyArrow)) continue;
 
                 AbstractPlayerActor enemyPlayer = otherGroup.getPlayer();
                 if (eachMyArrow.isNotCollided(enemyPlayer)) continue;
 
-                if (eachMyArrow.isLethal()) killPlayer(otherGroup.getPlayer());
-                else thrustPlayerActor(eachMyArrow, (PlayerActor) enemyPlayer);
+                if (eachMyArrow.isLethal()) {
+                    killPlayer(otherGroup.getPlayer());
+                    system.recordLongbowFinish(myGroup);
+                } else {
+                    thrustPlayerActor(eachMyArrow, (PlayerActor) enemyPlayer);
+                    system.recordPressure(myGroup);
+                }
 
                 breakArrow(eachMyArrow, myGroup);
             }
@@ -121,10 +133,16 @@ public class PlayGameState extends GameSystemState {
 
         if (!myGroup.getPlayer().isNull()) {
             for (AbstractArrowActor eachEnemyArrow : otherGroup.getArrowList()) {
+                if (otherGroup.getRemovingArrowList().contains(eachEnemyArrow)) continue;
                 if (eachEnemyArrow.isNotCollided(myGroup.getPlayer())) continue;
 
-                if (eachEnemyArrow.isLethal()) killPlayer(myGroup.getPlayer());
-                else thrustPlayerActor(eachEnemyArrow, (PlayerActor) myGroup.getPlayer());
+                if (eachEnemyArrow.isLethal()) {
+                    killPlayer(myGroup.getPlayer());
+                    system.recordLongbowFinish(otherGroup);
+                } else {
+                    thrustPlayerActor(eachEnemyArrow, (PlayerActor) myGroup.getPlayer());
+                    system.recordPressure(otherGroup);
+                }
 
                 breakArrow(eachEnemyArrow, otherGroup);
             }

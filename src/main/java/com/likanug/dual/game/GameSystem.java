@@ -14,6 +14,8 @@ import com.likanug.dual.playerEngine.NetworkPlayerEngine;
 import com.likanug.dual.playerEngine.PlayerEngine;
 import com.likanug.dual.state.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import static com.likanug.dual.App.FPS;
@@ -32,6 +34,10 @@ public class GameSystem {
     private final GameBackground currentBackground;
     private final boolean demoPlay;
     private boolean showsInstructionWindow;
+    private final TacticalEventRecorder tacticalEventRecorder =
+            new TacticalEventRecorder(GameConstants.TACTICAL_OPENING_WINDOW_FRAMES);
+    private final List<TacticalEvent> tacticalEventLog = new ArrayList<>();
+    private int combatFrameCount;
     /** 用于游戏物理运算的可确定性随机数生成器（联机时双方使用相同种子保证一致） */
     private final Random gameRandom;
 
@@ -185,6 +191,49 @@ public class GameSystem {
     /** 返回用于游戏物理运算的可确定性随机数生成器 */
     public Random getGameRandom() {
         return gameRandom;
+    }
+
+    public int getCombatFrameCount() {
+        return combatFrameCount;
+    }
+
+    /** Advances the deterministic combat clock once for each active play-state simulation frame. */
+    public void advanceCombatFrame() {
+        combatFrameCount++;
+    }
+
+    /** Returns immutable tactical facts for upcoming UI feedback or replay consumers. */
+    public List<TacticalEvent> getTacticalEventLog() {
+        return List.copyOf(tacticalEventLog);
+    }
+
+    /** Records the confirmed shortbow hit that begins one player's tactical opportunity. */
+    public void recordPressure(ActorGroup attackerGroup) {
+        tacticalEventLog.add(tacticalEventRecorder.recordPressure(resolvePlayerSide(attackerGroup), combatFrameCount));
+    }
+
+    /** Records a longbow charge only when it follows the same player's recent shortbow pressure. */
+    public void recordLongbowChargeStarted(PlayerActor attacker) {
+        tacticalEventRecorder.recordLongbowChargeStarted(resolvePlayerSide(attacker.getGroup()), combatFrameCount)
+                .ifPresent(tacticalEventLog::add);
+    }
+
+    /** Records a lethal longbow payoff only when it completes the same player's tactical sequence. */
+    public void recordLongbowFinish(ActorGroup attackerGroup) {
+        tacticalEventRecorder.recordLongbowFinish(resolvePlayerSide(attackerGroup), combatFrameCount)
+                .ifPresent(tacticalEventLog::add);
+    }
+
+    /** Clears both recorded facts and incomplete windows when a round or match is reset. */
+    public void resetTacticalEvents() {
+        tacticalEventRecorder.reset();
+        tacticalEventLog.clear();
+    }
+
+    private PlayerSide resolvePlayerSide(ActorGroup group) {
+        if (group == myGroup) return PlayerSide.ONE;
+        if (group == otherGroup) return PlayerSide.TWO;
+        throw new IllegalArgumentException("Actor group does not belong to this game system.");
     }
 
     public void run() {

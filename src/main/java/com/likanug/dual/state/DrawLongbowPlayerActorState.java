@@ -34,6 +34,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     public PlayerActorState entryState(PlayerActor parentActor) {
         parentActor.setChargedFrameCount(0);
         aim(parentActor, parentActor.getEngine().getControllingInputDevice());
+        if (app.getSystem() != null) app.getSystem().recordLongbowChargeStarted(parentActor);
         return this;
     }
 

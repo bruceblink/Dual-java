@@ -36,6 +36,7 @@ public final class GameConstants {
     public static final float LONGBOW_AUTO_AIM_RANGE = 520.0F;
     public static final int LONGBOW_RING_SIZE = 80;
     public static final float LONGBOW_RING_STROKE = 5.0F;
+    public static final int TACTICAL_OPENING_WINDOW_FRAMES = 90;
 
     // --- 竞技场背景 ---
     public static final int ARENA_BACKGROUND_COLOR = 96;
