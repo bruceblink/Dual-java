@@ -37,6 +37,7 @@ public class GameSystem {
     private final PlayerEngine myEngine;
     private final PlayerEngine otherEngine;
     private final GameBackground currentBackground;
+    private final ArenaLayout arenaLayout;
     private final boolean demoPlay;
     private final boolean localTwoPlayer;
     private boolean showsInstructionWindow;
@@ -50,17 +51,29 @@ public class GameSystem {
     private final MatchScore matchScore = new MatchScore(GameConstants.MATCH_ROUNDS_TO_WIN);
 
     public GameSystem(boolean demo, boolean instruction, App app) {
-        this(demo, instruction, app, false, AiDifficulty.STANDARD);
+        this(demo, instruction, app, false, AiDifficulty.STANDARD, ArenaLayout.open());
     }
 
     /** Builds demo, human-versus-AI, or local two-player combat while sharing one rule pipeline. */
     public GameSystem(boolean demo, boolean instruction, App app, boolean localTwoPlayer) {
-        this(demo, instruction, app, localTwoPlayer, AiDifficulty.STANDARD);
+        this(demo, instruction, app, localTwoPlayer, AiDifficulty.STANDARD, ArenaLayout.open());
     }
 
     /** Builds one local mode with an explicit fair AI profile when the opponent is computer-controlled. */
     public GameSystem(boolean demo, boolean instruction, App app, boolean localTwoPlayer, AiDifficulty aiDifficulty) {
+        this(demo, instruction, app, localTwoPlayer, aiDifficulty, ArenaLayout.open());
+    }
+
+    /** Builds a local game with explicit AI and arena configuration while keeping rules shared. */
+    public GameSystem(
+            boolean demo,
+            boolean instruction,
+            App app,
+            boolean localTwoPlayer,
+            AiDifficulty aiDifficulty,
+            ArenaLayout arenaLayout) {
         this.app = app;
+        this.arenaLayout = arenaLayout;
         // prepare ActorGroup
         this.myGroup = new ActorGroup();
         this.otherGroup = new ActorGroup();
@@ -142,6 +155,7 @@ public class GameSystem {
                 app);
         this.demoPlay = false;
         this.localTwoPlayer = false;
+        this.arenaLayout = ArenaLayout.open();
         this.showsInstructionWindow = false;
         this.gameRandom = new Random(network.getSharedSeed());
     }
@@ -250,6 +264,10 @@ public class GameSystem {
         return currentBackground;
     }
 
+    public ArenaLayout getArenaLayout() {
+        return arenaLayout;
+    }
+
     public boolean isDemoPlay() {
         return demoPlay;
     }
@@ -354,6 +372,7 @@ public class GameSystem {
         }
         currentBackground.update();
         currentBackground.display();
+        arenaLayout.display(app);
         currentState.runWorld(this);
 
         app.popMatrix();
