@@ -271,7 +271,9 @@ public class PlayGameState extends GameSystemState {
         final ActorGroup otherGroup = system.getOtherGroup();
 
         for (AbstractArrowActor eachMyArrow : myGroup.getArrowList()) {
+            if (myGroup.getRemovingArrowList().contains(eachMyArrow)) continue;
             for (AbstractArrowActor eachEnemyArrow : otherGroup.getArrowList()) {
+                if (otherGroup.getRemovingArrowList().contains(eachEnemyArrow)) continue;
                 if (eachMyArrow.isNotCollided(eachEnemyArrow)) continue;
                 system.addInterceptParticles(
                         collisionMidpoint(eachMyArrow.getxPosition(), eachEnemyArrow.getxPosition()),
