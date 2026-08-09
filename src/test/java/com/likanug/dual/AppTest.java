@@ -180,4 +180,40 @@ public class AppTest {
         app.keyPressed();
         assertFalse(app.isSettingsMenuVisible());
     }
+
+    @Test
+    void demoSettingsShortcutOpensMenuWithoutLeakingIntoCombatInput() {
+        KeyInput playerOne = new KeyInput();
+        KeyInput playerTwo = new KeyInput();
+        app.setCurrentKeyInput(playerOne);
+        app.setSecondKeyInput(playerTwo);
+
+        app.key = 'o';
+        app.keyPressed();
+        assertTrue(app.isSettingsMenuVisible());
+
+        app.key = 'w';
+        app.keyPressed();
+        assertFalse(playerOne.isWPressed);
+        assertFalse(playerTwo.isWPressed);
+    }
+
+    @Test
+    void focusLossClearsBothConfiguredLocalInputSnapshots() {
+        KeyInput playerOne = new KeyInput();
+        KeyInput playerTwo = new KeyInput();
+        playerOne.isWPressed = true;
+        playerOne.isXPressed = true;
+        playerTwo.isAPressed = true;
+        playerTwo.isAimRightPressed = true;
+        app.setCurrentKeyInput(playerOne);
+        app.setSecondKeyInput(playerTwo);
+
+        app.focusLost();
+
+        assertFalse(playerOne.isWPressed);
+        assertFalse(playerOne.isXPressed);
+        assertFalse(playerTwo.isAPressed);
+        assertFalse(playerTwo.isAimRightPressed);
+    }
 }
