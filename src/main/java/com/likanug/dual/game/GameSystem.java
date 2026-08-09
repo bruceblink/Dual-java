@@ -300,6 +300,7 @@ public class GameSystem {
 
     /** Starts a fresh match in the current mode, retaining the input engines and any network link. */
     public void resetMatch() {
+        if (network != null) network.resetRemoteMatchState();
         matchScore.reset();
         resetRound();
     }

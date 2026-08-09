@@ -113,6 +113,12 @@ public abstract class GameNetwork {
     public NetworkRoundResult getRemoteRoundResult() { return remoteRoundResult; }
     public NetworkRematchRequest getRemoteRematchRequest() { return remoteRematchRequest; }
 
+    /** Clears match-scoped snapshots after both peers have accepted a full-match replay. */
+    public void resetRemoteMatchState() {
+        remoteRoundResult = null;
+        remoteRematchRequest = null;
+    }
+
     // ──────────────────────────────────────────────
     // 子类调用
     // ──────────────────────────────────────────────

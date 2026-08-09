@@ -143,6 +143,26 @@ class GameNetworkTest {
     }
 
     @Test
+    void resetRemoteMatchStateAllowsRoundNumbersToRestart() throws Exception {
+        try (ChannelPair pair = createConnectedPair()) {
+            TestNetwork network = new TestNetwork();
+            network.channel = pair.local;
+            network.connected = true;
+            network.startReceiverThread();
+
+            writeFully(pair.remote, concat(
+                    NetworkMessage.encodeRoundResult(new NetworkRoundResult(3, NetworkRoundResult.SIDE_ONE, 3, 0, true)),
+                    NetworkMessage.encodeRematchRequest(new NetworkRematchRequest(3, true))));
+            waitUntil(() -> network.getRemoteRoundResult() != null && network.getRemoteRematchRequest() != null, 1000);
+
+            network.resetRemoteMatchState();
+
+            assertTrue(network.getRemoteRoundResult() == null);
+            assertTrue(network.getRemoteRematchRequest() == null);
+        }
+    }
+
+    @Test
     void disconnectWritesDisconnectMessage() throws Exception {
         try (ChannelPair pair = createConnectedPair()) {
             TestNetwork network = new TestNetwork();
@@ -219,6 +239,19 @@ class GameNetworkTest {
             }
         }
         throw new AssertionError("receiver thread did not stop within timeout");
+    }
+
+    private static void waitUntil(Check check, long timeoutMs) {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            if (check.value()) return;
+            Thread.onSpinWait();
+        }
+        throw new AssertionError("condition did not become true within timeout");
+    }
+
+    private interface Check {
+        boolean value();
     }
 
     private static class TestNetwork extends GameNetwork {
