@@ -20,5 +20,7 @@ class AiDifficultyTest {
                 < AiDifficulty.ADVANCED.getLongbowReleaseProbability());
         assertEquals(0.0F, AiDifficulty.BASIC.getFakeChargeProbability());
         assertEquals(0.15F, AiDifficulty.ADVANCED.getFakeChargeProbability());
+        assertEquals(0.0F, AiDifficulty.STANDARD.getInterceptAimProbability());
+        assertEquals(0.35F, AiDifficulty.ADVANCED.getInterceptAimProbability());
     }
 }

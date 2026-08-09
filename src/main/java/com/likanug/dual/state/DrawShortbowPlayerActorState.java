@@ -2,9 +2,12 @@ package com.likanug.dual.state;
 
 import com.likanug.dual.App;
 import com.likanug.dual.GameConstants;
+import com.likanug.dual.actor.arrow.AbstractArrowActor;
 import com.likanug.dual.actor.arrow.ShortbowArrow;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.inputDevice.AbstractInputDevice;
+import com.likanug.dual.playerEngine.AiDifficulty;
+import com.likanug.dual.playerEngine.ComputerPlayerEngine;
 
 import static com.likanug.dual.App.FPS;
 import static processing.core.PApplet.cos;
@@ -20,7 +23,36 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
     }
 
     public void aim(PlayerActor parentActor, AbstractInputDevice input) {
+        if (parentActor.getEngine() instanceof ComputerPlayerEngine computer
+                && shouldAimAtIncomingArrow(app.random(1.0F), computer.getDifficulty())) {
+            final AbstractArrowActor arrow = nearestEnemyArrow(parentActor);
+            if (arrow != null) {
+                parentActor.setAimAngle(parentActor.getAngle(arrow));
+                return;
+            }
+        }
         parentActor.setAimAngle(getEnemyPlayerActorAngle(parentActor));
+    }
+
+    private AbstractArrowActor nearestEnemyArrow(PlayerActor parentActor) {
+        AbstractArrowActor nearest = null;
+        float nearestDistance = Float.MAX_VALUE;
+        for (AbstractArrowActor arrow : parentActor.getGroup().getEnemyGroup().getArrowList()) {
+            final float distance = parentActor.getDistancePow2(arrow);
+            final float toPlayerX = parentActor.getxPosition() - arrow.getxPosition();
+            final float toPlayerY = parentActor.getyPosition() - arrow.getyPosition();
+            final float approachDot = arrow.getxVelocity() * toPlayerX + arrow.getyVelocity() * toPlayerY;
+            if (approachDot > 0.0F && distance < nearestDistance) {
+                nearest = arrow;
+                nearestDistance = distance;
+            }
+        }
+        return nearest;
+    }
+
+    /** Keeps intercept aiming opt-in and lets every other roll use the established enemy auto-aim. */
+    static boolean shouldAimAtIncomingArrow(float randomValue, AiDifficulty difficulty) {
+        return randomValue < difficulty.getInterceptAimProbability();
     }
 
     public void fire(PlayerActor parentActor) {

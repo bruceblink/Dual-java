@@ -9,6 +9,7 @@ import com.likanug.dual.game.GameSystem;
 import com.likanug.dual.inputDevice.KeyInput;
 import com.likanug.dual.inputDevice.InputDevice;
 import com.likanug.dual.playerEngine.PlayerEngine;
+import com.likanug.dual.playerEngine.AiDifficulty;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,6 +25,13 @@ class DrawBowPlayerActorStateTest {
         assertFalse(DrawShortbowPlayerActorState.canFire(true, 1));
         assertFalse(DrawShortbowPlayerActorState.canFire(true, 0, false));
 
+    }
+
+    @Test
+    void advancedAiInterceptAimIsOptInAndProbabilityBounded() {
+        assertTrue(DrawShortbowPlayerActorState.shouldAimAtIncomingArrow(0.10F, AiDifficulty.ADVANCED));
+        assertFalse(DrawShortbowPlayerActorState.shouldAimAtIncomingArrow(0.35F, AiDifficulty.ADVANCED));
+        assertFalse(DrawShortbowPlayerActorState.shouldAimAtIncomingArrow(0.10F, AiDifficulty.STANDARD));
     }
 
     @Test
