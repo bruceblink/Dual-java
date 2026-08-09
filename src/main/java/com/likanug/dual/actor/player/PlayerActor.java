@@ -21,6 +21,7 @@ public class PlayerActor extends AbstractPlayerActor {
     private float aimAngle;
     private int chargedFrameCount;
     private int damageRemainingFrameCount;
+    private int damageEndFeedbackFrameCount;
     private int shortbowCooldownFrameCount;
     private final ShortbowAmmo shortbowAmmo = new ShortbowAmmo(
             GameConstants.SHORTBOW_MAX_AMMO,
@@ -67,6 +68,14 @@ public class PlayerActor extends AbstractPlayerActor {
         this.damageRemainingFrameCount = damageRemainingFrameCount;
     }
 
+    public int getDamageEndFeedbackFrameCount() {
+        return damageEndFeedbackFrameCount;
+    }
+
+    public void setDamageEndFeedbackFrameCount(int damageEndFeedbackFrameCount) {
+        this.damageEndFeedbackFrameCount = damageEndFeedbackFrameCount;
+    }
+
     public int getShortbowCooldownFrameCount() {
         return shortbowCooldownFrameCount;
     }
@@ -91,6 +100,7 @@ public class PlayerActor extends AbstractPlayerActor {
         aimAngle = 0;
         chargedFrameCount = 0;
         damageRemainingFrameCount = 0;
+        damageEndFeedbackFrameCount = 0;
         shortbowCooldownFrameCount = 0;
         shortbowAmmo.reset();
         state = moveState.entryState(this);
@@ -112,6 +122,7 @@ public class PlayerActor extends AbstractPlayerActor {
         shortbowAmmo.tickRecovery();
         // Cooldown advances during every movement state so a released shortbow cannot leave it frozen.
         shortbowCooldownFrameCount = Math.max(0, shortbowCooldownFrameCount - 1);
+        damageEndFeedbackFrameCount = Math.max(0, damageEndFeedbackFrameCount - 1);
 
         if (xPosition < halfBodySize) {
             xPosition = halfBodySize;

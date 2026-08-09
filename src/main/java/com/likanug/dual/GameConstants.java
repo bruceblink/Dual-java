@@ -13,6 +13,9 @@ public final class GameConstants {
     public static final float PLAYER_BOUNCE = 0.5F;
     public static final float PLAYER_THRUST_SPEED = 8.0F;
     public static final float DAMAGED_DURATION_SEC = 0.75F;
+    public static final int DAMAGED_RING_SIZE = 64;
+    public static final float DAMAGED_RING_STROKE = 4.0F;
+    public static final int DAMAGED_END_FEEDBACK_FRAMES = 8;
 
     // --- 短弓箭 ---
     public static final float SHORTBOW_ARROW_HALF_LENGTH = 8.0F;
