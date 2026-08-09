@@ -29,6 +29,7 @@ public class PlayGameState extends GameSystemState {
 
     static final float SHORTBOW_HUD_X = 72.0F;
     static final float SHORTBOW_HUD_Y = INTERNAL_CANVAS_HEIGHT - 42.0F;
+    static final float PRESSURE_HUD_Y = SHORTBOW_HUD_Y - 54.0F;
     static final float MATCH_SCORE_HUD_Y = 24.0F;
     static final float TACTICAL_FEEDBACK_Y = 64.0F;
     private static final float SHORTBOW_HUD_DOT_SIZE = 16.0F;
@@ -76,6 +77,7 @@ public class PlayGameState extends GameSystemState {
 
     public void displayMessage(GameSystem system) {
         displayMatchScore(system);
+        displayPressureStatus(system);
         displayShortbowAmmo(system);
         displayTacticalFeedback(system);
 
@@ -83,6 +85,29 @@ public class PlayGameState extends GameSystemState {
         if (properFrameCount >= messageDurationFrameCount) return;
         app.fill(0, (float) (255.0 * (1.0 - (float) properFrameCount / messageDurationFrameCount)));
         app.text("Go", INTERNAL_CANVAS_WIDTH * 0.5F, INTERNAL_CANVAS_HEIGHT * 0.5F);
+    }
+
+    /** Shows the local player's active pressure refresh count so repeated shortbow hits remain legible. */
+    private void displayPressureStatus(GameSystem system) {
+        if (system.getMyGroup().getPlayer().isNull()) return;
+        final PlayerActor player = (PlayerActor) system.getMyGroup().getPlayer();
+        final int pressureCount = player.getShortbowPressure().getConsecutiveRefreshes();
+        if (player.getDamageRemainingFrameCount() <= 0 || pressureCount <= 0) return;
+
+        app.pushStyle();
+        app.textAlign(CENTER, CENTER);
+        app.textFont(App.smallFont, 14);
+        app.fill(0, 160);
+        app.text(
+                pressureStatusLabel(pressureCount, player.getShortbowPressure().getMaximumConsecutiveRefreshes()),
+                SHORTBOW_HUD_X,
+                PRESSURE_HUD_Y);
+        app.popStyle();
+    }
+
+    /** Formats the bounded pressure count for the same compact HUD surface as shortbow ammo. */
+    static String pressureStatusLabel(int pressureCount, int maximumPressureCount) {
+        return "Under pressure " + pressureCount + " / " + maximumPressureCount;
     }
 
     /** Draws the current round and first-to target in the stable HUD layer outside screen shake. */

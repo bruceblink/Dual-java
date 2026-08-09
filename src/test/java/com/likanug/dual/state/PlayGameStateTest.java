@@ -25,6 +25,11 @@ class PlayGameStateTest {
     }
 
     @Test
+    void pressureHudNamesTheBoundedRefreshCount() {
+        assertEquals("Under pressure 1 / 2", PlayGameState.pressureStatusLabel(1, 2));
+    }
+
+    @Test
     void matchScoreHudNamesRoundScoreAndTarget() {
         MatchScore score = new MatchScore(3);
         score.recordRoundWin(PlayerSide.ONE);
