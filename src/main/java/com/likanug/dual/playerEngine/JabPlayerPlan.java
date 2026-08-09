@@ -11,7 +11,8 @@ public class JabPlayerPlan extends DefaultPlayerPlan {
 
     public void execute(PlayerActor player, AbstractInputDevice input) {
         super.execute(player, input);
-        input.operateShotButton(true);
+        // Release the AI trigger while the shared reserve is empty so recovery can create a new press edge.
+        input.operateShotButton(player.getShortbowAmmo().canFire());
     }
 
 }
