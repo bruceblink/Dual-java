@@ -89,7 +89,7 @@ public class GameResultState extends GameSystemState {
         if (!system.isDemoPlay() && shouldShowResetPrompt()) {
             app.textFont(smallFont, 20);
             app.fill(224);
-            app.text("Press X key to reset.", RESET_PROMPT_X, resetPromptY());
+            app.text(resetPromptLabel(), RESET_PROMPT_X, resetPromptY());
         }
         app.popStyle();
     }
@@ -100,11 +100,18 @@ public class GameResultState extends GameSystemState {
                 app.newGame(true, system.isShowsInstructionWindow());
             }
         } else {
-            if (properFrameCount > durationFrameCount && app.getCurrentKeyInput().isXPressed) {
-                if (roundResult != null && roundResult.matchWinner().isEmpty()) {
-                    system.resetRound();
-                } else {
-                    app.newGame(true, true);  // finished match or legacy result without score
+            if (properFrameCount > durationFrameCount) {
+                if (app.getCurrentKeyInput().isXPressed) {
+                    if (roundResult != null && roundResult.matchWinner().isPresent()) {
+                        system.resetMatch();
+                    } else if (roundResult != null) {
+                        system.resetRound();
+                    } else {
+                        app.newGame(true, true);  // legacy result without score
+                    }
+                } else if (roundResult != null && roundResult.matchWinner().isPresent()
+                        && app.getCurrentKeyInput().isZPressed) {
+                    app.newGame(true, true);  // return to the demo without replaying
                 }
             }
         }
@@ -113,6 +120,14 @@ public class GameResultState extends GameSystemState {
     /** 重置提示延迟一秒出现，避免玩家误按跳过结算画面。 */
     boolean shouldShowResetPrompt() {
         return properFrameCount > durationFrameCount;
+    }
+
+    /** Names the distinct actions available after a completed match or an intermediate round. */
+    String resetPromptLabel() {
+        if (roundResult != null && roundResult.matchWinner().isPresent()) {
+            return "Press X to replay, Z for demo.";
+        }
+        return "Press X key for next round.";
     }
 
     /** Formats a result-layer label that keeps round winner and match winner semantics distinct. */

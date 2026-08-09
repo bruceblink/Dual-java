@@ -62,4 +62,17 @@ class MatchScoreTest {
 
         assertThrows(IllegalStateException.class, () -> score.recordRoundWin(PlayerSide.ONE));
     }
+
+    @Test
+    void resetMakesACompletedMatchReadyForReplay() {
+        MatchScore score = new MatchScore(1);
+        score.recordRoundWin(PlayerSide.TWO);
+
+        score.reset();
+
+        assertFalse(score.isMatchComplete());
+        assertTrue(score.getMatchWinner().isEmpty());
+        assertEquals(0, score.getPlayerOneWins());
+        assertEquals(0, score.getPlayerTwoWins());
+    }
 }

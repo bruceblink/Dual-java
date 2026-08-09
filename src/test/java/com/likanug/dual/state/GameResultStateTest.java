@@ -38,4 +38,13 @@ class GameResultStateTest {
         MatchScore.RoundResult match = score.recordRoundWin(PlayerSide.ONE);
         assertEquals("MATCH COMPLETE: YOU | Score YOU 3 - 0", GameResultState.roundScoreDisplayLabel(match));
     }
+
+    @Test
+    void resultPromptNamesReplayAndReturnActions() {
+        MatchScore score = new MatchScore(1);
+        MatchScore.RoundResult match = score.recordRoundWin(PlayerSide.ONE);
+        GameResultState state = new GameResultState(new App(), "You win.", null, match);
+
+        assertEquals("Press X to replay, Z for demo.", state.resetPromptLabel());
+    }
 }

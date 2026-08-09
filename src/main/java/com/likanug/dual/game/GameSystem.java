@@ -180,12 +180,22 @@ public class GameSystem {
         myGroup.clearArrows();
         otherGroup.clearArrows();
         commonParticleSet.clearForRound();
+        if (myEngine instanceof HumanPlayerEngine humanEngine) {
+            // The reset key is also a weapon key; release it before the new countdown reaches combat.
+            humanEngine.getCurrentKeyInput().clear();
+        }
         myGroup.setPlayer(createPlayer(myEngine, 255, INTERNAL_CANVAS_HEIGHT - 100));
         otherGroup.setPlayer(createPlayer(otherEngine, 0, 100));
         screenShakeValue = 0;
         combatFrameCount = 0;
         resetTacticalEvents();
         currentState = new StartGameState(app);
+    }
+
+    /** Starts a fresh match in the current mode, retaining the input engines and any network link. */
+    public void resetMatch() {
+        matchScore.reset();
+        resetRound();
     }
 
     public float getScreenShakeValue() {

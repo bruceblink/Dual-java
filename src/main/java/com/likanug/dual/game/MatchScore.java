@@ -68,6 +68,12 @@ public final class MatchScore {
         return Optional.empty();
     }
 
+    /** Clears both player totals so a replay can begin without replacing the active game mode. */
+    public void reset() {
+        playerOneWins = 0;
+        playerTwoWins = 0;
+    }
+
     private int getWins(PlayerSide side) {
         return side == PlayerSide.ONE ? playerOneWins : playerTwoWins;
     }
