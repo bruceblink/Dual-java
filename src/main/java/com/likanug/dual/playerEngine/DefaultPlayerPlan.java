@@ -91,6 +91,7 @@ public class DefaultPlayerPlan extends PlayerPlan {
         if (enemy.getState().isDamaged()) {
             if (app.random(1.0F) < difficulty.getKillAttemptProbability()) return killPlan;
         }
+        if (shouldStartFakeCharge(enemy.getState().isDamaged(), app.random(1.0F), difficulty)) return killPlan;
 
         // Avoid the nearest arrow
         AbstractArrowActor nearestArrow = null;
@@ -131,6 +132,11 @@ public class DefaultPlayerPlan extends PlayerPlan {
     private AiDifficulty getDifficulty(PlayerActor player) {
         if (player.getEngine() instanceof ComputerPlayerEngine computer) return computer.getDifficulty();
         return AiDifficulty.STANDARD;
+    }
+
+    /** Allows only profiles that opted in to begin a readable longbow feint against an undamaged target. */
+    static boolean shouldStartFakeCharge(boolean enemyDamaged, float randomValue, AiDifficulty difficulty) {
+        return !enemyDamaged && randomValue < difficulty.getFakeChargeProbability();
     }
 
     public void setMoveDirection(PlayerActor player, AbstractPlayerActor enemy) {

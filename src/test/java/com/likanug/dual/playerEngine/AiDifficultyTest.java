@@ -18,5 +18,7 @@ class AiDifficultyTest {
                 < AiDifficulty.ADVANCED.getKillAttemptProbability());
         assertTrue(AiDifficulty.BASIC.getLongbowReleaseProbability()
                 < AiDifficulty.ADVANCED.getLongbowReleaseProbability());
+        assertEquals(0.0F, AiDifficulty.BASIC.getFakeChargeProbability());
+        assertEquals(0.15F, AiDifficulty.ADVANCED.getFakeChargeProbability());
     }
 }
