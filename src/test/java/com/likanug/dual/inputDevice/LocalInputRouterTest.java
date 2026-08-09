@@ -60,6 +60,18 @@ class LocalInputRouterTest {
         assertFalse(router.getPlayerTwoInput().isZPressed);
     }
 
+    @Test
+    void playerTwoAimBindingsProduceAnIndependentKeyboardDirection() {
+        LocalInputRouter router = new LocalInputRouter(KeyBindings.playerOne(), KeyBindings.playerTwo());
+
+        router.handleKey('t', 0, true);
+        router.handleKey('h', 0, true);
+
+        assertTrue(router.getPlayerTwoInput().hasKeyboardAim());
+        assertEquals(-0.7853982F, router.getPlayerTwoInput().getKeyboardAimAngle(), 1.0E-6F);
+        assertFalse(router.getPlayerOneInput().hasKeyboardAim());
+    }
+
     private static KeyBindings bindingsWithShortbow(char key) {
         return KeyBindings.builder()
                 .bindCharacter(InputAction.UP, '1')

@@ -13,6 +13,7 @@ import com.likanug.dual.playerEngine.HumanPlayerEngine;
 import com.likanug.dual.playerEngine.NetworkPlayerEngine;
 import com.likanug.dual.playerEngine.PlayerEngine;
 import com.likanug.dual.state.*;
+import com.likanug.dual.inputDevice.KeyInput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,7 @@ public class GameSystem {
     private final PlayerEngine otherEngine;
     private final GameBackground currentBackground;
     private final boolean demoPlay;
+    private final boolean localTwoPlayer;
     private boolean showsInstructionWindow;
     private final TacticalEventRecorder tacticalEventRecorder =
             new TacticalEventRecorder(GameConstants.TACTICAL_OPENING_WINDOW_FRAMES);
@@ -47,6 +49,11 @@ public class GameSystem {
     private final MatchScore matchScore = new MatchScore(GameConstants.MATCH_ROUNDS_TO_WIN);
 
     public GameSystem(boolean demo, boolean instruction, App app) {
+        this(demo, instruction, app, false);
+    }
+
+    /** Builds demo, human-versus-AI, or local two-player combat while sharing one rule pipeline. */
+    public GameSystem(boolean demo, boolean instruction, App app, boolean localTwoPlayer) {
         this.app = app;
         // prepare ActorGroup
         this.myGroup = new ActorGroup();
@@ -70,7 +77,8 @@ public class GameSystem {
         else this.myEngine = new HumanPlayerEngine(app.getCurrentKeyInput());
         PlayerActor myPlayer = createPlayer(myEngine, 255, INTERNAL_CANVAS_HEIGHT - 100);
         this.myGroup.setPlayer(myPlayer);
-        this.otherEngine = new ComputerPlayerEngine(app);
+        if (demo || !localTwoPlayer) this.otherEngine = new ComputerPlayerEngine(app);
+        else this.otherEngine = new HumanPlayerEngine(localInputOrFallback(app));
         PlayerActor otherPlayer = createPlayer(otherEngine, 0, 100);
         this.otherGroup.setPlayer(otherPlayer);
 
@@ -82,6 +90,7 @@ public class GameSystem {
                 GameConstants.ARENA_GRID_MAX_ACCELERATION,
                 app);
         this.demoPlay = demo;
+        this.localTwoPlayer = localTwoPlayer;
         this.showsInstructionWindow = instruction;
         this.gameRandom = new Random();
     }
@@ -126,12 +135,17 @@ public class GameSystem {
                 GameConstants.ARENA_GRID_MAX_ACCELERATION,
                 app);
         this.demoPlay = false;
+        this.localTwoPlayer = false;
         this.showsInstructionWindow = false;
         this.gameRandom = new Random(network.getSharedSeed());
     }
 
     GameSystem(App app) {
         this(false, false, app);
+    }
+
+    private static KeyInput localInputOrFallback(App app) {
+        return app.getSecondKeyInput() != null ? app.getSecondKeyInput() : new KeyInput();
     }
 
     private PlayerActor createPlayer(PlayerEngine engine, int fillColor, float spawnY) {
@@ -181,10 +195,8 @@ public class GameSystem {
         myGroup.clearArrows();
         otherGroup.clearArrows();
         commonParticleSet.clearForRound();
-        if (myEngine instanceof HumanPlayerEngine humanEngine) {
-            // The reset key is also a weapon key; release it before the new countdown reaches combat.
-            humanEngine.getCurrentKeyInput().clear();
-        }
+        // The reset key is also a weapon key; release both local snapshots before combat resumes.
+        app.clearLocalInputs();
         myGroup.setPlayer(createPlayer(myEngine, 255, INTERNAL_CANVAS_HEIGHT - 100));
         otherGroup.setPlayer(createPlayer(otherEngine, 0, 100));
         screenShakeValue = 0;
@@ -234,6 +246,10 @@ public class GameSystem {
 
     public boolean isDemoPlay() {
         return demoPlay;
+    }
+
+    public boolean isLocalTwoPlayer() {
+        return localTwoPlayer;
     }
 
     public boolean isShowsInstructionWindow() {
@@ -364,8 +380,9 @@ public class GameSystem {
         app.text("Shortbow", contentOffsetX + 300, 290);
         app.text("Hold to charge longbow", contentOffsetX + 300, 355);
         app.textAlign(CENTER);
-        app.text("- Press Z key to start -", panelCenterX, 455);
-        app.text("(Click to hide this window)", panelCenterX, 490);
+        app.text("P2: IJKL move, TFGH aim, B/V bow", panelCenterX, 420);
+        app.text("Z: Human vs AI    L: Local 2P", panelCenterX, 465);
+        app.text("(Click to hide this window)", panelCenterX, 500);
         app.popStyle();
 
         app.strokeWeight(1);

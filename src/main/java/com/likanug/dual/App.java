@@ -74,6 +74,7 @@ public class App extends PApplet {
     public KeyInput getCurrentKeyInput() { return currentKeyInput; }
     public void setCurrentKeyInput(KeyInput k) { this.currentKeyInput = k; }
     public KeyInput getSecondKeyInput() { return secondKeyInput; }
+    public void setSecondKeyInput(KeyInput k) { this.secondKeyInput = k; }
     public GameSystem getSystem() { return system; }
     public void setSystem(GameSystem s) { this.system = s; }
     public boolean isPaused() { return paused; }
@@ -115,10 +116,24 @@ public class App extends PApplet {
         system = new GameSystem(demo, instruction, this);
     }
 
+    /** Starts a local two-player match while preserving both configured keyboard snapshots. */
+    public void newLocalGame(boolean instruction) {
+        clearLocalInputs();
+        if (activeNetwork != null) {
+            activeNetwork.disconnect();
+            activeNetwork = null;
+        }
+        networkMode = NetworkMode.NONE;
+        system = new GameSystem(false, instruction, this, true);
+    }
+
     /** Clears both local snapshots so a menu key cannot leak into the next combat state. */
     public void clearLocalInputs() {
         if (localInputRouter != null) localInputRouter.clear();
-        else if (currentKeyInput != null) currentKeyInput.clear();
+        else {
+            if (currentKeyInput != null) currentKeyInput.clear();
+            if (secondKeyInput != null) secondKeyInput.clear();
+        }
     }
 
     /** 启动联机对战（握手完成后调用） */
@@ -409,6 +424,10 @@ public class App extends PApplet {
     private void handleKeyNone() {
         if (key == 'n' || key == 'N') {
             networkMode = NetworkMode.LOBBY_MENU;
+            return;
+        }
+        if (system != null && system.isDemoPlay() && (key == 'l' || key == 'L')) {
+            newLocalGame(false);
             return;
         }
         // 原有逻辑

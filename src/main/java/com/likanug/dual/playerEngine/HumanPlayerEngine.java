@@ -34,6 +34,8 @@ public class HumanPlayerEngine extends PlayerEngine {
             controllingInputDevice.operateAim(atan2(
                     currentKeyInput.getMouseAimY() - player.getyPosition(),
                     currentKeyInput.getMouseAimX() - player.getxPosition()));
+        } else if (currentKeyInput.hasKeyboardAim()) {
+            controllingInputDevice.operateAim(currentKeyInput.getKeyboardAimAngle());
         }
     }
 

@@ -12,6 +12,10 @@ public class KeyInput {
     public boolean isAPressed = false;
     public boolean isSPressed = false;
     public boolean isDPressed = false;
+    public boolean isAimUpPressed = false;
+    public boolean isAimDownPressed = false;
+    public boolean isAimLeftPressed = false;
+    public boolean isAimRightPressed = false;
     private boolean mouseShotPressed = false;
     private boolean mouseLongShotPressed = false;
     private boolean hasMouseAim = false;
@@ -40,6 +44,17 @@ public class KeyInput {
 
     public boolean isLongShotPressed() {
         return isXPressed || mouseLongShotPressed;
+    }
+
+    public boolean hasKeyboardAim() {
+        return isAimUpPressed || isAimDownPressed || isAimLeftPressed || isAimRightPressed;
+    }
+
+    /** Converts the second player's four digital aim keys into the same angle used by mouse aim. */
+    public float getKeyboardAimAngle() {
+        final int horizontal = (isAimRightPressed ? 1 : 0) - (isAimLeftPressed ? 1 : 0);
+        final int vertical = (isAimDownPressed ? 1 : 0) - (isAimUpPressed ? 1 : 0);
+        return (float) Math.atan2(vertical, horizontal);
     }
 
     /**
@@ -102,6 +117,10 @@ public class KeyInput {
             }
             case SHORTBOW -> isZPressed = pressed;
             case LONGBOW -> isXPressed = pressed;
+            case AIM_UP -> isAimUpPressed = pressed;
+            case AIM_DOWN -> isAimDownPressed = pressed;
+            case AIM_LEFT -> isAimLeftPressed = pressed;
+            case AIM_RIGHT -> isAimRightPressed = pressed;
         }
     }
 
@@ -121,6 +140,10 @@ public class KeyInput {
         isAPressed = false;
         isSPressed = false;
         isDPressed = false;
+        isAimUpPressed = false;
+        isAimDownPressed = false;
+        isAimLeftPressed = false;
+        isAimRightPressed = false;
         releaseMouseButtons();
     }
 

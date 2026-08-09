@@ -7,5 +7,9 @@ public enum InputAction {
     LEFT,
     RIGHT,
     SHORTBOW,
-    LONGBOW
+    LONGBOW,
+    AIM_UP,
+    AIM_DOWN,
+    AIM_LEFT,
+    AIM_RIGHT
 }

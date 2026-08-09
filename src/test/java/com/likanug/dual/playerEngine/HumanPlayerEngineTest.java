@@ -48,4 +48,18 @@ class HumanPlayerEngineTest {
         assertTrue(intent.isLongShotButtonPressed());
         assertFalse(intent.hasAimAngle());
     }
+
+    @Test
+    void runUsesKeyboardAimWhenMouseAimIsUnavailable() {
+        KeyInput rawInput = new KeyInput();
+        rawInput.isAimUpPressed = true;
+        rawInput.isAimRightPressed = true;
+        HumanPlayerEngine engine = new HumanPlayerEngine(rawInput);
+        PlayerActor player = new PlayerActor(engine, 255, new App());
+
+        engine.run(player);
+
+        assertTrue(engine.getControllingInputDevice().hasAimAngle());
+        assertEquals(-0.7853982F, engine.getControllingInputDevice().getAimAngle(), 1.0E-6F);
+    }
 }

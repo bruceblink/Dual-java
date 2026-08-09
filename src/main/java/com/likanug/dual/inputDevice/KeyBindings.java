@@ -4,6 +4,7 @@ import processing.core.PConstants;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,14 @@ import java.util.Set;
 
 /** Stores immutable keyboard bindings and rejects ambiguous mappings between local players. */
 public final class KeyBindings {
+
+    private static final EnumSet<InputAction> REQUIRED_ACTIONS = EnumSet.of(
+            InputAction.UP,
+            InputAction.DOWN,
+            InputAction.LEFT,
+            InputAction.RIGHT,
+            InputAction.SHORTBOW,
+            InputAction.LONGBOW);
 
     private final EnumMap<InputAction, List<KeyStroke>> bindings;
 
@@ -43,6 +52,10 @@ public final class KeyBindings {
                 .bindCharacter(InputAction.RIGHT, 'l')
                 .bindCharacter(InputAction.SHORTBOW, 'b')
                 .bindCharacter(InputAction.LONGBOW, 'v')
+                .bindCharacter(InputAction.AIM_UP, 't')
+                .bindCharacter(InputAction.AIM_DOWN, 'g')
+                .bindCharacter(InputAction.AIM_LEFT, 'f')
+                .bindCharacter(InputAction.AIM_RIGHT, 'h')
                 .build();
     }
 
@@ -92,7 +105,7 @@ public final class KeyBindings {
         public KeyBindings build() {
             final EnumMap<InputAction, List<KeyStroke>> immutableBindings = new EnumMap<>(InputAction.class);
             for (Map.Entry<InputAction, List<KeyStroke>> entry : bindings.entrySet()) {
-                if (entry.getValue().isEmpty()) {
+                if (REQUIRED_ACTIONS.contains(entry.getKey()) && entry.getValue().isEmpty()) {
                     throw new IllegalStateException("Every input action needs at least one key binding.");
                 }
                 immutableBindings.put(entry.getKey(), List.copyOf(entry.getValue()));
