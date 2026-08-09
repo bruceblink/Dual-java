@@ -3,6 +3,7 @@ package com.likanug.dual.actor.player;
 import com.likanug.dual.App;
 import com.likanug.dual.GameConstants;
 import com.likanug.dual.playerEngine.PlayerEngine;
+import com.likanug.dual.game.ShortbowPressure;
 import com.likanug.dual.state.PlayerActorState;
 
 import static com.likanug.dual.App.FPS;
@@ -27,6 +28,8 @@ public class PlayerActor extends AbstractPlayerActor {
     private final ShortbowAmmo shortbowAmmo = new ShortbowAmmo(
             GameConstants.SHORTBOW_MAX_AMMO,
             Math.round(GameConstants.SHORTBOW_AMMO_RECOVERY_SEC * FPS));
+    private final ShortbowPressure shortbowPressure = new ShortbowPressure(
+            GameConstants.SHORTBOW_MAX_CONSECUTIVE_PRESSURES);
 
     public PlayerActor(PlayerEngine _engine, int col, App app) {
         super(16, _engine, app);
@@ -97,6 +100,10 @@ public class PlayerActor extends AbstractPlayerActor {
         return shortbowAmmo;
     }
 
+    public ShortbowPressure getShortbowPressure() {
+        return shortbowPressure;
+    }
+
     /** Restores movement, weapon state, and reserve ammo to the supplied round spawn point. */
     public void resetForRound(float spawnX, float spawnY, PlayerActorState moveState) {
         xPosition = spawnX;
@@ -113,6 +120,7 @@ public class PlayerActor extends AbstractPlayerActor {
         damageEndFeedbackFrameCount = 0;
         shortbowCooldownFrameCount = 0;
         shortbowAmmo.reset();
+        shortbowPressure.reset();
         state = moveState.entryState(this);
     }
 

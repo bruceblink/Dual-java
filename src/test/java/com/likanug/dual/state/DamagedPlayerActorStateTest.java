@@ -56,4 +56,23 @@ class DamagedPlayerActorStateTest {
         assertEquals(GameConstants.DAMAGED_END_FEEDBACK_FRAMES, player.getDamageEndFeedbackFrameCount());
         assertEquals(moveState, player.getState());
     }
+
+    @Test
+    void consecutiveHitsStopRefreshingAfterThePressureLimit() {
+        PlayerActor player = new PlayerActor(
+                new HumanPlayerEngine(new KeyInput()),
+                255,
+                new App()
+        );
+        DamagedPlayerActorState state = new DamagedPlayerActorState(new App());
+        state.setMoveState(new MovePlayerActorState(new App()));
+
+        state.entryState(player);
+        state.entryState(player);
+        player.setDamageRemainingFrameCount(10);
+        state.entryState(player);
+
+        assertEquals(10, player.getDamageRemainingFrameCount());
+        assertEquals(2, player.getShortbowPressure().getConsecutiveRefreshes());
+    }
 }

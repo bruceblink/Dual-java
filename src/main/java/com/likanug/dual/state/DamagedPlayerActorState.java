@@ -33,6 +33,7 @@ public class DamagedPlayerActorState extends PlayerActorState {
         int remainingFrames = Math.max(0, parentActor.getDamageRemainingFrameCount() - 1);
         parentActor.setDamageRemainingFrameCount(remainingFrames);
         if (remainingFrames == 0) {
+            parentActor.getShortbowPressure().reset();
             parentActor.setDamageEndFeedbackFrameCount(GameConstants.DAMAGED_END_FEEDBACK_FRAMES);
             parentActor.setState(moveState.entryState(parentActor));
         }
@@ -59,9 +60,11 @@ public class DamagedPlayerActorState extends PlayerActorState {
 
     public PlayerActorState entryState(PlayerActor parentActor) {
         // 受击会打断正在进行的长弓蓄力，恢复移动后不能沿用旧进度。
-        parentActor.setChargedFrameCount(0);
-        parentActor.setDamageRemainingFrameCount(durationFrameCount);
-        parentActor.setDamageEndFeedbackFrameCount(0);
+        if (parentActor.getShortbowPressure().recordHit()) {
+            parentActor.setChargedFrameCount(0);
+            parentActor.setDamageRemainingFrameCount(durationFrameCount);
+            parentActor.setDamageEndFeedbackFrameCount(0);
+        }
         return this;
     }
 
