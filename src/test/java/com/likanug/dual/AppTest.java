@@ -160,4 +160,24 @@ public class AppTest {
         assertFalse(app.isLocalModeMenuVisible());
         assertTrue(app.getSystem().isDemoPlay());
     }
+
+    @Test
+    void settingsMenuChangesVolumeAndCanBeClosed() {
+        app.setCurrentKeyInput(new KeyInput());
+        app.setSecondKeyInput(new KeyInput());
+        app.openSettingsMenu();
+
+        assertTrue(app.isSettingsMenuVisible());
+        app.key = '-';
+        app.keyPressed();
+        assertEquals("50%", app.getAudioSettings().displayLabel());
+
+        app.key = 'm';
+        app.keyPressed();
+        assertEquals("Muted", app.getAudioSettings().displayLabel());
+
+        app.key = ESC;
+        app.keyPressed();
+        assertFalse(app.isSettingsMenuVisible());
+    }
 }

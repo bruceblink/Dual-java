@@ -2,6 +2,8 @@ package com.likanug.dual;
 
 import com.likanug.dual.game.GameSystem;
 import com.likanug.dual.game.ArenaLayout;
+import com.likanug.dual.game.AudioSettings;
+import com.likanug.dual.game.SoundFeedback;
 import com.likanug.dual.inputDevice.KeyBindings;
 import com.likanug.dual.inputDevice.KeyInput;
 import com.likanug.dual.inputDevice.LocalInputRouter;
@@ -44,6 +46,7 @@ public class App extends PApplet {
     private LocalInputRouter localInputRouter;
     private GameSystem system;
     private boolean paused;
+    private final AudioSettings audioSettings = new AudioSettings();
 
     // ──────────────────────────────────────────────
     // 联机大厅状态机
@@ -55,7 +58,8 @@ public class App extends PApplet {
         HOSTING,     // 房主等待对方连接
         JOINING,     // 加入方输入 IP / Port
         CONNECTING,  // 正在连接中…
-        ONLINE       // 联机对战进行中
+        ONLINE,       // 联机对战进行中
+        SETTINGS_MENU // 音量和操作说明
     }
 
     private NetworkMode networkMode = NetworkMode.NONE;
@@ -83,6 +87,12 @@ public class App extends PApplet {
     public boolean isPaused() { return paused; }
     public void setPaused(boolean p) { this.paused = p; }
     public boolean isLocalModeMenuVisible() { return networkMode == NetworkMode.LOCAL_MODE_MENU; }
+    public boolean isSettingsMenuVisible() { return networkMode == NetworkMode.SETTINGS_MENU; }
+    public AudioSettings getAudioSettings() { return audioSettings; }
+
+    public App() {
+        SoundFeedback.setVolume(audioSettings.getVolume());
+    }
 
     // ──────────────────────────────────────────────
     // Processing 生命周期
@@ -145,6 +155,12 @@ public class App extends PApplet {
         networkMode = NetworkMode.LOCAL_MODE_MENU;
     }
 
+    /** Opens the local settings surface while preserving the current game for a safe return. */
+    public void openSettingsMenu() {
+        clearLocalInputs();
+        networkMode = NetworkMode.SETTINGS_MENU;
+    }
+
     /** Clears both local snapshots so a menu key cannot leak into the next combat state. */
     public void clearLocalInputs() {
         if (localInputRouter != null) localInputRouter.clear();
@@ -175,6 +191,7 @@ public class App extends PApplet {
             case JOINING    -> drawJoining();
             case CONNECTING -> drawConnecting();
             case ONLINE     -> drawOnlineGame();
+            case SETTINGS_MENU -> drawSettingsMenu();
         }
         popMatrix();
     }
@@ -351,6 +368,24 @@ public class App extends PApplet {
         popMatrix();
     }
 
+    private void drawSettingsMenu() {
+        pushMatrix();
+        translate(INTERNAL_CANVAS_WIDTH * 0.5f, INTERNAL_CANVAS_HEIGHT * 0.5f);
+        pushStyle();
+        textFont(smallFont, 28);
+        fill(0);
+        text("Settings", 0, -120);
+        textFont(smallFont, 20);
+        text("Volume: " + audioSettings.displayLabel(), 0, -45);
+        text("P1: WASD + arrows, Z shortbow, X longbow", 0, 5);
+        text("P2: IJKL + TFGH aim, B shortbow, V longbow", 0, 35);
+        textFont(smallFont, 16);
+        fill(80);
+        text("+ / - change volume | M mute | ESC back", 0, 95);
+        popStyle();
+        popMatrix();
+    }
+
     private void drawConnecting() {
         // 轮询连接状态
         if (networkClient != null && networkClient.isConnected()) {
@@ -447,6 +482,7 @@ public class App extends PApplet {
             case JOINING -> handleKeyJoining();
             case CONNECTING -> { /* 等待结果，不处理输入 */ }
             case ONLINE -> handleKeyOnline();
+            case SETTINGS_MENU -> handleKeySettingsMenu();
         }
     }
 
@@ -461,6 +497,11 @@ public class App extends PApplet {
     // ──────────────────────────────────────────────
 
     private void handleKeyNone() {
+        if (key == 'o' || key == 'O') {
+            clearLocalInputs();
+            networkMode = NetworkMode.SETTINGS_MENU;
+            return;
+        }
         if (key == 'n' || key == 'N') {
             networkMode = NetworkMode.LOBBY_MENU;
             return;
@@ -514,6 +555,22 @@ public class App extends PApplet {
         if (key == 'j' || key == 'J') {
             connectError = null;
             networkMode = NetworkMode.JOINING;
+        }
+    }
+
+    /** Handles settings changes without allowing menu keys to leak into a combat input snapshot. */
+    private void handleKeySettingsMenu() {
+        if (key == ESC) {
+            key = 0;
+            networkMode = NetworkMode.NONE;
+            return;
+        }
+        if (key == '+' || key == '=') {
+            SoundFeedback.setVolume(audioSettings.increaseVolume());
+        } else if (key == '-') {
+            SoundFeedback.setVolume(audioSettings.decreaseVolume());
+        } else if (key == 'm' || key == 'M') {
+            SoundFeedback.setVolume(audioSettings.toggleMute());
         }
     }
 
