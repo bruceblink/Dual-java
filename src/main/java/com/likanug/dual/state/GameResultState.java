@@ -1,6 +1,7 @@
 package com.likanug.dual.state;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.game.GameSystem;
 import com.likanug.dual.game.MatchScore;
 import com.likanug.dual.game.PlayerSide;
@@ -29,6 +30,9 @@ public class GameResultState extends GameSystemState {
     private final TacticalEvent finishFeedback;
     private final MatchScore.RoundResult roundResult;
     private boolean networkResetRequested;
+    private boolean networkResetTimedOut;
+    private boolean xPressedLastFrame;
+    private int networkResetWaitFrameCount;
 
     public GameResultState(App app, String msg) {
         this(app, msg, null);
@@ -102,21 +106,37 @@ public class GameResultState extends GameSystemState {
             }
         } else {
             if (properFrameCount > durationFrameCount) {
-                if (app.getCurrentKeyInput().isXPressed) {
-                    if (roundResult != null) {
-                        if (!networkResetRequested) {
-                            system.requestNetworkRematch(roundResult);
-                            networkResetRequested = true;
-                        }
-                        if (!system.isNetworkRematchReady(roundResult)) return;
-                        if (roundResult.matchWinner().isPresent()) {
-                            system.resetMatch();
-                        } else {
-                            system.resetRound();
-                        }
-                    } else {
-                        app.newGame(true, true);  // legacy result without score
+                boolean xPressed = app.getCurrentKeyInput().isXPressed;
+                if (!xPressed) {
+                    xPressedLastFrame = false;
+                    if (networkResetTimedOut) {
+                        networkResetTimedOut = false;
+                        networkResetRequested = false;
+                        networkResetWaitFrameCount = 0;
                     }
+                } else if (!xPressedLastFrame && roundResult != null) {
+                    system.requestNetworkRematch(roundResult);
+                    networkResetRequested = true;
+                    networkResetWaitFrameCount = 0;
+                }
+                xPressedLastFrame = xPressed;
+
+                if (xPressed && roundResult != null && networkResetRequested) {
+                    if (!system.isNetworkRematchReady(roundResult)) {
+                        networkResetWaitFrameCount++;
+                        if (hasNetworkRematchTimedOut(networkResetWaitFrameCount)) {
+                            networkResetTimedOut = true;
+                            networkResetRequested = false;
+                        }
+                        return;
+                    }
+                    if (roundResult.matchWinner().isPresent()) {
+                        system.resetMatch();
+                    } else {
+                        system.resetRound();
+                    }
+                } else if (xPressed && roundResult == null) {
+                    app.newGame(true, true);  // legacy result without score
                 } else if (roundResult != null && roundResult.matchWinner().isPresent()
                         && app.getCurrentKeyInput().isZPressed) {
                     app.newGame(true, true);  // return to the demo without replaying
@@ -132,11 +152,17 @@ public class GameResultState extends GameSystemState {
 
     /** Names the distinct actions available after a completed match or an intermediate round. */
     String resetPromptLabel() {
+        if (networkResetTimedOut) return "No response. Release X and try again.";
         if (networkResetRequested) return "Waiting for rival...";
         if (roundResult != null && roundResult.matchWinner().isPresent()) {
             return "Press X to replay, Z for demo.";
         }
         return "Press X key for next round.";
+    }
+
+    /** Keeps a lost peer from leaving the result overlay waiting forever. */
+    static boolean hasNetworkRematchTimedOut(int waitFrames) {
+        return waitFrames >= GameConstants.NETWORK_REMATCH_TIMEOUT_FRAMES;
     }
 
     /** Formats a result-layer label that keeps round winner and match winner semantics distinct. */

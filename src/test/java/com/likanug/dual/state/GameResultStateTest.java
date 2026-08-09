@@ -47,4 +47,10 @@ class GameResultStateTest {
 
         assertEquals("Press X to replay, Z for demo.", state.resetPromptLabel());
     }
+
+    @Test
+    void networkRematchTimeoutHasExplicitBound() {
+        assertEquals(false, GameResultState.hasNetworkRematchTimedOut(299));
+        assertEquals(true, GameResultState.hasNetworkRematchTimedOut(300));
+    }
 }
