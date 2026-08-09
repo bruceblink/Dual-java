@@ -2,6 +2,7 @@ package com.likanug.dual.state;
 
 import com.likanug.dual.App;
 import com.likanug.dual.game.PlayerSide;
+import com.likanug.dual.game.MatchScore;
 import com.likanug.dual.game.TacticalEvent;
 import com.likanug.dual.game.TacticalEventType;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ class GameResultStateTest {
         assertEquals(GameResultState.RESULT_MESSAGE_X, GameResultState.RESET_PROMPT_X);
         assertEquals(App.INTERNAL_CANVAS_HEIGHT * 0.5F, GameResultState.resultGroupCenterY());
         assertEquals(App.INTERNAL_CANVAS_HEIGHT * 0.5F, GameResultState.tacticalResultGroupCenterY());
-        assertEquals(80.0F, GameResultState.RESET_PROMPT_Y - GameResultState.RESULT_MESSAGE_Y);
+        assertEquals(160.0F, GameResultState.RESET_PROMPT_Y - GameResultState.RESULT_MESSAGE_Y);
     }
 
     @Test
@@ -25,5 +26,16 @@ class GameResultStateTest {
         GameResultState state = new GameResultState(new App(), "You win.", finish);
 
         assertEquals(finish, state.getFinishFeedback());
+    }
+
+    @Test
+    void resultScoreLabelDistinguishesRoundAndMatchOutcomes() {
+        MatchScore score = new MatchScore(3);
+        MatchScore.RoundResult round = score.recordRoundWin(PlayerSide.ONE);
+        assertEquals("ROUND WINNER: YOU | Score YOU 1 - 0", GameResultState.roundScoreDisplayLabel(round));
+
+        score.recordRoundWin(PlayerSide.ONE);
+        MatchScore.RoundResult match = score.recordRoundWin(PlayerSide.ONE);
+        assertEquals("MATCH COMPLETE: YOU | Score YOU 3 - 0", GameResultState.roundScoreDisplayLabel(match));
     }
 }

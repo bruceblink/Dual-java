@@ -9,6 +9,7 @@ import com.likanug.dual.actor.player.AbstractPlayerActor;
 import com.likanug.dual.actor.player.NullPlayerActor;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.game.GameSystem;
+import com.likanug.dual.game.MatchScore;
 import com.likanug.dual.game.PlayerSide;
 import com.likanug.dual.game.TacticalEvent;
 import com.likanug.dual.game.TacticalEventType;
@@ -28,6 +29,8 @@ public class PlayGameState extends GameSystemState {
 
     static final float SHORTBOW_HUD_X = 72.0F;
     static final float SHORTBOW_HUD_Y = INTERNAL_CANVAS_HEIGHT - 42.0F;
+    static final float MATCH_SCORE_HUD_Y = 24.0F;
+    static final float TACTICAL_FEEDBACK_Y = 64.0F;
     private static final float SHORTBOW_HUD_DOT_SIZE = 16.0F;
     private static final float SHORTBOW_HUD_DOT_GAP = 24.0F;
     private static final int TACTICAL_FEEDBACK_DURATION_FRAMES = (int) (FPS * 0.75F);
@@ -56,6 +59,7 @@ public class PlayGameState extends GameSystemState {
     }
 
     public void displayMessage(GameSystem system) {
+        displayMatchScore(system);
         displayShortbowAmmo(system);
         displayTacticalFeedback(system);
 
@@ -63,6 +67,23 @@ public class PlayGameState extends GameSystemState {
         if (properFrameCount >= messageDurationFrameCount) return;
         app.fill(0, (float) (255.0 * (1.0 - (float) properFrameCount / messageDurationFrameCount)));
         app.text("Go", INTERNAL_CANVAS_WIDTH * 0.5F, INTERNAL_CANVAS_HEIGHT * 0.5F);
+    }
+
+    /** Draws the current round and first-to target in the stable HUD layer outside screen shake. */
+    private void displayMatchScore(GameSystem system) {
+        app.pushStyle();
+        app.textAlign(CENTER, CENTER);
+        app.textFont(App.smallFont, 18);
+        app.fill(0, 192);
+        app.text(matchScoreDisplayLabel(system.getMatchScore()), INTERNAL_CANVAS_WIDTH * 0.5F, MATCH_SCORE_HUD_Y);
+        app.popStyle();
+    }
+
+    /** Formats one compact scoreboard label shared by rendering and UI tests. */
+    static String matchScoreDisplayLabel(MatchScore score) {
+        int roundNumber = score.getPlayerOneWins() + score.getPlayerTwoWins() + 1;
+        return "Round " + roundNumber + " | YOU " + score.getPlayerOneWins()
+                + " - " + score.getPlayerTwoWins() + " RIVAL | First to " + score.getRoundsToWin();
     }
 
     /** Draws the local player's current shortbow reserve outside the shake transform for reliable combat feedback. */
@@ -123,7 +144,7 @@ public class PlayGameState extends GameSystemState {
         app.text(
                 tacticalFeedbackLabel(tacticalFeedbackEvent.attacker(), tacticalFeedbackEvent.type()),
                 INTERNAL_CANVAS_WIDTH * 0.5F,
-                52.0F);
+                TACTICAL_FEEDBACK_Y);
         app.popStyle();
     }
 

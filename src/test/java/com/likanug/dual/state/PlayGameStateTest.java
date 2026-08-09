@@ -5,6 +5,7 @@ import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.arrow.ShortbowArrow;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.game.GameSystem;
+import com.likanug.dual.game.MatchScore;
 import com.likanug.dual.game.PlayerSide;
 import com.likanug.dual.game.TacticalEvent;
 import com.likanug.dual.game.TacticalEventType;
@@ -19,6 +20,15 @@ class PlayGameStateTest {
     void shortbowAmmoHudKeepsTheAvailableAndMaximumValuesReadable() {
         assertEquals("Shortbow 3 / 3", PlayGameState.shortbowAmmoDisplayLabel(3, 3));
         assertEquals("Shortbow 0 / 3", PlayGameState.shortbowAmmoDisplayLabel(0, 3));
+    }
+
+    @Test
+    void matchScoreHudNamesRoundScoreAndTarget() {
+        MatchScore score = new MatchScore(3);
+        score.recordRoundWin(PlayerSide.ONE);
+        score.recordRoundWin(PlayerSide.TWO);
+
+        assertEquals("Round 3 | YOU 1 - 1 RIVAL | First to 3", PlayGameState.matchScoreDisplayLabel(score));
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.likanug.dual.state;
 import com.likanug.dual.App;
 import com.likanug.dual.game.GameSystem;
 import com.likanug.dual.game.MatchScore;
+import com.likanug.dual.game.PlayerSide;
 import com.likanug.dual.game.TacticalEvent;
 import com.likanug.dual.game.TacticalEventType;
 
@@ -18,12 +19,13 @@ public class GameResultState extends GameSystemState {
     private final String resultMessage;
     private final int durationFrameCount = FPS;
     static final float RESULT_MESSAGE_X = INTERNAL_CANVAS_WIDTH * 0.5F;
-    static final float RESULT_MESSAGE_Y = INTERNAL_CANVAS_HEIGHT * 0.5F - 40.0F;
+    static final float RESULT_MESSAGE_Y = INTERNAL_CANVAS_HEIGHT * 0.5F - 80.0F;
     static final float RESET_PROMPT_X = RESULT_MESSAGE_X;
-    static final float RESET_PROMPT_Y = INTERNAL_CANVAS_HEIGHT * 0.5F + 40.0F;
-    static final float TACTICAL_RESULT_MESSAGE_Y = INTERNAL_CANVAS_HEIGHT * 0.5F - 80.0F;
-    static final float TACTICAL_FINISH_Y = INTERNAL_CANVAS_HEIGHT * 0.5F;
-    static final float TACTICAL_RESET_PROMPT_Y = INTERNAL_CANVAS_HEIGHT * 0.5F + 80.0F;
+    static final float RESET_PROMPT_Y = INTERNAL_CANVAS_HEIGHT * 0.5F + 80.0F;
+    static final float TACTICAL_RESULT_MESSAGE_Y = RESULT_MESSAGE_Y;
+    static final float TACTICAL_FINISH_Y = INTERNAL_CANVAS_HEIGHT * 0.5F - 28.0F;
+    static final float ROUND_SCORE_Y = INTERNAL_CANVAS_HEIGHT * 0.5F + 28.0F;
+    static final float TACTICAL_RESET_PROMPT_Y = RESET_PROMPT_Y;
     private final TacticalEvent finishFeedback;
     private final MatchScore.RoundResult roundResult;
 
@@ -79,6 +81,11 @@ public class GameResultState extends GameSystemState {
             app.text(PlayGameState.tacticalFeedbackLabel(finishFeedback.attacker(), finishFeedback.type()),
                     RESULT_MESSAGE_X, TACTICAL_FINISH_Y);
         }
+        if (roundResult != null) {
+            app.textFont(smallFont, 22);
+            app.fill(224);
+            app.text(roundScoreDisplayLabel(roundResult), RESULT_MESSAGE_X, ROUND_SCORE_Y);
+        }
         if (!system.isDemoPlay() && shouldShowResetPrompt()) {
             app.textFont(smallFont, 20);
             app.fill(224);
@@ -106,6 +113,16 @@ public class GameResultState extends GameSystemState {
     /** 重置提示延迟一秒出现，避免玩家误按跳过结算画面。 */
     boolean shouldShowResetPrompt() {
         return properFrameCount > durationFrameCount;
+    }
+
+    /** Formats a result-layer label that keeps round winner and match winner semantics distinct. */
+    static String roundScoreDisplayLabel(MatchScore.RoundResult result) {
+        String roundWinner = result.roundWinner() == PlayerSide.ONE ? "YOU" : "RIVAL";
+        String outcome = result.matchWinner().isPresent()
+                ? "MATCH COMPLETE: " + roundWinner
+                : "ROUND WINNER: " + roundWinner;
+        return outcome + " | Score YOU " + result.playerOneWins()
+                + " - " + result.playerTwoWins();
     }
 
     TacticalEvent getFinishFeedback() {
