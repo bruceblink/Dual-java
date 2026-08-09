@@ -42,6 +42,11 @@ public class PlayGameState extends GameSystemState {
     }
 
     public void runSystem(GameSystem system) {
+        if (system.consumeCombatPauseFrame()) {
+            displayFrozenCombatFrame(system);
+            return;
+        }
+
         system.advanceCombatFrame();
         system.getMyGroup().update();
         system.getMyGroup().act();
@@ -55,6 +60,15 @@ public class PlayGameState extends GameSystemState {
         checkCollision(system);
 
         system.getCommonParticleSet().update();
+        system.getCommonParticleSet().display();
+    }
+
+    /** Keeps the collision scene and its particles visible while simulation waits for the hit-stop window. */
+    private void displayFrozenCombatFrame(GameSystem system) {
+        system.getMyGroup().displayPlayer();
+        system.getOtherGroup().displayPlayer();
+        system.getMyGroup().displayArrows();
+        system.getOtherGroup().displayArrows();
         system.getCommonParticleSet().display();
     }
 
@@ -185,6 +199,7 @@ public class PlayGameState extends GameSystemState {
                 system.addInterceptParticles(
                         collisionMidpoint(eachMyArrow.getxPosition(), eachEnemyArrow.getxPosition()),
                         collisionMidpoint(eachMyArrow.getyPosition(), eachEnemyArrow.getyPosition()));
+                system.startCombatPause(GameConstants.INTERCEPT_HIT_STOP_FRAMES);
                 breakArrow(eachMyArrow, myGroup);
                 breakArrow(eachEnemyArrow, otherGroup);
             }

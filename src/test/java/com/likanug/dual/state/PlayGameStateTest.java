@@ -12,6 +12,8 @@ import com.likanug.dual.game.TacticalEventType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static processing.core.PConstants.HALF_PI;
 
 class PlayGameStateTest {
@@ -104,5 +106,20 @@ class PlayGameStateTest {
         assertEquals(
                 GameConstants.ARROW_BREAK_PARTICLE_COUNT * 2 + GameConstants.INTERCEPT_PARTICLE_COUNT + 1,
                 system.getCommonParticleSet().getParticleList().size());
+        assertEquals(GameConstants.INTERCEPT_HIT_STOP_FRAMES, system.getCombatPauseFrameCount());
+    }
+
+    @Test
+    void interceptionPauseConsumesExactlyItsConfiguredFrames() {
+        App app = new App();
+        GameSystem system = new GameSystem(true, false, app);
+
+        system.startCombatPause(GameConstants.INTERCEPT_HIT_STOP_FRAMES);
+
+        for (int frame = 0; frame < GameConstants.INTERCEPT_HIT_STOP_FRAMES; frame++) {
+            assertTrue(system.consumeCombatPauseFrame());
+        }
+        assertFalse(system.consumeCombatPauseFrame());
+        assertEquals(0, system.getCombatPauseFrameCount());
     }
 }

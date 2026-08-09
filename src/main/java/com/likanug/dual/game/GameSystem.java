@@ -41,6 +41,7 @@ public class GameSystem {
             new TacticalEventRecorder(GameConstants.TACTICAL_OPENING_WINDOW_FRAMES);
     private final List<TacticalEvent> tacticalEventLog = new ArrayList<>();
     private int combatFrameCount;
+    private int combatPauseFrameCount;
     /** 用于游戏物理运算的可确定性随机数生成器（联机时双方使用相同种子保证一致） */
     private final Random gameRandom;
     private final MatchScore matchScore = new MatchScore(GameConstants.MATCH_ROUNDS_TO_WIN);
@@ -188,8 +189,25 @@ public class GameSystem {
         otherGroup.setPlayer(createPlayer(otherEngine, 0, 100));
         screenShakeValue = 0;
         combatFrameCount = 0;
+        combatPauseFrameCount = 0;
         resetTacticalEvents();
         currentState = new StartGameState(app);
+    }
+
+    /** Starts a short deterministic hit-stop window used only for readable arrow interceptions. */
+    public void startCombatPause(int frameCount) {
+        combatPauseFrameCount = Math.max(combatPauseFrameCount, frameCount);
+    }
+
+    public int getCombatPauseFrameCount() {
+        return combatPauseFrameCount;
+    }
+
+    /** Consumes one frozen simulation frame while leaving rendering and feedback visible. */
+    public boolean consumeCombatPauseFrame() {
+        if (combatPauseFrameCount <= 0) return false;
+        combatPauseFrameCount--;
+        return true;
     }
 
     /** Starts a fresh match in the current mode, retaining the input engines and any network link. */
