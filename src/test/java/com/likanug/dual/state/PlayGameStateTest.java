@@ -27,6 +27,12 @@ class PlayGameStateTest {
     @Test
     void pressureHudNamesTheBoundedRefreshCount() {
         assertEquals("Under pressure 1 / 2", PlayGameState.pressureStatusLabel(1, 2));
+        assertEquals("P2 pressure 2 / 2", PlayGameState.pressureStatusLabel("P2", 2, 2));
+    }
+
+    @Test
+    void localOpponentAmmoHudKeepsTheOwnerLabelVisible() {
+        assertEquals("P2 Shortbow 1 / 3", PlayGameState.shortbowAmmoDisplayLabel("P2 Shortbow", 1, 3));
     }
 
     @Test

@@ -30,6 +30,9 @@ public class PlayGameState extends GameSystemState {
     static final float SHORTBOW_HUD_X = 72.0F;
     static final float SHORTBOW_HUD_Y = INTERNAL_CANVAS_HEIGHT - 42.0F;
     static final float PRESSURE_HUD_Y = SHORTBOW_HUD_Y - 54.0F;
+    static final float OPPONENT_SHORTBOW_HUD_X = INTERNAL_CANVAS_WIDTH - SHORTBOW_HUD_X;
+    static final float OPPONENT_SHORTBOW_HUD_Y = 94.0F;
+    static final float OPPONENT_PRESSURE_HUD_Y = 40.0F;
     static final float MATCH_SCORE_HUD_Y = 24.0F;
     static final float TACTICAL_FEEDBACK_Y = 64.0F;
     private static final float SHORTBOW_HUD_DOT_SIZE = 16.0F;
@@ -79,6 +82,7 @@ public class PlayGameState extends GameSystemState {
         displayMatchScore(system);
         displayPressureStatus(system);
         displayShortbowAmmo(system);
+        displayLocalOpponentHud(system);
         displayTacticalFeedback(system);
 
         int messageDurationFrameCount = FPS;
@@ -90,7 +94,22 @@ public class PlayGameState extends GameSystemState {
     /** Shows the local player's active pressure refresh count so repeated shortbow hits remain legible. */
     private void displayPressureStatus(GameSystem system) {
         if (system.getMyGroup().getPlayer().isNull()) return;
-        final PlayerActor player = (PlayerActor) system.getMyGroup().getPlayer();
+        displayPressureStatus(
+                (PlayerActor) system.getMyGroup().getPlayer(),
+                SHORTBOW_HUD_X,
+                PRESSURE_HUD_Y,
+                null);
+    }
+
+    /** Shows the second local player's bounded pressure count in a stable top-of-arena HUD. */
+    private void displayLocalOpponentHud(GameSystem system) {
+        if (!system.isLocalTwoPlayer() || system.getOtherGroup().getPlayer().isNull()) return;
+        final PlayerActor player = (PlayerActor) system.getOtherGroup().getPlayer();
+        displayPressureStatus(player, OPPONENT_SHORTBOW_HUD_X, OPPONENT_PRESSURE_HUD_Y, "P2");
+        displayShortbowAmmoHud(player, OPPONENT_SHORTBOW_HUD_X, OPPONENT_SHORTBOW_HUD_Y, "P2 Shortbow");
+    }
+
+    private void displayPressureStatus(PlayerActor player, float x, float y, String ownerLabel) {
         final int pressureCount = player.getShortbowPressure().getConsecutiveRefreshes();
         if (player.getDamageRemainingFrameCount() <= 0 || pressureCount <= 0) return;
 
@@ -99,15 +118,21 @@ public class PlayGameState extends GameSystemState {
         app.textFont(App.smallFont, 14);
         app.fill(0, 160);
         app.text(
-                pressureStatusLabel(pressureCount, player.getShortbowPressure().getMaximumConsecutiveRefreshes()),
-                SHORTBOW_HUD_X,
-                PRESSURE_HUD_Y);
+                ownerLabel == null
+                        ? pressureStatusLabel(pressureCount, player.getShortbowPressure().getMaximumConsecutiveRefreshes())
+                        : pressureStatusLabel(ownerLabel, pressureCount, player.getShortbowPressure().getMaximumConsecutiveRefreshes()),
+                x,
+                y);
         app.popStyle();
     }
 
     /** Formats the bounded pressure count for the same compact HUD surface as shortbow ammo. */
     static String pressureStatusLabel(int pressureCount, int maximumPressureCount) {
         return "Under pressure " + pressureCount + " / " + maximumPressureCount;
+    }
+
+    static String pressureStatusLabel(String ownerLabel, int pressureCount, int maximumPressureCount) {
+        return ownerLabel + " pressure " + pressureCount + " / " + maximumPressureCount;
     }
 
     /** Draws the current round and first-to target in the stable HUD layer outside screen shake. */
@@ -130,8 +155,10 @@ public class PlayGameState extends GameSystemState {
     /** Draws the local player's current shortbow reserve outside the shake transform for reliable combat feedback. */
     private void displayShortbowAmmo(GameSystem system) {
         if (system.getMyGroup().getPlayer().isNull()) return;
+        displayShortbowAmmoHud((PlayerActor) system.getMyGroup().getPlayer(), SHORTBOW_HUD_X, SHORTBOW_HUD_Y, "Shortbow");
+    }
 
-        final PlayerActor player = (PlayerActor) system.getMyGroup().getPlayer();
+    private void displayShortbowAmmoHud(PlayerActor player, float x, float y, String label) {
         final int availableAmmo = player.getShortbowAmmo().getAvailableAmmo();
         final int maximumAmmo = player.getShortbowAmmo().getMaximumAmmo();
 
@@ -139,32 +166,32 @@ public class PlayGameState extends GameSystemState {
         app.textAlign(CENTER, CENTER);
         app.textFont(App.smallFont, 16);
         app.fill(0, 176);
-        app.text(shortbowAmmoDisplayLabel(availableAmmo, maximumAmmo), SHORTBOW_HUD_X, SHORTBOW_HUD_Y - 22.0F);
+        app.text(shortbowAmmoDisplayLabel(label, availableAmmo, maximumAmmo), x, y - 22.0F);
         app.stroke(0, 176);
         for (int index = 0; index < maximumAmmo; index++) {
             if (index < availableAmmo) app.fill(255);
             else app.fill(0, 48);
             app.ellipse(
-                    SHORTBOW_HUD_X + (index - (maximumAmmo - 1) * 0.5F) * SHORTBOW_HUD_DOT_GAP,
-                    SHORTBOW_HUD_Y,
+                    x + (index - (maximumAmmo - 1) * 0.5F) * SHORTBOW_HUD_DOT_GAP,
+                    y,
                     SHORTBOW_HUD_DOT_SIZE,
                     SHORTBOW_HUD_DOT_SIZE);
         }
-        displayShortbowRecoveryBar(player.getShortbowAmmo().getRecoveryProgressRatio());
+        displayShortbowRecoveryBar(x, y, player.getShortbowAmmo().getRecoveryProgressRatio());
         app.popStyle();
     }
 
     /** Shows the next-arrow recovery fraction directly below the reserve dots without covering the arena. */
-    private void displayShortbowRecoveryBar(float progressRatio) {
+    private void displayShortbowRecoveryBar(float x, float y, float progressRatio) {
         if (progressRatio <= 0.0F) return;
         final float clampedProgress = Math.max(0.0F, Math.min(1.0F, progressRatio));
-        final float barY = SHORTBOW_HUD_Y + 16.0F;
+        final float barY = y + 16.0F;
         app.noStroke();
         app.fill(0, 48);
-        app.rect(SHORTBOW_HUD_X, barY, SHORTBOW_RECOVERY_BAR_WIDTH, SHORTBOW_RECOVERY_BAR_HEIGHT);
+        app.rect(x, barY, SHORTBOW_RECOVERY_BAR_WIDTH, SHORTBOW_RECOVERY_BAR_HEIGHT);
         app.fill(255, 192);
         app.rect(
-                SHORTBOW_HUD_X - SHORTBOW_RECOVERY_BAR_WIDTH * 0.5F
+                x - SHORTBOW_RECOVERY_BAR_WIDTH * 0.5F
                         + SHORTBOW_RECOVERY_BAR_WIDTH * clampedProgress * 0.5F,
                 barY,
                 SHORTBOW_RECOVERY_BAR_WIDTH * clampedProgress,
@@ -173,7 +200,11 @@ public class PlayGameState extends GameSystemState {
 
     /** Produces the textual reserve value so the same numbers remain available beyond the dot indicator. */
     static String shortbowAmmoDisplayLabel(int availableAmmo, int maximumAmmo) {
-        return "Shortbow " + availableAmmo + " / " + maximumAmmo;
+        return shortbowAmmoDisplayLabel("Shortbow", availableAmmo, maximumAmmo);
+    }
+
+    static String shortbowAmmoDisplayLabel(String ownerLabel, int availableAmmo, int maximumAmmo) {
+        return ownerLabel + " " + availableAmmo + " / " + maximumAmmo;
     }
 
     /** Consumes new combat facts and shows the most recent tactical state without moving with screen shake. */
