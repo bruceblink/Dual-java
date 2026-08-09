@@ -36,11 +36,16 @@ test {
 }
 
 /**
- * 使用 JDK 自带 jpackage，自动适配当前操作系统
+ * Selects the JDK that owns jpackage, allowing Windows packaging to use the
+ * JDK 21 + WiX 3 toolchain even when Gradle itself runs on a newer JDK.
  */
+def jpackageJavaHome = providers.environmentVariable('JPACKAGE_JAVA_HOME')
+        .orElse(providers.systemProperty('jpackage.java.home'))
+        .orElse(providers.provider { System.getProperty('java.home') })
+
 def jpackageExe = providers.provider {
     def executable = org.gradle.internal.os.OperatingSystem.current().isWindows() ? 'jpackage.exe' : 'jpackage'
-    new File(System.getProperty('java.home'), "bin/${executable}").absolutePath
+    new File(jpackageJavaHome.get(), "bin/${executable}").absolutePath
 }
 
 tasks.register('packageApp', Exec) {
@@ -120,8 +125,14 @@ tasks.register('packageAppImage', Exec) {
             : os.isMacOsX()
                 ? layout.projectDirectory.file("src/main/resources/icon.icns").asFile.absolutePath
                 : layout.projectDirectory.file("src/main/resources/icon.png").asFile.absolutePath
+    def imageAppDir = new File(imageDistDir, appName)
 
     doFirst {
+        // jpackage refuses an existing app-image target; remove only this task's generated directory.
+        if (imageAppDir.exists()) {
+            imageAppDir.eachFileRecurse { generatedFile -> generatedFile.setWritable(true) }
+            imageAppDir.deleteDir()
+        }
         imageDistDir.mkdirs()
     }
 

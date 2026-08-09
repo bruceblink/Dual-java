@@ -91,6 +91,7 @@
 java -jar server/build/libs/dual-server-1.0-all.jar [port]
 
 # 打包为 Windows 安装包（.exe，需要 WiX 3.x）
+# 若 Gradle 使用 JDK 25+，将 JPACKAGE_JAVA_HOME 指向 JDK 21；WiX 3 的 tools 目录需在 PATH
 ./gradlew packageApp
 
 # 在未安装 WiX 时验证可运行的应用目录
@@ -98,6 +99,10 @@ java -jar server/build/libs/dual-server-1.0-all.jar [port]
 ```
 
 安装包输出到 `build/dist/` 目录。
+
+Windows 安装器使用 JDK 21 的 `jpackage` 与 WiX 3.x。若当前 `JAVA_HOME` 是更高版本的 JDK，
+可在 PowerShell 中临时设置 `JPACKAGE_JAVA_HOME` 后再运行上面的任务；不设置时默认使用当前 JDK。
+`JPACKAGE_JAVA_HOME` 也可改用 Gradle 系统属性 `-Djpackage.java.home=...`。
 
 ## 构建说明
 
