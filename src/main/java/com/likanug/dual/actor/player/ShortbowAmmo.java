@@ -53,4 +53,10 @@ public final class ShortbowAmmo {
         availableAmmo++;
         recoveryProgressFrameCount = 0;
     }
+
+    /** Restores a new round's full reserve and removes recovery progress from the previous round. */
+    public void reset() {
+        availableAmmo = maximumAmmo;
+        recoveryProgressFrameCount = 0;
+    }
 }

@@ -31,6 +31,9 @@ public class GameSystem {
     private GameSystemState currentState;
     private float screenShakeValue;
     private final DamagedPlayerActorState damagedState;
+    private final MovePlayerActorState moveState;
+    private final PlayerEngine myEngine;
+    private final PlayerEngine otherEngine;
     private final GameBackground currentBackground;
     private final boolean demoPlay;
     private boolean showsInstructionWindow;
@@ -40,6 +43,7 @@ public class GameSystem {
     private int combatFrameCount;
     /** 用于游戏物理运算的可确定性随机数生成器（联机时双方使用相同种子保证一致） */
     private final Random gameRandom;
+    private final MatchScore matchScore = new MatchScore(GameConstants.MATCH_ROUNDS_TO_WIN);
 
     public GameSystem(boolean demo, boolean instruction, App app) {
         this.app = app;
@@ -50,7 +54,7 @@ public class GameSystem {
         this.otherGroup.setEnemyGroup(myGroup);
 
         // prepare PlayerActorState
-        final MovePlayerActorState moveState = new MovePlayerActorState(app);
+        this.moveState = new MovePlayerActorState(app);
         final DrawShortbowPlayerActorState drawShortbowState = new DrawShortbowPlayerActorState(app);
         final DrawBowPlayerActorState drawLongbowState = new DrawLongbowPlayerActorState(app);
         this.damagedState = new DamagedPlayerActorState(app);
@@ -61,19 +65,12 @@ public class GameSystem {
         this.damagedState.setMoveState(moveState);
 
         // prepare PlayerActor
-        PlayerEngine myEngine;
-        if (demo) myEngine = new ComputerPlayerEngine(app);
-        else myEngine = new HumanPlayerEngine(app.getCurrentKeyInput());
-        PlayerActor myPlayer = new PlayerActor(myEngine, 255, app);
-        myPlayer.setxPosition(INTERNAL_CANVAS_WIDTH * 0.5F);
-        myPlayer.setyPosition(INTERNAL_CANVAS_HEIGHT - 100);
-        myPlayer.setState(moveState);
+        if (demo) this.myEngine = new ComputerPlayerEngine(app);
+        else this.myEngine = new HumanPlayerEngine(app.getCurrentKeyInput());
+        PlayerActor myPlayer = createPlayer(myEngine, 255, INTERNAL_CANVAS_HEIGHT - 100);
         this.myGroup.setPlayer(myPlayer);
-        PlayerEngine otherEngine = new ComputerPlayerEngine(app);
-        PlayerActor otherPlayer = new PlayerActor(otherEngine, 0, app);
-        otherPlayer.setxPosition(INTERNAL_CANVAS_WIDTH * 0.5F);
-        otherPlayer.setyPosition(100);
-        otherPlayer.setState(moveState);
+        this.otherEngine = new ComputerPlayerEngine(app);
+        PlayerActor otherPlayer = createPlayer(otherEngine, 0, 100);
         this.otherGroup.setPlayer(otherPlayer);
 
         // other
@@ -101,7 +98,7 @@ public class GameSystem {
         this.myGroup.setEnemyGroup(otherGroup);
         this.otherGroup.setEnemyGroup(myGroup);
 
-        final MovePlayerActorState moveState = new MovePlayerActorState(app);
+        this.moveState = new MovePlayerActorState(app);
         final DrawShortbowPlayerActorState drawShortbowState = new DrawShortbowPlayerActorState(app);
         final DrawBowPlayerActorState drawLongbowState = new DrawLongbowPlayerActorState(app);
         this.damagedState = new DamagedPlayerActorState(app);
@@ -112,17 +109,13 @@ public class GameSystem {
         this.damagedState.setMoveState(moveState);
 
         // 本地玩家（下方，白色）
-        PlayerActor myPlayer = new PlayerActor(new HumanPlayerEngine(app.getCurrentKeyInput()), 255, app);
-        myPlayer.setxPosition(INTERNAL_CANVAS_WIDTH * 0.5F);
-        myPlayer.setyPosition(INTERNAL_CANVAS_HEIGHT - 100);
-        myPlayer.setState(moveState);
+        this.myEngine = new HumanPlayerEngine(app.getCurrentKeyInput());
+        PlayerActor myPlayer = createPlayer(myEngine, 255, INTERNAL_CANVAS_HEIGHT - 100);
         this.myGroup.setPlayer(myPlayer);
 
         // 远端玩家（上方，黑色）
-        PlayerActor otherPlayer = new PlayerActor(new NetworkPlayerEngine(network), 0, app);
-        otherPlayer.setxPosition(INTERNAL_CANVAS_WIDTH * 0.5F);
-        otherPlayer.setyPosition(100);
-        otherPlayer.setState(moveState);
+        this.otherEngine = new NetworkPlayerEngine(network);
+        PlayerActor otherPlayer = createPlayer(otherEngine, 0, 100);
         this.otherGroup.setPlayer(otherPlayer);
 
         this.commonParticleSet = new ParticleSet(2048, app);
@@ -138,6 +131,12 @@ public class GameSystem {
 
     GameSystem(App app) {
         this(false, false, app);
+    }
+
+    private PlayerActor createPlayer(PlayerEngine engine, int fillColor, float spawnY) {
+        PlayerActor player = new PlayerActor(engine, fillColor, app);
+        player.resetForRound(INTERNAL_CANVAS_WIDTH * 0.5F, spawnY, moveState);
+        return player;
     }
 
     public ActorGroup getMyGroup() {
@@ -158,6 +157,35 @@ public class GameSystem {
 
     public void setCurrentState(GameSystemState currentState) {
         this.currentState = currentState;
+    }
+
+    public MatchScore getMatchScore() {
+        return matchScore;
+    }
+
+    /** Records one round winner while keeping the match score available for the next round. */
+    public MatchScore.RoundResult recordRoundWin(PlayerSide roundWinner) {
+        return matchScore.recordRoundWin(roundWinner);
+    }
+
+    /**
+     * Rebuilds only round-scoped state: players, arrows, particles, tactical facts, and countdown.
+     * Engines, match score, mode, and network-backed input devices remain attached to this system.
+     */
+    public void resetRound() {
+        if (matchScore.isMatchComplete()) {
+            throw new IllegalStateException("A completed match cannot start another round.");
+        }
+
+        myGroup.clearArrows();
+        otherGroup.clearArrows();
+        commonParticleSet.clearForRound();
+        myGroup.setPlayer(createPlayer(myEngine, 255, INTERNAL_CANVAS_HEIGHT - 100));
+        otherGroup.setPlayer(createPlayer(otherEngine, 0, 100));
+        screenShakeValue = 0;
+        combatFrameCount = 0;
+        resetTacticalEvents();
+        currentState = new StartGameState(app);
     }
 
     public float getScreenShakeValue() {

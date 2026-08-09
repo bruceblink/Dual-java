@@ -2,6 +2,7 @@ package com.likanug.dual.state;
 
 import com.likanug.dual.App;
 import com.likanug.dual.game.GameSystem;
+import com.likanug.dual.game.MatchScore;
 import com.likanug.dual.game.TacticalEvent;
 import com.likanug.dual.game.TacticalEventType;
 
@@ -24,6 +25,7 @@ public class GameResultState extends GameSystemState {
     static final float TACTICAL_FINISH_Y = INTERNAL_CANVAS_HEIGHT * 0.5F;
     static final float TACTICAL_RESET_PROMPT_Y = INTERNAL_CANVAS_HEIGHT * 0.5F + 80.0F;
     private final TacticalEvent finishFeedback;
+    private final MatchScore.RoundResult roundResult;
 
     public GameResultState(App app, String msg) {
         this(app, msg, null);
@@ -31,12 +33,18 @@ public class GameResultState extends GameSystemState {
 
     /** Keeps a confirmed tactical finish visible after the play state hands control to the result overlay. */
     public GameResultState(App app, String msg, TacticalEvent finishFeedback) {
+        this(app, msg, finishFeedback, null);
+    }
+
+    /** Keeps the round outcome alongside existing tactical result feedback for the next-round action. */
+    public GameResultState(App app, String msg, TacticalEvent finishFeedback, MatchScore.RoundResult roundResult) {
         super(app);
         if (finishFeedback != null && finishFeedback.type() != TacticalEventType.FINISH) {
             throw new IllegalArgumentException("Result feedback must be a FINISH event.");
         }
         resultMessage = msg;
         this.finishFeedback = finishFeedback;
+        this.roundResult = roundResult;
     }
 
     public void runSystem(GameSystem system) {
@@ -86,7 +94,11 @@ public class GameResultState extends GameSystemState {
             }
         } else {
             if (properFrameCount > durationFrameCount && app.getCurrentKeyInput().isXPressed) {
-                app.newGame(true, true);  // back to demoplay with instruction window
+                if (roundResult != null && roundResult.matchWinner().isEmpty()) {
+                    system.resetRound();
+                } else {
+                    app.newGame(true, true);  // finished match or legacy result without score
+                }
             }
         }
     }

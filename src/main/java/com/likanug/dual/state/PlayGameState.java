@@ -135,9 +135,11 @@ public class PlayGameState extends GameSystemState {
 
     public void checkStateTransition(GameSystem system) {
         if (system.getMyGroup().getPlayer().isNull()) {
-            system.setCurrentState(new GameResultState(app, "You lose.", getFinishFeedback()));
+            system.setCurrentState(new GameResultState(
+                    app, "You lose.", getFinishFeedback(), system.recordRoundWin(PlayerSide.TWO)));
         } else if (system.getOtherGroup().getPlayer().isNull()) {
-            system.setCurrentState(new GameResultState(app, "You win.", getFinishFeedback()));
+            system.setCurrentState(new GameResultState(
+                    app, "You win.", getFinishFeedback(), system.recordRoundWin(PlayerSide.ONE)));
         }
     }
 

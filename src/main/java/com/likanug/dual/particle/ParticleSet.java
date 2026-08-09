@@ -65,4 +65,17 @@ public class ParticleSet {
     public ParticleBuilder getBuilder() {
         return builder;
     }
+
+    /** Returns active particles to the pool and clears transient effects between rounds. */
+    public void clearForRound() {
+        particlePool.update();
+        for (Particle particle : removingParticleList) {
+            particlePool.deallocate(particle);
+        }
+        for (Particle particle : particleList) {
+            particlePool.deallocate(particle);
+        }
+        particleList.clear();
+        removingParticleList.clear();
+    }
 }

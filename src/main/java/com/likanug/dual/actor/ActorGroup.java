@@ -77,4 +77,10 @@ public class ActorGroup {
     public ArrayList<AbstractArrowActor> getRemovingArrowList() {
         return removingArrowList;
     }
+
+    /** Removes every arrow and pending removal marker so the next round starts with a clean arena. */
+    public void clearArrows() {
+        arrowList.clear();
+        removingArrowList.clear();
+    }
 }

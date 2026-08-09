@@ -3,6 +3,7 @@ package com.likanug.dual.actor.player;
 import com.likanug.dual.App;
 import com.likanug.dual.GameConstants;
 import com.likanug.dual.playerEngine.PlayerEngine;
+import com.likanug.dual.state.PlayerActorState;
 
 import static com.likanug.dual.App.FPS;
 import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
@@ -76,6 +77,23 @@ public class PlayerActor extends AbstractPlayerActor {
 
     public ShortbowAmmo getShortbowAmmo() {
         return shortbowAmmo;
+    }
+
+    /** Restores movement, weapon state, and reserve ammo to the supplied round spawn point. */
+    public void resetForRound(float spawnX, float spawnY, PlayerActorState moveState) {
+        xPosition = spawnX;
+        yPosition = spawnY;
+        xVelocity = 0;
+        yVelocity = 0;
+        directionAngle = 0;
+        speed = 0;
+        rotationAngle = 0;
+        aimAngle = 0;
+        chargedFrameCount = 0;
+        damageRemainingFrameCount = 0;
+        shortbowCooldownFrameCount = 0;
+        shortbowAmmo.reset();
+        state = moveState.entryState(this);
     }
 
 
