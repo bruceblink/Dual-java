@@ -16,5 +16,7 @@ class AiDifficultyTest {
         assertTrue(AiDifficulty.STANDARD.getEvadeProbability() < AiDifficulty.ADVANCED.getEvadeProbability());
         assertTrue(AiDifficulty.BASIC.getKillAttemptProbability()
                 < AiDifficulty.ADVANCED.getKillAttemptProbability());
+        assertTrue(AiDifficulty.BASIC.getLongbowReleaseProbability()
+                < AiDifficulty.ADVANCED.getLongbowReleaseProbability());
     }
 }

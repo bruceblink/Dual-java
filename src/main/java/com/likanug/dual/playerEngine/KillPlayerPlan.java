@@ -45,7 +45,9 @@ public class KillPlayerPlan extends PlayerPlan {
 
         input.operateShotButton(false);
 
-        input.operateLongShotButton(!player.getState().hasCompletedLongBowCharge(player) || !(app.random(1) < 0.05));
+        final AiDifficulty difficulty = getDifficulty(player);
+        final boolean chargeComplete = player.getState().hasCompletedLongBowCharge(player);
+        input.operateLongShotButton(!shouldReleaseLongbow(chargeComplete, app.random(1.0F), difficulty));
     }
 
     public PlayerPlan nextPlan(PlayerActor player) {
@@ -57,6 +59,16 @@ public class KillPlayerPlan extends PlayerPlan {
         if (!player.getEngine().controllingInputDevice.isLongShotButtonPressed()) return movePlan;
 
         return this;
+    }
+
+    /** Releases only after a complete charge and the selected fair profile's reaction roll succeeds. */
+    static boolean shouldReleaseLongbow(boolean chargeComplete, float randomValue, AiDifficulty difficulty) {
+        return chargeComplete && randomValue < difficulty.getLongbowReleaseProbability();
+    }
+
+    private AiDifficulty getDifficulty(PlayerActor player) {
+        if (player.getEngine() instanceof ComputerPlayerEngine computer) return computer.getDifficulty();
+        return AiDifficulty.STANDARD;
     }
 
 }
