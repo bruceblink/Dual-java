@@ -33,6 +33,8 @@ public class PlayGameState extends GameSystemState {
     static final float TACTICAL_FEEDBACK_Y = 64.0F;
     private static final float SHORTBOW_HUD_DOT_SIZE = 16.0F;
     private static final float SHORTBOW_HUD_DOT_GAP = 24.0F;
+    private static final float SHORTBOW_RECOVERY_BAR_WIDTH = 72.0F;
+    private static final float SHORTBOW_RECOVERY_BAR_HEIGHT = 4.0F;
     private static final int TACTICAL_FEEDBACK_DURATION_FRAMES = (int) (FPS * 0.75F);
     private TacticalEvent tacticalFeedbackEvent;
     private int tacticalFeedbackStartFrame;
@@ -123,7 +125,25 @@ public class PlayGameState extends GameSystemState {
                     SHORTBOW_HUD_DOT_SIZE,
                     SHORTBOW_HUD_DOT_SIZE);
         }
+        displayShortbowRecoveryBar(player.getShortbowAmmo().getRecoveryProgressRatio());
         app.popStyle();
+    }
+
+    /** Shows the next-arrow recovery fraction directly below the reserve dots without covering the arena. */
+    private void displayShortbowRecoveryBar(float progressRatio) {
+        if (progressRatio <= 0.0F) return;
+        final float clampedProgress = Math.max(0.0F, Math.min(1.0F, progressRatio));
+        final float barY = SHORTBOW_HUD_Y + 16.0F;
+        app.noStroke();
+        app.fill(0, 48);
+        app.rect(SHORTBOW_HUD_X, barY, SHORTBOW_RECOVERY_BAR_WIDTH, SHORTBOW_RECOVERY_BAR_HEIGHT);
+        app.fill(255, 192);
+        app.rect(
+                SHORTBOW_HUD_X - SHORTBOW_RECOVERY_BAR_WIDTH * 0.5F
+                        + SHORTBOW_RECOVERY_BAR_WIDTH * clampedProgress * 0.5F,
+                barY,
+                SHORTBOW_RECOVERY_BAR_WIDTH * clampedProgress,
+                SHORTBOW_RECOVERY_BAR_HEIGHT);
     }
 
     /** Produces the textual reserve value so the same numbers remain available beyond the dot indicator. */

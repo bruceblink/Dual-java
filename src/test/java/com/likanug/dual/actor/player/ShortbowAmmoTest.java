@@ -54,4 +54,19 @@ class ShortbowAmmoTest {
         ammo.tickRecovery();
         assertEquals(2, ammo.getAvailableAmmo());
     }
+
+    @Test
+    void recoveryProgressReportsTheNextArrowAndResetsWhenItArrives() {
+        ShortbowAmmo ammo = new ShortbowAmmo(3, 4);
+
+        assertEquals(0.0F, ammo.getRecoveryProgressRatio());
+        ammo.consume();
+        assertEquals(0.0F, ammo.getRecoveryProgressRatio());
+        ammo.tickRecovery();
+        assertEquals(0.25F, ammo.getRecoveryProgressRatio());
+        ammo.tickRecovery();
+        ammo.tickRecovery();
+        ammo.tickRecovery();
+        assertEquals(0.0F, ammo.getRecoveryProgressRatio());
+    }
 }
