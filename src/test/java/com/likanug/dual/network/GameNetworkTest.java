@@ -111,6 +111,38 @@ class GameNetworkTest {
     }
 
     @Test
+    void receiverKeepsNewestRematchRequest() throws Exception {
+        try (ChannelPair pair = createConnectedPair()) {
+            TestNetwork network = new TestNetwork();
+            network.channel = pair.local;
+            network.connected = true;
+            network.startReceiverThread();
+
+            byte[] oldRequest = NetworkMessage.encodeRematchRequest(new NetworkRematchRequest(1, false));
+            byte[] newRequest = NetworkMessage.encodeRematchRequest(new NetworkRematchRequest(2, true));
+            writeFully(pair.remote, concat(newRequest, oldRequest, new byte[]{NetworkMessage.TYPE_DISCONNECT}));
+
+            waitUntilDisconnected(network, 1000);
+
+            assertEquals(new NetworkRematchRequest(2, true), network.getRemoteRematchRequest());
+        }
+    }
+
+    @Test
+    void sendRematchRequestWritesFixedFrame() throws Exception {
+        try (ChannelPair pair = createConnectedPair()) {
+            TestNetwork network = new TestNetwork();
+            network.channel = pair.local;
+            network.connected = true;
+
+            network.sendRematchRequest(new NetworkRematchRequest(2, false));
+
+            byte[] written = readExactly(pair.remote, NetworkMessage.REMATCH_REQUEST_MSG_LEN, 1000);
+            assertEquals(new NetworkRematchRequest(2, false), NetworkMessage.decodeRematchRequest(written));
+        }
+    }
+
+    @Test
     void disconnectWritesDisconnectMessage() throws Exception {
         try (ChannelPair pair = createConnectedPair()) {
             TestNetwork network = new TestNetwork();

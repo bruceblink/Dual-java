@@ -157,6 +157,15 @@ public class RelayRoom {
                         out.write(payload);
                         out.flush();
                     }
+                    case NetworkProtocol.TYPE_REMATCH_REQUEST -> {
+                        byte[] payload = in.readNBytes(NetworkProtocol.REMATCH_REQUEST_MSG_LEN - 1);
+                        if (payload.length != NetworkProtocol.REMATCH_REQUEST_MSG_LEN - 1) {
+                            throw new EOFException("Incomplete rematch request");
+                        }
+                        out.writeByte(NetworkProtocol.TYPE_REMATCH_REQUEST);
+                        out.write(payload);
+                        out.flush();
+                    }
                     case NetworkProtocol.TYPE_DISCONNECT -> {
                         log.info("[Room " + roomId + "] [" + direction + "] Disconnect received.");
                         notifyDisconnect(out);

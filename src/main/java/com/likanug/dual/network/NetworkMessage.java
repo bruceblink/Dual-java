@@ -10,6 +10,7 @@ package com.likanug.dual.network;
  *   TYPE_START_ACK  [0x02]                 - 握手回应：Client→Server
  *   TYPE_DISCONNECT [0x03]                 - 主动断线通知
  *   TYPE_ROUND_RESULT [0x04][5 bytes]      - completed round and score snapshot
+ *   TYPE_REMATCH_REQUEST [0x05][2 bytes]   - request the same round transition
  * </pre>
  * flags 字节位定义：bit0=UP, bit1=DOWN, bit2=LEFT, bit3=RIGHT, bit4=Z, bit5=X
  */
@@ -20,7 +21,9 @@ public final class NetworkMessage {
     public static final byte TYPE_START_ACK  = 0x02;
     public static final byte TYPE_DISCONNECT = 0x03;
     public static final byte TYPE_ROUND_RESULT = 0x04;
+    public static final byte TYPE_REMATCH_REQUEST = 0x05;
     public static final int ROUND_RESULT_MSG_LEN = 6;
+    public static final int REMATCH_REQUEST_MSG_LEN = NetworkRematchRequest.MSG_LEN;
 
     /** 将 6 个按键布尔值编码为单个字节 */
     public static byte encodeInput(boolean up, boolean down, boolean left,
@@ -65,6 +68,19 @@ public final class NetworkMessage {
                 frame[3] & 0xFF,
                 frame[4] & 0xFF,
                 frame[5] != 0);
+    }
+
+    /** Encodes a replay or next-round request with the completed round number. */
+    public static byte[] encodeRematchRequest(NetworkRematchRequest request) {
+        return new byte[]{TYPE_REMATCH_REQUEST, (byte) request.roundNumber(), (byte) (request.matchReset() ? 1 : 0)};
+    }
+
+    /** Decodes and validates a fixed-size rematch request frame. */
+    public static NetworkRematchRequest decodeRematchRequest(byte[] frame) {
+        if (frame == null || frame.length != REMATCH_REQUEST_MSG_LEN || frame[0] != TYPE_REMATCH_REQUEST) {
+            throw new IllegalArgumentException("Invalid rematch request frame.");
+        }
+        return new NetworkRematchRequest(frame[1] & 0xFF, frame[2] != 0);
     }
 
     private NetworkMessage() {}

@@ -22,4 +22,11 @@ class NetworkRoundResultTest {
         assertThrows(IllegalArgumentException.class,
                 () -> NetworkMessage.decodeRoundResult(new byte[]{NetworkMessage.TYPE_INPUT}));
     }
+
+    @Test
+    void rematchRequestRoundTripsThroughFixedFrame() {
+        NetworkRematchRequest expected = new NetworkRematchRequest(3, true);
+
+        assertEquals(expected, NetworkMessage.decodeRematchRequest(NetworkMessage.encodeRematchRequest(expected)));
+    }
 }

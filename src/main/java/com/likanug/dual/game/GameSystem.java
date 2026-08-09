@@ -7,6 +7,7 @@ import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.actor.arrow.AbstractArrowActor;
 import com.likanug.dual.network.GameNetwork;
 import com.likanug.dual.network.NetworkRoundResult;
+import com.likanug.dual.network.NetworkRematchRequest;
 import com.likanug.dual.particle.Particle;
 import com.likanug.dual.particle.ParticleBuilder;
 import com.likanug.dual.particle.ParticleSet;
@@ -216,6 +217,23 @@ public class GameSystem {
                     result.matchWinner().isPresent()));
         }
         return result;
+    }
+
+    /** Sends the local result-overlay action so online peers reset the same completed round together. */
+    public void requestNetworkRematch(MatchScore.RoundResult result) {
+        if (network == null || result == null) return;
+        int roundNumber = result.playerOneWins() + result.playerTwoWins();
+        network.sendRematchRequest(new NetworkRematchRequest(roundNumber, result.matchWinner().isPresent()));
+    }
+
+    /** Allows a local result to advance only after the peer confirms the same round transition. */
+    public boolean isNetworkRematchReady(MatchScore.RoundResult result) {
+        if (network == null) return true;
+        if (result == null) return false;
+        NetworkRematchRequest request = network.getRemoteRematchRequest();
+        return request != null
+                && request.roundNumber() == result.playerOneWins() + result.playerTwoWins()
+                && request.matchReset() == result.matchWinner().isPresent();
     }
 
     /**

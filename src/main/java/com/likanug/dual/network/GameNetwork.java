@@ -31,6 +31,8 @@ public abstract class GameNetwork {
 
     /** Latest accepted remote round result; older or duplicate round numbers are ignored. */
     private volatile NetworkRoundResult remoteRoundResult;
+    /** Latest accepted rematch request; older round requests cannot reset a newer result. */
+    private volatile NetworkRematchRequest remoteRematchRequest;
 
     // ──────────────────────────────────────────────
     // 主线程调用
@@ -58,6 +60,18 @@ public abstract class GameNetwork {
         try {
             synchronized (writeLock) {
                 writeFully(ByteBuffer.wrap(NetworkMessage.encodeRoundResult(result)));
+            }
+        } catch (IOException e) {
+            disconnected = true;
+        }
+    }
+
+    /** Sends a single transition request after the local player confirms the result overlay. */
+    public void sendRematchRequest(NetworkRematchRequest request) {
+        if (!connected || channel == null || disconnected || request == null) return;
+        try {
+            synchronized (writeLock) {
+                writeFully(ByteBuffer.wrap(NetworkMessage.encodeRematchRequest(request)));
             }
         } catch (IOException e) {
             disconnected = true;
@@ -97,6 +111,7 @@ public abstract class GameNetwork {
     public boolean isDisconnected() { return disconnected; }
     public int getSharedSeed()      { return sharedSeed; }
     public NetworkRoundResult getRemoteRoundResult() { return remoteRoundResult; }
+    public NetworkRematchRequest getRemoteRematchRequest() { return remoteRematchRequest; }
 
     // ──────────────────────────────────────────────
     // 子类调用
@@ -173,6 +188,21 @@ public abstract class GameNetwork {
                             NetworkRoundResult previous = remoteRoundResult;
                             if (previous == null || result.roundNumber() > previous.roundNumber()) {
                                 remoteRoundResult = result;
+                            }
+                        }
+                        case NetworkMessage.TYPE_REMATCH_REQUEST -> {
+                            ByteBuffer requestBuffer = ByteBuffer.allocate(NetworkMessage.REMATCH_REQUEST_MSG_LEN - 1);
+                            if (!readFullyWithDeadline(channel, requestBuffer, System.nanoTime() + 5_000_000_000L)) {
+                                continue;
+                            }
+                            byte[] frame = new byte[NetworkMessage.REMATCH_REQUEST_MSG_LEN];
+                            frame[0] = NetworkMessage.TYPE_REMATCH_REQUEST;
+                            requestBuffer.flip();
+                            requestBuffer.get(frame, 1, frame.length - 1);
+                            NetworkRematchRequest request = NetworkMessage.decodeRematchRequest(frame);
+                            NetworkRematchRequest previous = remoteRematchRequest;
+                            if (previous == null || request.roundNumber() > previous.roundNumber()) {
+                                remoteRematchRequest = request;
                             }
                         }
                         case NetworkMessage.TYPE_DISCONNECT -> {

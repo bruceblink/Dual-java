@@ -10,6 +10,7 @@ package com.likanug.dual.server;
  *   TYPE_START_ACK  [0x02]                 – client → server, handshake confirmation
  *   TYPE_DISCONNECT [0x03]                 – either side notifying graceful disconnect
  *   TYPE_ROUND_RESULT [0x04][5 bytes]      – completed round and score snapshot
+ *   TYPE_REMATCH_REQUEST [0x05][2 bytes]   – request the same round transition
  * </pre>
  *
  * Input flags byte bit layout:
@@ -31,10 +32,12 @@ public final class NetworkProtocol {
     public static final byte TYPE_START_ACK  = 0x02;
     public static final byte TYPE_DISCONNECT = 0x03;
     public static final byte TYPE_ROUND_RESULT = 0x04;
+    public static final byte TYPE_REMATCH_REQUEST = 0x05;
 
     /** Total byte length of a TYPE_INPUT message (type byte + flags byte). */
     public static final int INPUT_MSG_LEN = 2;
     public static final int ROUND_RESULT_MSG_LEN = 6;
+    public static final int REMATCH_REQUEST_MSG_LEN = 3;
 
     private NetworkProtocol() {}
 }

@@ -28,6 +28,7 @@ public class GameResultState extends GameSystemState {
     static final float TACTICAL_RESET_PROMPT_Y = RESET_PROMPT_Y;
     private final TacticalEvent finishFeedback;
     private final MatchScore.RoundResult roundResult;
+    private boolean networkResetRequested;
 
     public GameResultState(App app, String msg) {
         this(app, msg, null);
@@ -102,10 +103,17 @@ public class GameResultState extends GameSystemState {
         } else {
             if (properFrameCount > durationFrameCount) {
                 if (app.getCurrentKeyInput().isXPressed) {
-                    if (roundResult != null && roundResult.matchWinner().isPresent()) {
-                        system.resetMatch();
-                    } else if (roundResult != null) {
-                        system.resetRound();
+                    if (roundResult != null) {
+                        if (!networkResetRequested) {
+                            system.requestNetworkRematch(roundResult);
+                            networkResetRequested = true;
+                        }
+                        if (!system.isNetworkRematchReady(roundResult)) return;
+                        if (roundResult.matchWinner().isPresent()) {
+                            system.resetMatch();
+                        } else {
+                            system.resetRound();
+                        }
                     } else {
                         app.newGame(true, true);  // legacy result without score
                     }
@@ -124,6 +132,7 @@ public class GameResultState extends GameSystemState {
 
     /** Names the distinct actions available after a completed match or an intermediate round. */
     String resetPromptLabel() {
+        if (networkResetRequested) return "Waiting for rival...";
         if (roundResult != null && roundResult.matchWinner().isPresent()) {
             return "Press X to replay, Z for demo.";
         }
