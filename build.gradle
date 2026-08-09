@@ -63,16 +63,19 @@ tasks.register('packageApp', Exec) {
         iconFile = layout.projectDirectory.file("src/main/resources/icon.png").asFile.absolutePath
     }
 
+    def distDir = layout.buildDirectory.dir("dist").get().asFile
+    def installLibDir = layout.buildDirectory.dir("install/${application.applicationName}/lib").get().asFile
+    def resourceDir = layout.projectDirectory.dir("src/main/jpackage").asFile.absolutePath
+
     doFirst {
-        def distDir = layout.buildDirectory.dir("dist").get().asFile
         distDir.mkdirs()
     }
 
     def cmd = [
         jpackageExe.get(),
         '--type', packageType,
-        '--input', layout.buildDirectory.dir("install/${application.applicationName}/lib").get().asFile.absolutePath,
-        '--dest', layout.buildDirectory.dir("dist").get().asFile.absolutePath,
+        '--input', installLibDir.absolutePath,
+        '--dest', distDir.absolutePath,
         '--name', appName,
         '--main-class', application.mainClass.get(),
         '--main-jar', "${appName}-${appVersion}.jar",
@@ -88,7 +91,7 @@ tasks.register('packageApp', Exec) {
             '--win-menu-group', 'Games',
             '--win-dir-chooser',
             '--win-upgrade-uuid', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-            '--resource-dir', layout.projectDirectory.dir("src/main/jpackage").asFile.absolutePath
+            '--resource-dir', resourceDir
         ]
     } else if (os.isMacOsX()) {
         cmd += [
