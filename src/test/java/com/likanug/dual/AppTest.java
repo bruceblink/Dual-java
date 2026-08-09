@@ -2,6 +2,7 @@ package com.likanug.dual;
 
 import com.likanug.dual.game.GameSystem;
 import com.likanug.dual.inputDevice.KeyInput;
+import com.likanug.dual.playerEngine.AiDifficulty;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -112,11 +113,25 @@ public class AppTest {
         app.setSecondKeyInput(new KeyInput());
         app.openLocalModeMenu();
 
-        app.key = '2';
+        app.key = '4';
         app.keyPressed();
 
         assertFalse(app.isLocalModeMenuVisible());
         assertTrue(app.getSystem().isLocalTwoPlayer());
+    }
+
+    @Test
+    void localModeMenuStartsTheSelectedBasicAiProfile() {
+        app.setCurrentKeyInput(new KeyInput());
+        app.setSecondKeyInput(new KeyInput());
+        app.openLocalModeMenu();
+
+        app.key = '1';
+        app.keyPressed();
+
+        assertFalse(app.isLocalModeMenuVisible());
+        assertFalse(app.getSystem().isLocalTwoPlayer());
+        assertEquals(AiDifficulty.BASIC, app.getSystem().getAiDifficulty());
     }
 
     @Test

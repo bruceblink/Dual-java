@@ -3,14 +3,23 @@ package com.likanug.dual.playerEngine;
 import com.likanug.dual.App;
 import com.likanug.dual.actor.player.PlayerActor;
 
+import java.util.Objects;
+
 public class ComputerPlayerEngine extends PlayerEngine {
 
     private final App app;
-    private final int planUpdateFrameCount = 10;
+    private final AiDifficulty difficulty;
+    private final int planUpdateFrameCount;
     private PlayerPlan currentPlan;
 
     public ComputerPlayerEngine(App app) {
+        this(app, AiDifficulty.STANDARD);
+    }
+
+    public ComputerPlayerEngine(App app, AiDifficulty difficulty) {
         this.app = app;
+        this.difficulty = Objects.requireNonNull(difficulty);
+        this.planUpdateFrameCount = difficulty.getPlanUpdateFrameCount();
         final MovePlayerPlan move = new MovePlayerPlan(app);
         final JabPlayerPlan jab = new JabPlayerPlan(app);
         final KillPlayerPlan kill = new KillPlayerPlan(app);
@@ -32,6 +41,10 @@ public class ComputerPlayerEngine extends PlayerEngine {
 
     public int getPlanUpdateFrameCount() {
         return planUpdateFrameCount;
+    }
+
+    public AiDifficulty getDifficulty() {
+        return difficulty;
     }
 
     public PlayerPlan getCurrentPlan() {

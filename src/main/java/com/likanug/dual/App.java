@@ -4,6 +4,7 @@ import com.likanug.dual.game.GameSystem;
 import com.likanug.dual.inputDevice.KeyBindings;
 import com.likanug.dual.inputDevice.KeyInput;
 import com.likanug.dual.inputDevice.LocalInputRouter;
+import com.likanug.dual.playerEngine.AiDifficulty;
 import com.likanug.dual.network.GameNetwork;
 import com.likanug.dual.network.NetworkClient;
 import com.likanug.dual.network.NetworkServer;
@@ -108,6 +109,10 @@ public class App extends PApplet {
     }
 
     public void newGame(boolean demo, boolean instruction) {
+        newGame(demo, instruction, AiDifficulty.STANDARD);
+    }
+
+    public void newGame(boolean demo, boolean instruction, AiDifficulty aiDifficulty) {
         clearLocalInputs();
         // 如果正在联机，先断线
         if (activeNetwork != null) {
@@ -115,7 +120,7 @@ public class App extends PApplet {
             activeNetwork = null;
         }
         networkMode = NetworkMode.NONE;
-        system = new GameSystem(demo, instruction, this);
+        system = new GameSystem(demo, instruction, this, false, aiDifficulty);
     }
 
     /** Starts a local two-player match while preserving both configured keyboard snapshots. */
@@ -329,11 +334,13 @@ public class App extends PApplet {
         pushStyle();
         textFont(smallFont, 28);
         fill(0);
-        text("Choose Local Mode", 0, -120);
+        text("Choose Game Mode", 0, -120);
         textFont(smallFont, 22);
-        text("1 / H  Human vs AI", 0, -30);
-        text("2 / L  Local 2P", 0, 25);
-        text("ESC    Back to demo", 0, 95);
+        text("1  Basic AI", 0, -60);
+        text("2  Standard AI", 0, -15);
+        text("3  Advanced AI", 0, 30);
+        text("4  Local 2P", 0, 75);
+        text("ESC    Back to demo", 0, 145);
         popStyle();
         popMatrix();
     }
@@ -476,11 +483,19 @@ public class App extends PApplet {
             if (system != null && system.isDemoPlay()) system.setShowsInstructionWindow(true);
             return;
         }
-        if (key == '1' || key == 'h' || key == 'H') {
-            newGame(false, false);
+        if (key == '1') {
+            newGame(false, false, AiDifficulty.BASIC);
             return;
         }
-        if (key == '2' || key == 'l' || key == 'L') newLocalGame(false);
+        if (key == '2' || key == 'h' || key == 'H') {
+            newGame(false, false, AiDifficulty.STANDARD);
+            return;
+        }
+        if (key == '3') {
+            newGame(false, false, AiDifficulty.ADVANCED);
+            return;
+        }
+        if (key == '4' || key == 'l' || key == 'L') newLocalGame(false);
     }
 
     private void handleKeyLobbyMenu() {

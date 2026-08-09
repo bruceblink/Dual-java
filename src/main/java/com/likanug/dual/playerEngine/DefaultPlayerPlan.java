@@ -85,10 +85,11 @@ public class DefaultPlayerPlan extends PlayerPlan {
 
     public PlayerPlan nextPlan(PlayerActor player) {
         final AbstractPlayerActor enemy = player.getGroup().getEnemyGroup().getPlayer();
+        final AiDifficulty difficulty = getDifficulty(player);
 
         // Draw longbow if enemy is damaged
         if (enemy.getState().isDamaged()) {
-            if (app.random(1.0F) < 0.3) return killPlan;
+            if (app.random(1.0F) < difficulty.getKillAttemptProbability()) return killPlan;
         }
 
         // Avoid the nearest arrow
@@ -110,20 +111,26 @@ public class DefaultPlayerPlan extends PlayerPlan {
             final float escapeTargetX = player.getxPosition() + 100 * cos(escapeAngle);
             final float escapeTargetY = player.getyPosition() + 100 * sin(escapeAngle);
             setMoveDirection(player, escapeTargetX, escapeTargetY, 0);
-            if (app.random(1.0F) < 0.7) return movePlan;
+            if (app.random(1.0F) < difficulty.getEvadeProbability()) return movePlan;
             else return jabPlan;
         }
 
         // Away from enemy
         setMoveDirection(player, enemy);
         if (player.getDistancePow2(enemy) < 100000.0) {
-            if (app.random(1.0F) < 0.7) return movePlan;
+            if (app.random(1.0F) < difficulty.getEvadeProbability()) return movePlan;
             else return jabPlan;
         }
 
         // If there is nothing special
-        if (app.random(1.0F) < 0.2) return movePlan;
+        if (app.random(1.0F) < difficulty.getIdleMoveProbability()) return movePlan;
         else return jabPlan;
+    }
+
+    /** Reads only the AI profile attached to this player; human and network players keep standard defaults. */
+    private AiDifficulty getDifficulty(PlayerActor player) {
+        if (player.getEngine() instanceof ComputerPlayerEngine computer) return computer.getDifficulty();
+        return AiDifficulty.STANDARD;
     }
 
     public void setMoveDirection(PlayerActor player, AbstractPlayerActor enemy) {

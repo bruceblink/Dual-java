@@ -9,6 +9,7 @@ import com.likanug.dual.particle.Particle;
 import com.likanug.dual.particle.ParticleBuilder;
 import com.likanug.dual.particle.ParticleSet;
 import com.likanug.dual.playerEngine.ComputerPlayerEngine;
+import com.likanug.dual.playerEngine.AiDifficulty;
 import com.likanug.dual.playerEngine.HumanPlayerEngine;
 import com.likanug.dual.playerEngine.NetworkPlayerEngine;
 import com.likanug.dual.playerEngine.PlayerEngine;
@@ -49,11 +50,16 @@ public class GameSystem {
     private final MatchScore matchScore = new MatchScore(GameConstants.MATCH_ROUNDS_TO_WIN);
 
     public GameSystem(boolean demo, boolean instruction, App app) {
-        this(demo, instruction, app, false);
+        this(demo, instruction, app, false, AiDifficulty.STANDARD);
     }
 
     /** Builds demo, human-versus-AI, or local two-player combat while sharing one rule pipeline. */
     public GameSystem(boolean demo, boolean instruction, App app, boolean localTwoPlayer) {
+        this(demo, instruction, app, localTwoPlayer, AiDifficulty.STANDARD);
+    }
+
+    /** Builds one local mode with an explicit fair AI profile when the opponent is computer-controlled. */
+    public GameSystem(boolean demo, boolean instruction, App app, boolean localTwoPlayer, AiDifficulty aiDifficulty) {
         this.app = app;
         // prepare ActorGroup
         this.myGroup = new ActorGroup();
@@ -77,7 +83,7 @@ public class GameSystem {
         else this.myEngine = new HumanPlayerEngine(app.getCurrentKeyInput());
         PlayerActor myPlayer = createPlayer(myEngine, 255, INTERNAL_CANVAS_HEIGHT - 100);
         this.myGroup.setPlayer(myPlayer);
-        if (demo || !localTwoPlayer) this.otherEngine = new ComputerPlayerEngine(app);
+        if (demo || !localTwoPlayer) this.otherEngine = new ComputerPlayerEngine(app, aiDifficulty);
         else this.otherEngine = new HumanPlayerEngine(localInputOrFallback(app));
         PlayerActor otherPlayer = createPlayer(otherEngine, 0, 100);
         this.otherGroup.setPlayer(otherPlayer);
@@ -250,6 +256,14 @@ public class GameSystem {
 
     public boolean isLocalTwoPlayer() {
         return localTwoPlayer;
+    }
+
+    public AiDifficulty getAiDifficulty() {
+        return myEngine instanceof ComputerPlayerEngine computer
+                ? computer.getDifficulty()
+                : otherEngine instanceof ComputerPlayerEngine computer
+                        ? computer.getDifficulty()
+                        : null;
     }
 
     public boolean isShowsInstructionWindow() {
