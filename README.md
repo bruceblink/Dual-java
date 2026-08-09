@@ -92,6 +92,9 @@ java -jar server/build/libs/dual-server-1.0-all.jar [port]
 
 # 打包为 Windows 安装包（.exe，需要 WiX 3.x）
 ./gradlew packageApp
+
+# 在未安装 WiX 时验证可运行的应用目录
+./gradlew packageAppImage
 ```
 
 安装包输出到 `build/dist/` 目录。

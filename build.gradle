@@ -106,3 +106,35 @@ tasks.register('packageApp', Exec) {
 
     commandLine = cmd
 }
+
+tasks.register('packageAppImage', Exec) {
+    dependsOn 'installDist'
+
+    def appName = application.applicationName
+    def appVersion = project.version.toString()
+    def imageDistDir = layout.buildDirectory.dir("dist-image").get().asFile
+    def installLibDir = layout.buildDirectory.dir("install/${application.applicationName}/lib").get().asFile
+    def os = org.gradle.internal.os.OperatingSystem.current()
+    def iconFile = os.isWindows()
+            ? layout.projectDirectory.file("src/main/resources/icon.ico").asFile.absolutePath
+            : os.isMacOsX()
+                ? layout.projectDirectory.file("src/main/resources/icon.icns").asFile.absolutePath
+                : layout.projectDirectory.file("src/main/resources/icon.png").asFile.absolutePath
+
+    doFirst {
+        imageDistDir.mkdirs()
+    }
+
+    commandLine = [
+            jpackageExe.get(),
+            '--type', 'app-image',
+            '--input', installLibDir.absolutePath,
+            '--dest', imageDistDir.absolutePath,
+            '--name', appName,
+            '--main-class', application.mainClass.get(),
+            '--main-jar', "${appName}-${appVersion}.jar",
+            '--java-options', '-Djava.awt.headless=false',
+            '--java-options', '-Djava.library.path=$APPDIR',
+            '--icon', iconFile,
+    ]
+}
