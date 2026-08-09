@@ -310,7 +310,7 @@ public class GameSystem {
         if (demoPlay) {
             if (app.getCurrentKeyInput().isZPressed) {
                 // Z starts the match but is also the shortbow compatibility key; do not carry it into combat.
-                app.getCurrentKeyInput().clear();
+                app.clearLocalInputs();
                 app.setSystem(new GameSystem(app));  // stop demo and start game
                 return;
             }

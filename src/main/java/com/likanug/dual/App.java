@@ -1,7 +1,9 @@
 package com.likanug.dual;
 
 import com.likanug.dual.game.GameSystem;
+import com.likanug.dual.inputDevice.KeyBindings;
 import com.likanug.dual.inputDevice.KeyInput;
+import com.likanug.dual.inputDevice.LocalInputRouter;
 import com.likanug.dual.network.GameNetwork;
 import com.likanug.dual.network.NetworkClient;
 import com.likanug.dual.network.NetworkServer;
@@ -36,6 +38,8 @@ public class App extends PApplet {
     // 游戏核心状态
     // ──────────────────────────────────────────────
     private KeyInput currentKeyInput;
+    private KeyInput secondKeyInput;
+    private LocalInputRouter localInputRouter;
     private GameSystem system;
     private boolean paused;
 
@@ -69,6 +73,7 @@ public class App extends PApplet {
     // ──────────────────────────────────────────────
     public KeyInput getCurrentKeyInput() { return currentKeyInput; }
     public void setCurrentKeyInput(KeyInput k) { this.currentKeyInput = k; }
+    public KeyInput getSecondKeyInput() { return secondKeyInput; }
     public GameSystem getSystem() { return system; }
     public void setSystem(GameSystem s) { this.system = s; }
     public boolean isPaused() { return paused; }
@@ -93,11 +98,14 @@ public class App extends PApplet {
         textAlign(CENTER, CENTER);
         rectMode(CENTER);
         ellipseMode(CENTER);
-        currentKeyInput = new KeyInput();
+        localInputRouter = new LocalInputRouter(KeyBindings.playerOne(), KeyBindings.playerTwo());
+        currentKeyInput = localInputRouter.getPlayerOneInput();
+        secondKeyInput = localInputRouter.getPlayerTwoInput();
         newGame(true, true);
     }
 
     public void newGame(boolean demo, boolean instruction) {
+        clearLocalInputs();
         // 如果正在联机，先断线
         if (activeNetwork != null) {
             activeNetwork.disconnect();
@@ -105,6 +113,12 @@ public class App extends PApplet {
         }
         networkMode = NetworkMode.NONE;
         system = new GameSystem(demo, instruction, this);
+    }
+
+    /** Clears both local snapshots so a menu key cannot leak into the next combat state. */
+    public void clearLocalInputs() {
+        if (localInputRouter != null) localInputRouter.clear();
+        else if (currentKeyInput != null) currentKeyInput.clear();
     }
 
     /** 启动联机对战（握手完成后调用） */
@@ -364,7 +378,7 @@ public class App extends PApplet {
     @Override
     public void focusLost() {
         // AWT 可能在 setup() 创建输入对象前发送失焦事件；此时没有按键状态需要释放。
-        if (currentKeyInput != null) currentKeyInput.clear();
+        clearLocalInputs();
     }
 
     @Override
@@ -385,18 +399,7 @@ public class App extends PApplet {
     @Override
     public void keyReleased() {
         if (networkMode != NetworkMode.NONE && networkMode != NetworkMode.ONLINE) return;
-        if (key != CODED) {
-            if (key == 'z' || key == 'Z') { currentKeyInput.isZPressed = false; return; }
-            if (key == 'x' || key == 'X') { currentKeyInput.isXPressed = false; return; }
-            setWasdKey(key, false);
-        } else {
-            switch (keyCode) {
-                case UP    -> currentKeyInput.isUpPressed    = false;
-                case DOWN  -> currentKeyInput.isDownPressed  = false;
-                case LEFT  -> currentKeyInput.isLeftPressed  = false;
-                case RIGHT -> currentKeyInput.isRightPressed = false;
-            }
-        }
+        applyLocalKey(false);
     }
 
     // ──────────────────────────────────────────────
@@ -410,35 +413,19 @@ public class App extends PApplet {
         }
         // 原有逻辑
         if (key != CODED) {
-            if (key == 'z' || key == 'Z') { currentKeyInput.isZPressed = true; return; }
-            if (key == 'x' || key == 'X') { currentKeyInput.isXPressed = true; return; }
-            if (setWasdKey(key, true)) return;
-            if (key == 'p') {
+            if (key == 'p' || key == 'P') {
                 if (paused) loop(); else noLoop();
                 paused = !paused;
+                return;
             }
+            applyLocalKey(true);
             return;
         }
-        switch (keyCode) {
-            case UP    -> currentKeyInput.isUpPressed    = true;
-            case DOWN  -> currentKeyInput.isDownPressed  = true;
-            case LEFT  -> currentKeyInput.isLeftPressed  = true;
-            case RIGHT -> currentKeyInput.isRightPressed = true;
-        }
+        applyLocalKey(true);
     }
 
     private void handleKeyOnline() {
-        if (key != CODED) {
-            if (key == 'z' || key == 'Z') { currentKeyInput.isZPressed = true; return; }
-            if (key == 'x' || key == 'X') { currentKeyInput.isXPressed = true; return; }
-        } else {
-            switch (keyCode) {
-                case UP    -> currentKeyInput.isUpPressed    = true;
-                case DOWN  -> currentKeyInput.isDownPressed  = true;
-                case LEFT  -> currentKeyInput.isLeftPressed  = true;
-                case RIGHT -> currentKeyInput.isRightPressed = true;
-            }
-        }
+        applyLocalKey(true);
     }
 
     private void handleKeyLobbyMenu() {
@@ -450,16 +437,9 @@ public class App extends PApplet {
         }
     }
 
-    /** 更新 WASD 的独立物理键状态，保证它们可与方向键同时按住和释放。 */
-    private boolean setWasdKey(char pressedKey, boolean pressed) {
-        switch (Character.toLowerCase(pressedKey)) {
-            case 'w' -> currentKeyInput.isWPressed = pressed;
-            case 'a' -> currentKeyInput.isAPressed = pressed;
-            case 's' -> currentKeyInput.isSPressed = pressed;
-            case 'd' -> currentKeyInput.isDPressed = pressed;
-            default -> { return false; }
-        }
-        return true;
+    /** Routes a key transition to both local snapshots while menus keep their own controls. */
+    private void applyLocalKey(boolean pressed) {
+        if (localInputRouter != null) localInputRouter.handleKey(key, keyCode, pressed);
     }
 
     private void handleKeyJoining() {

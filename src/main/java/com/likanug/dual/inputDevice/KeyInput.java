@@ -72,6 +72,39 @@ public class KeyInput {
         mouseLongShotPressed = pressed;
     }
 
+    /** Applies one configured keyboard action while keeping each player's snapshot independent. */
+    public void applyKey(KeyBindings bindings, char character, int keyCode, boolean pressed) {
+        for (InputAction action : InputAction.values()) {
+            for (KeyStroke stroke : bindings.strokes(action)) {
+                if (stroke.matches(character, keyCode)) setAction(action, stroke, pressed);
+            }
+        }
+    }
+
+    private void setAction(InputAction action, KeyStroke stroke, boolean pressed) {
+        final boolean characterBinding = stroke.keyCode() < 0;
+        switch (action) {
+            case UP -> {
+                if (characterBinding) isWPressed = pressed;
+                else isUpPressed = pressed;
+            }
+            case DOWN -> {
+                if (characterBinding) isSPressed = pressed;
+                else isDownPressed = pressed;
+            }
+            case LEFT -> {
+                if (characterBinding) isAPressed = pressed;
+                else isLeftPressed = pressed;
+            }
+            case RIGHT -> {
+                if (characterBinding) isDPressed = pressed;
+                else isRightPressed = pressed;
+            }
+            case SHORTBOW -> isZPressed = pressed;
+            case LONGBOW -> isXPressed = pressed;
+        }
+    }
+
     public void releaseMouseButtons() {
         mouseShotPressed = false;
         mouseLongShotPressed = false;
