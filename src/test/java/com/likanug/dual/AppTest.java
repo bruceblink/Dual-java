@@ -1,5 +1,7 @@
 package com.likanug.dual;
 
+import com.likanug.dual.game.GameSystem;
+import com.likanug.dual.inputDevice.KeyInput;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static processing.core.PConstants.ESC;
 
 public class AppTest {
 
@@ -101,5 +104,32 @@ public class AppTest {
         assertThrows(IllegalArgumentException.class, () -> App.parsePort("0"));
         assertThrows(IllegalArgumentException.class, () -> App.parsePort("65536"));
         assertThrows(IllegalArgumentException.class, () -> App.parsePort("abc"));
+    }
+
+    @Test
+    void localModeMenuStartsLocalTwoPlayerFromTheVisibleSecondOption() {
+        app.setCurrentKeyInput(new KeyInput());
+        app.setSecondKeyInput(new KeyInput());
+        app.openLocalModeMenu();
+
+        app.key = '2';
+        app.keyPressed();
+
+        assertFalse(app.isLocalModeMenuVisible());
+        assertTrue(app.getSystem().isLocalTwoPlayer());
+    }
+
+    @Test
+    void localModeMenuCanBeCancelledBackToTheDemo() {
+        app.setCurrentKeyInput(new KeyInput());
+        app.setSecondKeyInput(new KeyInput());
+        app.setSystem(new GameSystem(true, false, app));
+        app.openLocalModeMenu();
+
+        app.key = ESC;
+        app.keyPressed();
+
+        assertFalse(app.isLocalModeMenuVisible());
+        assertTrue(app.getSystem().isDemoPlay());
     }
 }

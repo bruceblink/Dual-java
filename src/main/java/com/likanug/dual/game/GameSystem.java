@@ -325,9 +325,9 @@ public class GameSystem {
         //演示模式
         if (demoPlay) {
             if (app.getCurrentKeyInput().isZPressed) {
-                // Z starts the match but is also the shortbow compatibility key; do not carry it into combat.
+                // Z opens the mode chooser; it is also a weapon key, so clear both local snapshots first.
                 app.clearLocalInputs();
-                app.setSystem(new GameSystem(app));  // stop demo and start game
+                app.openLocalModeMenu();
                 return;
             }
         }
@@ -381,7 +381,7 @@ public class GameSystem {
         app.text("Hold to charge longbow", contentOffsetX + 300, 355);
         app.textAlign(CENTER);
         app.text("P2: IJKL move, TFGH aim, B/V bow", panelCenterX, 420);
-        app.text("Z: Human vs AI    L: Local 2P", panelCenterX, 465);
+        app.text("Z: Choose local mode", panelCenterX, 465);
         app.text("(Click to hide this window)", panelCenterX, 500);
         app.popStyle();
 

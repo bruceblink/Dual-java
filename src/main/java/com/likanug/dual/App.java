@@ -48,6 +48,7 @@ public class App extends PApplet {
     // ──────────────────────────────────────────────
     private enum NetworkMode {
         NONE,        // 演示 / 本地模式（默认）
+        LOCAL_MODE_MENU, // 选择人机或本地双人
         LOBBY_MENU,  // 选择"开房"或"加入"
         HOSTING,     // 房主等待对方连接
         JOINING,     // 加入方输入 IP / Port
@@ -79,6 +80,7 @@ public class App extends PApplet {
     public void setSystem(GameSystem s) { this.system = s; }
     public boolean isPaused() { return paused; }
     public void setPaused(boolean p) { this.paused = p; }
+    public boolean isLocalModeMenuVisible() { return networkMode == NetworkMode.LOCAL_MODE_MENU; }
 
     // ──────────────────────────────────────────────
     // Processing 生命周期
@@ -127,6 +129,12 @@ public class App extends PApplet {
         system = new GameSystem(false, instruction, this, true);
     }
 
+    /** Opens the visible local mode chooser while keeping the demo system available for cancel. */
+    public void openLocalModeMenu() {
+        clearLocalInputs();
+        networkMode = NetworkMode.LOCAL_MODE_MENU;
+    }
+
     /** Clears both local snapshots so a menu key cannot leak into the next combat state. */
     public void clearLocalInputs() {
         if (localInputRouter != null) localInputRouter.clear();
@@ -151,6 +159,7 @@ public class App extends PApplet {
         scale(canvasScale());
         switch (networkMode) {
             case NONE       -> system.run();
+            case LOCAL_MODE_MENU -> drawLocalModeMenu();
             case LOBBY_MENU -> drawLobbyMenu();
             case HOSTING    -> drawHosting();
             case JOINING    -> drawJoining();
@@ -313,6 +322,22 @@ public class App extends PApplet {
         popMatrix();
     }
 
+    /** Draws an explicit mode choice so starting a match does not depend on an unexplained key. */
+    private void drawLocalModeMenu() {
+        pushMatrix();
+        translate(INTERNAL_CANVAS_WIDTH * 0.5f, INTERNAL_CANVAS_HEIGHT * 0.5f);
+        pushStyle();
+        textFont(smallFont, 28);
+        fill(0);
+        text("Choose Local Mode", 0, -120);
+        textFont(smallFont, 22);
+        text("1 / H  Human vs AI", 0, -30);
+        text("2 / L  Local 2P", 0, 25);
+        text("ESC    Back to demo", 0, 95);
+        popStyle();
+        popMatrix();
+    }
+
     private void drawConnecting() {
         // 轮询连接状态
         if (networkClient != null && networkClient.isConnected()) {
@@ -401,6 +426,7 @@ public class App extends PApplet {
         // 联机大厅优先拦截
         switch (networkMode) {
             case NONE -> handleKeyNone();
+            case LOCAL_MODE_MENU -> handleKeyLocalModeMenu();
             case LOBBY_MENU -> handleKeyLobbyMenu();
             case HOSTING -> {
                 if (key == ESC) { key = 0; cancelHosting(); }
@@ -426,10 +452,6 @@ public class App extends PApplet {
             networkMode = NetworkMode.LOBBY_MENU;
             return;
         }
-        if (system != null && system.isDemoPlay() && (key == 'l' || key == 'L')) {
-            newLocalGame(false);
-            return;
-        }
         // 原有逻辑
         if (key != CODED) {
             if (key == 'p' || key == 'P') {
@@ -445,6 +467,20 @@ public class App extends PApplet {
 
     private void handleKeyOnline() {
         applyLocalKey(true);
+    }
+
+    private void handleKeyLocalModeMenu() {
+        if (key == ESC) {
+            key = 0;
+            networkMode = NetworkMode.NONE;
+            if (system != null && system.isDemoPlay()) system.setShowsInstructionWindow(true);
+            return;
+        }
+        if (key == '1' || key == 'h' || key == 'H') {
+            newGame(false, false);
+            return;
+        }
+        if (key == '2' || key == 'l' || key == 'L') newLocalGame(false);
     }
 
     private void handleKeyLobbyMenu() {

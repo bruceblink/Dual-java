@@ -56,7 +56,7 @@ class GameSystemTacticalEventTest {
     }
 
     @Test
-    void startingFromDemoClearsTheZKeyBeforeEnteringTheHumanMatch() {
+    void startingFromDemoClearsTheZKeyBeforeOpeningTheModeMenu() {
         App app = new App();
         KeyInput input = new KeyInput();
         input.isZPressed = true;
@@ -67,6 +67,7 @@ class GameSystemTacticalEventTest {
         demo.run();
 
         assertFalse(input.isZPressed);
-        assertFalse(app.getSystem().isDemoPlay());
+        assertTrue(app.isLocalModeMenuVisible());
+        assertTrue(app.getSystem().isDemoPlay());
     }
 }
