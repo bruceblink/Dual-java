@@ -148,6 +148,15 @@ public class RelayRoom {
                         out.writeByte(flags);
                         out.flush();
                     }
+                    case NetworkProtocol.TYPE_ROUND_RESULT -> {
+                        byte[] payload = in.readNBytes(NetworkProtocol.ROUND_RESULT_MSG_LEN - 1);
+                        if (payload.length != NetworkProtocol.ROUND_RESULT_MSG_LEN - 1) {
+                            throw new EOFException("Incomplete round-result message");
+                        }
+                        out.writeByte(NetworkProtocol.TYPE_ROUND_RESULT);
+                        out.write(payload);
+                        out.flush();
+                    }
                     case NetworkProtocol.TYPE_DISCONNECT -> {
                         log.info("[Room " + roomId + "] [" + direction + "] Disconnect received.");
                         notifyDisconnect(out);

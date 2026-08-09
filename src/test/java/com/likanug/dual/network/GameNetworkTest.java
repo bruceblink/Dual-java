@@ -10,6 +10,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameNetworkTest {
@@ -71,6 +72,45 @@ class GameNetworkTest {
     }
 
     @Test
+    void receiverKeepsNewestRoundResultAndIgnoresDuplicateOrStaleFrames() throws Exception {
+        try (ChannelPair pair = createConnectedPair()) {
+            TestNetwork network = new TestNetwork();
+            network.channel = pair.local;
+            network.connected = true;
+            network.startReceiverThread();
+
+            byte[] first = NetworkMessage.encodeRoundResult(
+                    new NetworkRoundResult(2, NetworkRoundResult.SIDE_ONE, 2, 0, false));
+            byte[] duplicate = NetworkMessage.encodeRoundResult(
+                    new NetworkRoundResult(2, NetworkRoundResult.SIDE_TWO, 0, 2, true));
+            byte[] newer = NetworkMessage.encodeRoundResult(
+                    new NetworkRoundResult(3, NetworkRoundResult.SIDE_TWO, 1, 3, true));
+            writeFully(pair.remote, concat(first, duplicate, newer, new byte[]{NetworkMessage.TYPE_DISCONNECT}));
+
+            waitUntilDisconnected(network, 1000);
+
+            assertTrue(network.getRemoteRoundResult().matchComplete());
+            assertTrue(network.getRemoteRoundResult().roundNumber() == 3);
+            assertTrue(network.getRemoteRoundResult().winnerSide() == NetworkRoundResult.SIDE_TWO);
+        }
+    }
+
+    @Test
+    void sendRoundResultWritesFixedFrame() throws Exception {
+        try (ChannelPair pair = createConnectedPair()) {
+            TestNetwork network = new TestNetwork();
+            network.channel = pair.local;
+            network.connected = true;
+
+            network.sendRoundResult(new NetworkRoundResult(1, NetworkRoundResult.SIDE_ONE, 1, 0, false));
+
+            byte[] written = readExactly(pair.remote, NetworkMessage.ROUND_RESULT_MSG_LEN, 1000);
+            assertEquals(new NetworkRoundResult(1, NetworkRoundResult.SIDE_ONE, 1, 0, false),
+                    NetworkMessage.decodeRoundResult(written));
+        }
+    }
+
+    @Test
     void disconnectWritesDisconnectMessage() throws Exception {
         try (ChannelPair pair = createConnectedPair()) {
             TestNetwork network = new TestNetwork();
@@ -107,6 +147,18 @@ class GameNetworkTest {
             if (written < 0) throw new IOException("channel closed while writing");
             if (written == 0) Thread.onSpinWait();
         }
+    }
+
+    private static byte[] concat(byte[]... arrays) {
+        int length = 0;
+        for (byte[] array : arrays) length += array.length;
+        byte[] result = new byte[length];
+        int offset = 0;
+        for (byte[] array : arrays) {
+            System.arraycopy(array, 0, result, offset, array.length);
+            offset += array.length;
+        }
+        return result;
     }
 
     private static byte[] readExactly(SocketChannel channel, int length, long timeoutMs) throws IOException {

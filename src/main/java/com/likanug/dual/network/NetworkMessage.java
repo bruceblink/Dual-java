@@ -9,6 +9,7 @@ package com.likanug.dual.network;
  *   TYPE_START      [0x01][seed(4bytes)]   - 握手：Server→Client 携带共享随机种子
  *   TYPE_START_ACK  [0x02]                 - 握手回应：Client→Server
  *   TYPE_DISCONNECT [0x03]                 - 主动断线通知
+ *   TYPE_ROUND_RESULT [0x04][5 bytes]      - completed round and score snapshot
  * </pre>
  * flags 字节位定义：bit0=UP, bit1=DOWN, bit2=LEFT, bit3=RIGHT, bit4=Z, bit5=X
  */
@@ -18,6 +19,8 @@ public final class NetworkMessage {
     public static final byte TYPE_START      = 0x01;
     public static final byte TYPE_START_ACK  = 0x02;
     public static final byte TYPE_DISCONNECT = 0x03;
+    public static final byte TYPE_ROUND_RESULT = 0x04;
+    public static final int ROUND_RESULT_MSG_LEN = 6;
 
     /** 将 6 个按键布尔值编码为单个字节 */
     public static byte encodeInput(boolean up, boolean down, boolean left,
@@ -38,6 +41,31 @@ public final class NetworkMessage {
     public static boolean isRight(byte f) { return (f & 0x08) != 0; }
     public static boolean isZ(byte f)     { return (f & 0x10) != 0; }
     public static boolean isX(byte f)     { return (f & 0x20) != 0; }
+
+    /** Encodes one completed round so a relay can forward it without understanding game rules. */
+    public static byte[] encodeRoundResult(NetworkRoundResult result) {
+        return new byte[]{
+                TYPE_ROUND_RESULT,
+                (byte) result.roundNumber(),
+                (byte) result.winnerSide(),
+                (byte) result.playerOneWins(),
+                (byte) result.playerTwoWins(),
+                (byte) (result.matchComplete() ? 1 : 0)
+        };
+    }
+
+    /** Decodes and validates a fixed-size round-result frame received from the wire. */
+    public static NetworkRoundResult decodeRoundResult(byte[] frame) {
+        if (frame == null || frame.length != ROUND_RESULT_MSG_LEN || frame[0] != TYPE_ROUND_RESULT) {
+            throw new IllegalArgumentException("Invalid round-result frame.");
+        }
+        return new NetworkRoundResult(
+                frame[1] & 0xFF,
+                frame[2] & 0xFF,
+                frame[3] & 0xFF,
+                frame[4] & 0xFF,
+                frame[5] != 0);
+    }
 
     private NetworkMessage() {}
 }

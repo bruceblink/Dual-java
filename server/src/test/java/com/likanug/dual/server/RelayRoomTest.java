@@ -58,6 +58,41 @@ class RelayRoomTest {
         }
     }
 
+    @Test
+    void forwardsRoundResultFrameWithoutInterpretingItsPayload() throws Exception {
+        try (SocketPair playerA = openSocketPair();
+             SocketPair playerB = openSocketPair()) {
+            playerB.clientSide().setSoTimeout(2000);
+            RelayRoom room = new RelayRoom(3, playerA.serverSide(), 1000);
+            room.addPlayer(playerB.serverSide());
+
+            DataInputStream inA = new DataInputStream(playerA.clientSide().getInputStream());
+            DataOutputStream outA = new DataOutputStream(playerA.clientSide().getOutputStream());
+            DataInputStream inB = new DataInputStream(playerB.clientSide().getInputStream());
+            DataOutputStream outB = new DataOutputStream(playerB.clientSide().getOutputStream());
+
+            assertEquals(NetworkProtocol.TYPE_START, inA.read());
+            inA.readInt();
+            assertEquals(NetworkProtocol.TYPE_START, inB.read());
+            inB.readInt();
+            outA.writeByte(NetworkProtocol.TYPE_START_ACK);
+            outA.flush();
+            outB.writeByte(NetworkProtocol.TYPE_START_ACK);
+            outB.flush();
+
+            byte[] frame = new byte[]{NetworkProtocol.TYPE_ROUND_RESULT, 2, 1, 0, 2, 1};
+            outA.write(frame);
+            outA.flush();
+
+            byte[] forwarded = new byte[NetworkProtocol.ROUND_RESULT_MSG_LEN];
+            inB.readFully(forwarded);
+            for (int index = 0; index < frame.length; index++) assertEquals(frame[index], forwarded[index]);
+
+            outA.writeByte(NetworkProtocol.TYPE_DISCONNECT);
+            outA.flush();
+        }
+    }
+
     private static SocketPair openSocketPair() throws IOException {
         try (ServerSocket listener = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
             Socket clientSide = new Socket(InetAddress.getLoopbackAddress(), listener.getLocalPort());

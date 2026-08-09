@@ -29,6 +29,9 @@ public abstract class GameNetwork {
     /** 双方共享的随机数种子，用于保证物理运算一致性 */
     private volatile int sharedSeed = 0;
 
+    /** Latest accepted remote round result; older or duplicate round numbers are ignored. */
+    private volatile NetworkRoundResult remoteRoundResult;
+
     // ──────────────────────────────────────────────
     // 主线程调用
     // ──────────────────────────────────────────────
@@ -43,6 +46,18 @@ public abstract class GameNetwork {
         try {
             synchronized (writeLock) {
                 writeFully(ByteBuffer.wrap(new byte[]{NetworkMessage.TYPE_INPUT, flags}));
+            }
+        } catch (IOException e) {
+            disconnected = true;
+        }
+    }
+
+    /** Sends one completed round snapshot while keeping input frames independent and cheap. */
+    public void sendRoundResult(NetworkRoundResult result) {
+        if (!connected || channel == null || disconnected || result == null) return;
+        try {
+            synchronized (writeLock) {
+                writeFully(ByteBuffer.wrap(NetworkMessage.encodeRoundResult(result)));
             }
         } catch (IOException e) {
             disconnected = true;
@@ -81,6 +96,7 @@ public abstract class GameNetwork {
     public boolean isConnected()    { return connected && !disconnected; }
     public boolean isDisconnected() { return disconnected; }
     public int getSharedSeed()      { return sharedSeed; }
+    public NetworkRoundResult getRemoteRoundResult() { return remoteRoundResult; }
 
     // ──────────────────────────────────────────────
     // 子类调用
@@ -143,6 +159,21 @@ public abstract class GameNetwork {
                                 continue;
                             }
                             remoteInputFlags = oneByte.get(0);
+                        }
+                        case NetworkMessage.TYPE_ROUND_RESULT -> {
+                            ByteBuffer resultBuffer = ByteBuffer.allocate(NetworkMessage.ROUND_RESULT_MSG_LEN - 1);
+                            if (!readFullyWithDeadline(channel, resultBuffer, System.nanoTime() + 5_000_000_000L)) {
+                                continue;
+                            }
+                            byte[] frame = new byte[NetworkMessage.ROUND_RESULT_MSG_LEN];
+                            frame[0] = NetworkMessage.TYPE_ROUND_RESULT;
+                            resultBuffer.flip();
+                            resultBuffer.get(frame, 1, frame.length - 1);
+                            NetworkRoundResult result = NetworkMessage.decodeRoundResult(frame);
+                            NetworkRoundResult previous = remoteRoundResult;
+                            if (previous == null || result.roundNumber() > previous.roundNumber()) {
+                                remoteRoundResult = result;
+                            }
                         }
                         case NetworkMessage.TYPE_DISCONNECT -> {
                             return;

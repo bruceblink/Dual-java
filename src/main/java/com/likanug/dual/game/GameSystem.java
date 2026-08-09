@@ -6,6 +6,7 @@ import com.likanug.dual.actor.ActorGroup;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.actor.arrow.AbstractArrowActor;
 import com.likanug.dual.network.GameNetwork;
+import com.likanug.dual.network.NetworkRoundResult;
 import com.likanug.dual.particle.Particle;
 import com.likanug.dual.particle.ParticleBuilder;
 import com.likanug.dual.particle.ParticleSet;
@@ -39,6 +40,7 @@ public class GameSystem {
     private final PlayerEngine otherEngine;
     private final GameBackground currentBackground;
     private final ArenaLayout arenaLayout;
+    private final GameNetwork network;
     private final boolean demoPlay;
     private final boolean localTwoPlayer;
     private boolean showsInstructionWindow;
@@ -74,6 +76,7 @@ public class GameSystem {
             AiDifficulty aiDifficulty,
             ArenaLayout arenaLayout) {
         this.app = app;
+        this.network = null;
         this.arenaLayout = arenaLayout;
         // prepare ActorGroup
         this.myGroup = new ActorGroup();
@@ -123,6 +126,7 @@ public class GameSystem {
      */
     public GameSystem(GameNetwork network, App app) {
         this.app = app;
+        this.network = network;
         this.myGroup = new ActorGroup();
         this.otherGroup = new ActorGroup();
         this.myGroup.setEnemyGroup(otherGroup);
@@ -201,7 +205,17 @@ public class GameSystem {
 
     /** Records one round winner while keeping the match score available for the next round. */
     public MatchScore.RoundResult recordRoundWin(PlayerSide roundWinner) {
-        return matchScore.recordRoundWin(roundWinner);
+        MatchScore.RoundResult result = matchScore.recordRoundWin(roundWinner);
+        if (network != null) {
+            int roundNumber = result.playerOneWins() + result.playerTwoWins();
+            network.sendRoundResult(new NetworkRoundResult(
+                    roundNumber,
+                    roundWinner == PlayerSide.ONE ? NetworkRoundResult.SIDE_ONE : NetworkRoundResult.SIDE_TWO,
+                    result.playerOneWins(),
+                    result.playerTwoWins(),
+                    result.matchWinner().isPresent()));
+        }
+        return result;
     }
 
     /**
