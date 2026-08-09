@@ -31,6 +31,7 @@ public class GameResultState extends GameSystemState {
     private final MatchScore.RoundResult roundResult;
     private boolean networkResetRequested;
     private boolean networkResetTimedOut;
+    private boolean networkScoreMismatch;
     private boolean xPressedLastFrame;
     private int networkResetWaitFrameCount;
 
@@ -107,6 +108,7 @@ public class GameResultState extends GameSystemState {
         } else {
             if (properFrameCount > durationFrameCount) {
                 boolean xPressed = app.getCurrentKeyInput().isXPressed;
+                networkScoreMismatch = system.hasNetworkRoundResultMismatch(roundResult);
                 if (!xPressed) {
                     xPressedLastFrame = false;
                     if (networkResetTimedOut) {
@@ -152,6 +154,7 @@ public class GameResultState extends GameSystemState {
 
     /** Names the distinct actions available after a completed match or an intermediate round. */
     String resetPromptLabel() {
+        if (networkScoreMismatch) return "Score mismatch. Waiting for sync...";
         if (networkResetTimedOut) return "No response. Release X and try again.";
         if (networkResetRequested) return "Waiting for rival...";
         if (roundResult != null && roundResult.matchWinner().isPresent()) {

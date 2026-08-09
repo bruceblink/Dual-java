@@ -230,10 +230,33 @@ public class GameSystem {
     public boolean isNetworkRematchReady(MatchScore.RoundResult result) {
         if (network == null) return true;
         if (result == null) return false;
+        if (!isNetworkRoundResultConsistent(result)) return false;
         NetworkRematchRequest request = network.getRemoteRematchRequest();
         return request != null
                 && request.roundNumber() == result.playerOneWins() + result.playerTwoWins()
                 && request.matchReset() == result.matchWinner().isPresent();
+    }
+
+    /** Compares the remote sender's perspective with this client's score and winner before a reset. */
+    public boolean isNetworkRoundResultConsistent(MatchScore.RoundResult result) {
+        if (network == null) return true;
+        if (result == null) return false;
+        NetworkRoundResult remoteResult = network.getRemoteRoundResult();
+        if (remoteResult == null) return false;
+        NetworkRoundResult expectedLocalPerspective = new NetworkRoundResult(
+                result.playerOneWins() + result.playerTwoWins(),
+                result.roundWinner() == PlayerSide.ONE ? NetworkRoundResult.SIDE_ONE : NetworkRoundResult.SIDE_TWO,
+                result.playerOneWins(),
+                result.playerTwoWins(),
+                result.matchWinner().isPresent());
+        return remoteResult.mirrored().equals(expectedLocalPerspective);
+    }
+
+    /** Distinguishes a delayed result frame from an actual peer score disagreement. */
+    public boolean hasNetworkRoundResultMismatch(MatchScore.RoundResult result) {
+        if (network == null || result == null) return false;
+        NetworkRoundResult remoteResult = network.getRemoteRoundResult();
+        return remoteResult != null && !isNetworkRoundResultConsistent(result);
     }
 
     /**
