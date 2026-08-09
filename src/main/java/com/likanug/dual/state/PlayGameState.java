@@ -55,8 +55,9 @@ public class PlayGameState extends GameSystemState {
 
         system.advanceCombatFrame();
         system.getMyGroup().update();
-        system.getMyGroup().act();
         system.getOtherGroup().update();
+        system.resolveArenaCollisions();
+        system.getMyGroup().act();
         system.getOtherGroup().act();
         system.getMyGroup().displayPlayer();
         system.getOtherGroup().displayPlayer();

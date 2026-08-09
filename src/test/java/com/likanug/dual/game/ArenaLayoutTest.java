@@ -1,6 +1,8 @@
 package com.likanug.dual.game;
 
 import com.likanug.dual.App;
+import com.likanug.dual.actor.player.PlayerActor;
+import com.likanug.dual.playerEngine.PlayerEngine;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,5 +38,23 @@ class ArenaLayoutTest {
         org.junit.jupiter.api.Assertions.assertThrows(
                 IllegalArgumentException.class,
                 () -> new ArenaRect(0.0F, 0.0F, 0.0F, 20.0F));
+    }
+
+    @Test
+    void resolvingAPlayerAtTheCenterPushesItToASafeSide() {
+        App app = new App();
+        PlayerEngine engine = new PlayerEngine() {
+            @Override
+            public void run(PlayerActor player) {
+            }
+        };
+        PlayerActor player = new PlayerActor(engine, 255, app);
+        player.setxPosition(640.0F);
+        player.setyPosition(360.0F);
+
+        ArenaLayout.centralCover().resolvePlayer(player);
+
+        assertFalse(ArenaLayout.centralCover().blocksCircle(
+                player.getxPosition(), player.getyPosition(), player.getHalfBodySize()));
     }
 }

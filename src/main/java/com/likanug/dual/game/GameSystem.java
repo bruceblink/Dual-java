@@ -4,6 +4,7 @@ import com.likanug.dual.App;
 import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.ActorGroup;
 import com.likanug.dual.actor.player.PlayerActor;
+import com.likanug.dual.actor.arrow.AbstractArrowActor;
 import com.likanug.dual.network.GameNetwork;
 import com.likanug.dual.particle.Particle;
 import com.likanug.dual.particle.ParticleBuilder;
@@ -266,6 +267,22 @@ public class GameSystem {
 
     public ArenaLayout getArenaLayout() {
         return arenaLayout;
+    }
+
+    /** Resolves cover collisions after positions advance and before weapon state acts. */
+    public void resolveArenaCollisions() {
+        arenaLayout.resolvePlayer((PlayerActor) myGroup.getPlayer());
+        arenaLayout.resolvePlayer((PlayerActor) otherGroup.getPlayer());
+        removeArrowsInsideCover(myGroup);
+        removeArrowsInsideCover(otherGroup);
+    }
+
+    private void removeArrowsInsideCover(ActorGroup group) {
+        for (AbstractArrowActor arrow : group.getArrowList()) {
+            if (arenaLayout.blocksCircle(arrow.getxPosition(), arrow.getyPosition(), arrow.getCollisionRadius())) {
+                group.getRemovingArrowList().add(arrow);
+            }
+        }
     }
 
     public boolean isDemoPlay() {

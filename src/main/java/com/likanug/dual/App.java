@@ -1,6 +1,7 @@
 package com.likanug.dual;
 
 import com.likanug.dual.game.GameSystem;
+import com.likanug.dual.game.ArenaLayout;
 import com.likanug.dual.inputDevice.KeyBindings;
 import com.likanug.dual.inputDevice.KeyInput;
 import com.likanug.dual.inputDevice.LocalInputRouter;
@@ -113,6 +114,10 @@ public class App extends PApplet {
     }
 
     public void newGame(boolean demo, boolean instruction, AiDifficulty aiDifficulty) {
+        newGame(demo, instruction, aiDifficulty, ArenaLayout.open());
+    }
+
+    public void newGame(boolean demo, boolean instruction, AiDifficulty aiDifficulty, ArenaLayout arenaLayout) {
         clearLocalInputs();
         // 如果正在联机，先断线
         if (activeNetwork != null) {
@@ -120,7 +125,7 @@ public class App extends PApplet {
             activeNetwork = null;
         }
         networkMode = NetworkMode.NONE;
-        system = new GameSystem(demo, instruction, this, false, aiDifficulty);
+        system = new GameSystem(demo, instruction, this, false, aiDifficulty, arenaLayout);
     }
 
     /** Starts a local two-player match while preserving both configured keyboard snapshots. */
@@ -340,7 +345,8 @@ public class App extends PApplet {
         text("2  Standard AI", 0, -15);
         text("3  Advanced AI", 0, 30);
         text("4  Local 2P", 0, 75);
-        text("ESC    Back to demo", 0, 145);
+        text("5  Standard AI + Cover", 0, 120);
+        text("ESC    Back to demo", 0, 175);
         popStyle();
         popMatrix();
     }
@@ -493,6 +499,10 @@ public class App extends PApplet {
         }
         if (key == '3') {
             newGame(false, false, AiDifficulty.ADVANCED);
+            return;
+        }
+        if (key == '5') {
+            newGame(false, false, AiDifficulty.STANDARD, ArenaLayout.centralCover());
             return;
         }
         if (key == '4' || key == 'l' || key == 'L') newLocalGame(false);

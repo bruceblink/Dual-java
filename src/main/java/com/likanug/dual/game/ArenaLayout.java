@@ -1,6 +1,7 @@
 package com.likanug.dual.game;
 
 import com.likanug.dual.App;
+import com.likanug.dual.actor.player.PlayerActor;
 
 import java.util.List;
 
@@ -41,6 +42,33 @@ public final class ArenaLayout {
 
     public boolean blocksCircle(float x, float y, float radius) {
         return obstacles.stream().anyMatch(rect -> rect.containsCircle(x, y, radius));
+    }
+
+    /** Pushes a player to the nearest safe side when movement enters a cover rectangle. */
+    public void resolvePlayer(PlayerActor player) {
+        final float radius = player.getHalfBodySize();
+        for (ArenaRect obstacle : obstacles) {
+            if (!obstacle.containsCircle(player.getxPosition(), player.getyPosition(), radius)) continue;
+
+            final float pushLeft = player.getxPosition() - (obstacle.left() - radius);
+            final float pushRight = (obstacle.right() + radius) - player.getxPosition();
+            final float pushTop = player.getyPosition() - (obstacle.top() - radius);
+            final float pushBottom = (obstacle.bottom() + radius) - player.getyPosition();
+            final float smallestPush = Math.min(Math.min(pushLeft, pushRight), Math.min(pushTop, pushBottom));
+            if (smallestPush == pushLeft) {
+                player.setxPosition(obstacle.left() - radius);
+                player.setxVelocity(-Math.abs(player.getxVelocity()));
+            } else if (smallestPush == pushRight) {
+                player.setxPosition(obstacle.right() + radius);
+                player.setxVelocity(Math.abs(player.getxVelocity()));
+            } else if (smallestPush == pushTop) {
+                player.setyPosition(obstacle.top() - radius);
+                player.setyVelocity(-Math.abs(player.getyVelocity()));
+            } else {
+                player.setyPosition(obstacle.bottom() + radius);
+                player.setyVelocity(Math.abs(player.getyVelocity()));
+            }
+        }
     }
 
     /** Renders cover geometry in the same fixed coordinate space as players and arrows. */
