@@ -5,6 +5,8 @@ import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.ActorGroup;
 import com.likanug.dual.actor.player.NullPlayerActor;
 import com.likanug.dual.actor.player.PlayerActor;
+import com.likanug.dual.game.GameSystem;
+import com.likanug.dual.inputDevice.KeyInput;
 import com.likanug.dual.inputDevice.InputDevice;
 import com.likanug.dual.playerEngine.PlayerEngine;
 import org.junit.jupiter.api.Test;
@@ -86,6 +88,30 @@ class DrawBowPlayerActorStateTest {
                 DrawLongbowPlayerActorState.ReleaseOutcome.FIRE,
                 DrawLongbowPlayerActorState.releaseOutcome(false, 30, 30)
         );
+    }
+
+    @Test
+    void longbowReadyFeedbackIsEmittedOnlyOnceAtTheChargeBoundary() {
+        App app = new App();
+        KeyInput keyInput = new KeyInput();
+        app.setCurrentKeyInput(keyInput);
+        GameSystem system = new GameSystem(false, false, app);
+        app.setSystem(system);
+
+        PlayerActor player = (PlayerActor) system.getMyGroup().getPlayer();
+        DrawLongbowPlayerActorState state = new DrawLongbowPlayerActorState(app);
+        MovePlayerActorState moveState = new MovePlayerActorState(app);
+        state.setMoveState(moveState);
+        player.getEngine().getControllingInputDevice().operateLongShotButton(true);
+        player.setState(state.entryState(player));
+        player.setChargedFrameCount((int) (GameConstants.LONGBOW_CHARGE_SEC * App.FPS));
+
+        state.act(player);
+        int particleCountAfterReady = system.getCommonParticleSet().getParticleList().size();
+        state.act(player);
+
+        assertTrue(player.isChargeReadyFeedbackShown());
+        assertEquals(particleCountAfterReady, system.getCommonParticleSet().getParticleList().size());
     }
 
     @Test

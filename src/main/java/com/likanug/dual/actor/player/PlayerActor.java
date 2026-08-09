@@ -20,6 +20,7 @@ public class PlayerActor extends AbstractPlayerActor {
 
     private float aimAngle;
     private int chargedFrameCount;
+    private boolean chargeReadyFeedbackShown;
     private int damageRemainingFrameCount;
     private int damageEndFeedbackFrameCount;
     private int shortbowCooldownFrameCount;
@@ -58,6 +59,14 @@ public class PlayerActor extends AbstractPlayerActor {
 
     public void setChargedFrameCount(int chargedFrameCount) {
         this.chargedFrameCount = chargedFrameCount;
+    }
+
+    public boolean isChargeReadyFeedbackShown() {
+        return chargeReadyFeedbackShown;
+    }
+
+    public void setChargeReadyFeedbackShown(boolean chargeReadyFeedbackShown) {
+        this.chargeReadyFeedbackShown = chargeReadyFeedbackShown;
     }
 
     public int getDamageRemainingFrameCount() {
@@ -99,6 +108,7 @@ public class PlayerActor extends AbstractPlayerActor {
         rotationAngle = 0;
         aimAngle = 0;
         chargedFrameCount = 0;
+        chargeReadyFeedbackShown = false;
         damageRemainingFrameCount = 0;
         damageEndFeedbackFrameCount = 0;
         shortbowCooldownFrameCount = 0;

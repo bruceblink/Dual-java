@@ -8,6 +8,7 @@ import com.likanug.dual.actor.player.AbstractPlayerActor;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.inputDevice.AbstractInputDevice;
 import com.likanug.dual.particle.Particle;
+import com.likanug.dual.game.SoundFeedback;
 
 import static com.likanug.dual.App.FPS;
 import static processing.core.PApplet.*;
@@ -34,6 +35,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
 
     public PlayerActorState entryState(PlayerActor parentActor) {
         parentActor.setChargedFrameCount(0);
+        parentActor.setChargeReadyFeedbackShown(false);
         aim(parentActor, parentActor.getEngine().getControllingInputDevice());
         if (app.getSystem() != null) app.getSystem().recordLongbowChargeStarted(parentActor);
         return this;
@@ -142,7 +144,10 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     public void act(PlayerActor parentActor) {
         super.act(parentActor);
 
-        if (parentActor.getChargedFrameCount() != chargeRequiredFrameCount) return;
+        if (parentActor.getChargedFrameCount() != chargeRequiredFrameCount
+                || parentActor.isChargeReadyFeedbackShown()) return;
+
+        parentActor.setChargeReadyFeedbackShown(true);
 
         final Particle newParticle = app.getSystem().getCommonParticleSet().getBuilder()
                 .type(3)  // Ring
@@ -154,6 +159,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
                 .lifespanSecond(0)
                 .build();
         app.getSystem().getCommonParticleSet().getParticleList().add(newParticle);
+        SoundFeedback.playChargeReady();
     }
 
     public boolean isDrawingLongBow() {
