@@ -14,6 +14,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -65,6 +66,52 @@ class GameSystemNetworkSyncTest {
             assertFalse(system.isNetworkRoundResultConsistent(localResult));
             assertFalse(system.isNetworkRematchReady(localResult));
             assertTrue(system.hasNetworkRoundResultMismatch(localResult));
+            network.disconnect();
+        }
+    }
+
+    @Test
+    void fullMatchRematchClearsSnapshotsForTheNextMatchOnTheSameConnection() throws Exception {
+        try (ChannelPair pair = createConnectedPair()) {
+            TestNetwork network = new TestNetwork();
+            network.attach(pair.local);
+
+            App app = new App();
+            app.setCurrentKeyInput(new KeyInput());
+            GameSystem system = new GameSystem(network, app);
+
+            for (int round = 1; round <= 3; round++) {
+                MatchScore.RoundResult localResult = system.recordRoundWin(PlayerSide.ONE);
+                NetworkRoundResult sent = NetworkMessage.decodeRoundResult(
+                        readExactly(pair.remote, NetworkMessage.ROUND_RESULT_MSG_LEN, 1000));
+                assertEquals(round, sent.roundNumber());
+
+                NetworkRoundResult remoteResult = new NetworkRoundResult(
+                        round,
+                        NetworkRoundResult.SIDE_TWO,
+                        0,
+                        round,
+                        round == 3);
+                writeFully(pair.remote, NetworkMessage.encodeRoundResult(remoteResult));
+                waitUntil(() -> remoteResult.equals(network.getRemoteRoundResult()), 1000);
+
+                if (round == 3) {
+                    NetworkRematchRequest request = new NetworkRematchRequest(round, true);
+                    writeFully(pair.remote, NetworkMessage.encodeRematchRequest(request));
+                    waitUntil(() -> request.equals(network.getRemoteRematchRequest()), 1000);
+                    assertTrue(system.isNetworkRoundResultConsistent(localResult));
+                    assertTrue(system.isNetworkRematchReady(localResult));
+                    system.resetMatch();
+                    assertTrue(network.getRemoteRoundResult() == null);
+                    assertTrue(network.getRemoteRematchRequest() == null);
+                }
+            }
+
+            system.recordRoundWin(PlayerSide.ONE);
+            NetworkRoundResult nextMatchResult = NetworkMessage.decodeRoundResult(
+                    readExactly(pair.remote, NetworkMessage.ROUND_RESULT_MSG_LEN, 1000));
+            assertEquals(1, nextMatchResult.roundNumber());
+            assertEquals(1, nextMatchResult.playerOneWins());
             network.disconnect();
         }
     }
