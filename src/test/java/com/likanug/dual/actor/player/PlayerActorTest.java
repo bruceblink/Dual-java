@@ -2,6 +2,7 @@ package com.likanug.dual.actor.player;
 
 import com.likanug.dual.App;
 import com.likanug.dual.playerEngine.PlayerEngine;
+import com.likanug.dual.state.MovePlayerActorState;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,5 +31,26 @@ class PlayerActorTest {
         assertEquals(1.0F, PlayerActor.inputAccelerationScale(0.0F, -1.0F));
         assertEquals((float) (1.0 / Math.sqrt(2.0)), PlayerActor.inputAccelerationScale(1.0F, 1.0F));
         assertEquals((float) (1.0 / Math.sqrt(2.0)), PlayerActor.inputAccelerationScale(-0.5F, 0.5F));
+    }
+
+    @Test
+    void longbowRecoveryCountsDownAndRoundResetClearsIt() {
+        PlayerEngine engine = new PlayerEngine() {
+            @Override
+            public void run(PlayerActor player) {
+            }
+        };
+        App app = new App();
+        PlayerActor player = new PlayerActor(engine, 255, app);
+        player.setLongbowRecoveryFrameCount(2);
+
+        player.update();
+        assertEquals(1, player.getLongbowRecoveryFrameCount());
+        player.update();
+        assertEquals(0, player.getLongbowRecoveryFrameCount());
+
+        player.setLongbowRecoveryFrameCount(10);
+        player.resetForRound(100.0F, 200.0F, new MovePlayerActorState(app));
+        assertEquals(0, player.getLongbowRecoveryFrameCount());
     }
 }

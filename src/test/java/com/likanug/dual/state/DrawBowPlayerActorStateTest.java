@@ -99,6 +99,66 @@ class DrawBowPlayerActorStateTest {
     }
 
     @Test
+    void longbowFireStartsAVisibleAttackRecoveryWindow() {
+        App app = new App();
+        KeyInput keyInput = new KeyInput();
+        app.setCurrentKeyInput(keyInput);
+        GameSystem system = new GameSystem(false, false, app);
+        app.setSystem(system);
+        PlayerActor player = (PlayerActor) system.getMyGroup().getPlayer();
+        DrawLongbowPlayerActorState state = new DrawLongbowPlayerActorState(app);
+        MovePlayerActorState moveState = new MovePlayerActorState(app);
+        state.setMoveState(moveState);
+        player.setState(state);
+        player.setChargedFrameCount((int) (GameConstants.LONGBOW_CHARGE_SEC * App.FPS));
+        player.getEngine().getControllingInputDevice().operateLongShotButton(false);
+
+        state.act(player);
+
+        assertEquals(
+                Math.round(GameConstants.LONGBOW_RECOVERY_SEC * App.FPS),
+                player.getLongbowRecoveryFrameCount());
+        assertEquals(moveState, player.getState());
+        assertEquals(1.0F, MovePlayerActorState.recoveryProgress(
+                player.getLongbowRecoveryFrameCount(),
+                Math.round(GameConstants.LONGBOW_RECOVERY_SEC * App.FPS)));
+    }
+
+    @Test
+    void longbowRecoveryBlocksWeaponsButStillAppliesMovementInput() {
+        App app = new App();
+        PlayerEngine engine = new PlayerEngine() {
+            @Override
+            public void run(PlayerActor player) {
+            }
+        };
+        InputDevice input = (InputDevice) engine.getControllingInputDevice();
+        PlayerActor player = new PlayerActor(engine, 255, app);
+        PlayerActor target = new PlayerActor(engine, 0, app);
+        ActorGroup playerGroup = new ActorGroup();
+        ActorGroup targetGroup = new ActorGroup();
+        playerGroup.setEnemyGroup(targetGroup);
+        targetGroup.setEnemyGroup(playerGroup);
+        playerGroup.setPlayer(player);
+        targetGroup.setPlayer(target);
+        MovePlayerActorState moveState = new MovePlayerActorState(app);
+        moveState.setDrawShortbowState(new DrawShortbowPlayerActorState(app));
+        moveState.setDrawLongbowState(new DrawLongbowPlayerActorState(app));
+        player.setState(moveState);
+        player.setLongbowRecoveryFrameCount(1);
+        input.operateMoveButton(1, 1);
+        input.operateShotButton(true);
+        input.operateLongShotButton(true);
+
+        moveState.act(player);
+
+        assertEquals(0, playerGroup.getArrowList().size());
+        assertEquals(moveState, player.getState());
+        assertTrue(player.getxVelocity() > 0.0F);
+        assertTrue(player.getyVelocity() > 0.0F);
+    }
+
+    @Test
     void longbowChargeAdvancesOnlyWhileHeldAndStopsAtTheFiringThreshold() {
         assertEquals(1, DrawLongbowPlayerActorState.advanceChargeFrameCount(true, 0, 30));
         assertEquals(15, DrawLongbowPlayerActorState.advanceChargeFrameCount(false, 15, 30));

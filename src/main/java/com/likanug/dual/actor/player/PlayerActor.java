@@ -22,6 +22,7 @@ public class PlayerActor extends AbstractPlayerActor {
     private float aimAngle;
     private int chargedFrameCount;
     private boolean chargeReadyFeedbackShown;
+    private int longbowRecoveryFrameCount;
     private int damageRemainingFrameCount;
     private int damageEndFeedbackFrameCount;
     private int shortbowCooldownFrameCount;
@@ -72,6 +73,14 @@ public class PlayerActor extends AbstractPlayerActor {
         this.chargeReadyFeedbackShown = chargeReadyFeedbackShown;
     }
 
+    public int getLongbowRecoveryFrameCount() {
+        return longbowRecoveryFrameCount;
+    }
+
+    public void setLongbowRecoveryFrameCount(int longbowRecoveryFrameCount) {
+        this.longbowRecoveryFrameCount = Math.max(0, longbowRecoveryFrameCount);
+    }
+
     public int getDamageRemainingFrameCount() {
         return damageRemainingFrameCount;
     }
@@ -116,6 +125,7 @@ public class PlayerActor extends AbstractPlayerActor {
         aimAngle = 0;
         chargedFrameCount = 0;
         chargeReadyFeedbackShown = false;
+        longbowRecoveryFrameCount = 0;
         damageRemainingFrameCount = 0;
         damageEndFeedbackFrameCount = 0;
         shortbowCooldownFrameCount = 0;
@@ -155,6 +165,7 @@ public class PlayerActor extends AbstractPlayerActor {
         shortbowAmmo.tickRecovery();
         // Cooldown advances during every movement state so a released shortbow cannot leave it frozen.
         shortbowCooldownFrameCount = Math.max(0, shortbowCooldownFrameCount - 1);
+        longbowRecoveryFrameCount = Math.max(0, longbowRecoveryFrameCount - 1);
         damageEndFeedbackFrameCount = Math.max(0, damageEndFeedbackFrameCount - 1);
 
         if (xPosition < halfBodySize) {

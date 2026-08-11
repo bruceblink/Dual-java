@@ -92,6 +92,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
         parentActor.getGroup().addArrow(newArrow);
         app.getSystem().setScreenShakeValue(app.getSystem().getScreenShakeValue() + 10);
         parentActor.setChargedFrameCount(0);
+        parentActor.setLongbowRecoveryFrameCount(Math.round(GameConstants.LONGBOW_RECOVERY_SEC * FPS));
         parentActor.setState(moveState.entryState(parentActor));
     }
 
