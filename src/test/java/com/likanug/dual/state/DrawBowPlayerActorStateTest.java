@@ -67,6 +67,47 @@ class DrawBowPlayerActorStateTest {
     }
 
     @Test
+    void successfulShortbowUsesAFixedFullMovementActionWindow() {
+        ShortbowStateFixture fixture = shortbowStateFixture();
+        fixture.input.operateMoveButton(1, 0);
+        fixture.input.operateShotButton(true);
+
+        fixture.player.act();
+
+        assertEquals(GameConstants.SHORTBOW_ACTION_FRAMES, fixture.player.getShortbowActionFrameCount());
+        assertEquals(1, fixture.playerGroup.getArrowList().size());
+        assertEquals(1.0F, fixture.shortbowState.getMoveRatio());
+
+        for (int frame = 0; frame < GameConstants.SHORTBOW_ACTION_FRAMES; frame++) {
+            fixture.player.update();
+            fixture.player.act();
+        }
+
+        assertEquals(fixture.moveState, fixture.player.getState());
+        assertEquals(1, fixture.playerGroup.getArrowList().size());
+        assertTrue(fixture.player.getxVelocity() > 1.0F);
+    }
+
+    @Test
+    void heldLongbowStartsOnTheFirstFrameAfterShortbowAction() {
+        ShortbowStateFixture fixture = shortbowStateFixture();
+        fixture.input.operateShotButton(true);
+        fixture.player.act();
+        fixture.input.operateLongShotButton(true);
+
+        for (int frame = 0; frame < GameConstants.SHORTBOW_ACTION_FRAMES; frame++) {
+            fixture.player.update();
+            fixture.player.act();
+        }
+        assertEquals(fixture.moveState, fixture.player.getState());
+
+        fixture.player.update();
+        fixture.player.act();
+
+        assertEquals(fixture.longbowState, fixture.player.getState());
+    }
+
+    @Test
     void longbowChargeProgressIsContinuousAndClamped() {
         assertEquals(0.0F, DrawLongbowPlayerActorState.calculateChargeProgress(-1, 30));
         assertEquals(0.5F, DrawLongbowPlayerActorState.calculateChargeProgress(15, 30));
@@ -343,13 +384,15 @@ class DrawBowPlayerActorStateTest {
         shortbowState.setMoveState(moveState);
         longbowState.setMoveState(moveState);
         player.setState(moveState);
-        return new ShortbowStateFixture(input, player, playerGroup, longbowState);
+        return new ShortbowStateFixture(input, player, playerGroup, moveState, shortbowState, longbowState);
     }
 
     private record ShortbowStateFixture(
             InputDevice input,
             PlayerActor player,
             ActorGroup playerGroup,
+            MovePlayerActorState moveState,
+            DrawShortbowPlayerActorState shortbowState,
             DrawLongbowPlayerActorState longbowState) {
     }
 }

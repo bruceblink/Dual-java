@@ -47,6 +47,7 @@ public class MovePlayerActorState extends PlayerActorState {
             parentActor.setState(drawShortbowState.entryState(parentActor));
             parentActor.setAimAngle(getEnemyPlayerActorAngle(parentActor));
             drawShortbowState.fire(parentActor);
+            parentActor.startShortbowAction();
             return;
         }
         if (input.isLongShotButtonPressed()) {

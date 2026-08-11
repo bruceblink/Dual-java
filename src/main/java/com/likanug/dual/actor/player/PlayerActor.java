@@ -27,6 +27,7 @@ public class PlayerActor extends AbstractPlayerActor {
     private int damageEndFeedbackFrameCount;
     private int shortbowCooldownFrameCount;
     private int shortbowInputBufferFrameCount;
+    private int shortbowActionFrameCount;
     private final ShortbowAmmo shortbowAmmo = new ShortbowAmmo(
             GameConstants.SHORTBOW_MAX_AMMO,
             Math.round(GameConstants.SHORTBOW_AMMO_RECOVERY_SEC * FPS));
@@ -123,6 +124,15 @@ public class PlayerActor extends AbstractPlayerActor {
         shortbowInputBufferFrameCount = 0;
     }
 
+    public int getShortbowActionFrameCount() {
+        return shortbowActionFrameCount;
+    }
+
+    /** Starts this actor's fixed snap-shot pose without sharing timing between the two players. */
+    public void startShortbowAction() {
+        shortbowActionFrameCount = GameConstants.SHORTBOW_ACTION_FRAMES;
+    }
+
     public ShortbowAmmo getShortbowAmmo() {
         return shortbowAmmo;
     }
@@ -148,6 +158,7 @@ public class PlayerActor extends AbstractPlayerActor {
         damageEndFeedbackFrameCount = 0;
         shortbowCooldownFrameCount = 0;
         shortbowInputBufferFrameCount = 0;
+        shortbowActionFrameCount = 0;
         shortbowAmmo.reset();
         shortbowPressure.reset();
         state = moveState.entryState(this);
@@ -191,6 +202,7 @@ public class PlayerActor extends AbstractPlayerActor {
         // Cooldown advances during every movement state so a released shortbow cannot leave it frozen.
         shortbowCooldownFrameCount = Math.max(0, shortbowCooldownFrameCount - 1);
         shortbowInputBufferFrameCount = Math.max(0, shortbowInputBufferFrameCount - 1);
+        shortbowActionFrameCount = Math.max(0, shortbowActionFrameCount - 1);
         longbowRecoveryFrameCount = Math.max(0, longbowRecoveryFrameCount - 1);
         damageEndFeedbackFrameCount = Math.max(0, damageEndFeedbackFrameCount - 1);
 

@@ -29,6 +29,7 @@ public final class GameConstants {
     public static final float SHORTBOW_AMMO_RECOVERY_SEC = 1.0F;
     public static final float SHORTBOW_FIRE_INTERVAL_SEC = 0.2F;
     public static final int SHORTBOW_INPUT_BUFFER_FRAMES = 6;
+    public static final int SHORTBOW_ACTION_FRAMES = 4;
     public static final int SHORTBOW_MAX_CONSECUTIVE_PRESSURES = 2;
 
     // --- 长弓箭 ---

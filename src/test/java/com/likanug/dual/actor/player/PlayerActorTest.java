@@ -82,4 +82,25 @@ class PlayerActorTest {
         player.resetForRound(100.0F, 200.0F, new MovePlayerActorState(app));
         assertEquals(0, player.getShortbowInputBufferFrameCount());
     }
+
+    @Test
+    void shortbowActionTimerIsPerPlayerAndRoundScoped() {
+        PlayerEngine engine = new PlayerEngine() {
+            @Override
+            public void run(PlayerActor player) {
+            }
+        };
+        App app = new App();
+        PlayerActor first = new PlayerActor(engine, 255, app);
+        PlayerActor second = new PlayerActor(engine, 0, app);
+
+        first.startShortbowAction();
+        first.update();
+
+        assertEquals(GameConstants.SHORTBOW_ACTION_FRAMES - 1, first.getShortbowActionFrameCount());
+        assertEquals(0, second.getShortbowActionFrameCount());
+
+        first.resetForRound(100.0F, 200.0F, new MovePlayerActorState(app));
+        assertEquals(0, first.getShortbowActionFrameCount());
+    }
 }

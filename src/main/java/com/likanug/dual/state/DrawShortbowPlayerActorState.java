@@ -34,6 +34,17 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
         parentActor.setAimAngle(getEnemyPlayerActorAngle(parentActor));
     }
 
+    /** Runs a fixed full-movement follow-through and releases it independently of button hold duration. */
+    @Override
+    public void act(PlayerActor parentActor) {
+        final AbstractInputDevice input = parentActor.getEngine().getControllingInputDevice();
+        aim(parentActor, input);
+        parentActor.addVelocity(input.getHorizontalMoveButton(), input.getVerticalMoveButton());
+        if (parentActor.getShortbowActionFrameCount() <= 0) {
+            parentActor.setState(moveState.entryState(parentActor));
+        }
+    }
+
     private AbstractArrowActor nearestEnemyArrow(PlayerActor parentActor) {
         AbstractArrowActor nearest = null;
         float nearestDistance = Float.MAX_VALUE;
@@ -102,6 +113,11 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
     /** Checks cadence and reserve before Move commits a buffered press to the weapon state. */
     boolean isReadyToFire(PlayerActor player) {
         return player.getShortbowCooldownFrameCount() <= 0 && player.getShortbowAmmo().canFire();
+    }
+
+    @Override
+    protected float getMoveRatio() {
+        return 1.0F;
     }
 
 }
