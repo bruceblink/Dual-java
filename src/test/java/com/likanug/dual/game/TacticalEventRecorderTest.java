@@ -79,4 +79,18 @@ class TacticalEventRecorderTest {
         assertTrue(recorder.hasActiveOpening(PlayerSide.ONE, 100));
         assertFalse(recorder.hasActiveOpening(PlayerSide.ONE, 101));
     }
+
+    @Test
+    void interceptionIsTheOnlyNeutralTacticalFact() {
+        assertEquals(
+                new TacticalEvent(null, TacticalEventType.INTERCEPT, 5),
+                TacticalEvent.intercept(5));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new TacticalEvent(null, TacticalEventType.PRESSURE, 5));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new TacticalEvent(PlayerSide.ONE, TacticalEventType.INTERCEPT, 5));
+        assertThrows(IllegalArgumentException.class, () -> TacticalEvent.intercept(-1));
+    }
 }

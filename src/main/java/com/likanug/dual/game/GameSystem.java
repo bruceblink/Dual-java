@@ -408,6 +408,11 @@ public class GameSystem {
                 .ifPresent(tacticalEventLog::add);
     }
 
+    /** Records one neutral arrow-interception fact for the fixed HUD and replay feedback layer. */
+    public void recordInterception() {
+        tacticalEventLog.add(TacticalEvent.intercept(combatFrameCount));
+    }
+
     /** Returns whether a charging player is still converting a recent shortbow hit into an opening. */
     public boolean hasTacticalOpening(PlayerActor attacker) {
         return tacticalEventRecorder.hasActiveOpening(

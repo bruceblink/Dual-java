@@ -15,6 +15,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GameSystemTacticalEventTest {
 
     @Test
+    void interceptionIsRecordedAsANeutralFactOutsideThePressureSequence() {
+        App app = new App();
+        GameSystem system = new GameSystem(true, false, app);
+        system.advanceCombatFrame();
+
+        system.recordInterception();
+
+        assertEquals(
+                List.of(new TacticalEvent(null, TacticalEventType.INTERCEPT, 1)),
+                system.getTacticalEventLog());
+    }
+
+    @Test
     void pressureThenLongbowEntryAndFinishExposeOnlyConfirmedSequenceFacts() {
         App app = new App();
         GameSystem system = new GameSystem(true, false, app);

@@ -296,6 +296,7 @@ public class PlayGameState extends GameSystemState {
             case PRESSURE -> app.fill(232, 192, 96, alpha);
             case OPENING -> app.fill(64, 176, 128, alpha);
             case FINISH -> app.fill(192, 64, 64, alpha);
+            case INTERCEPT -> app.fill(96, 208, 232, alpha);
         }
         app.text(
                 tacticalFeedbackLabel(tacticalFeedbackEvent.attacker(), tacticalFeedbackEvent.type()),
@@ -306,6 +307,7 @@ public class PlayGameState extends GameSystemState {
 
     /** Formats the compact state label displayed for the two-player tactical sequence. */
     static String tacticalFeedbackLabel(PlayerSide attacker, TacticalEventType type) {
+        if (type == TacticalEventType.INTERCEPT) return "ARROWS: INTERCEPT";
         String playerLabel = attacker == PlayerSide.ONE ? "YOU" : "RIVAL";
         return playerLabel + ": " + type;
     }
@@ -340,6 +342,7 @@ public class PlayGameState extends GameSystemState {
             for (AbstractArrowActor eachEnemyArrow : otherGroup.getArrowList()) {
                 if (otherGroup.getRemovingArrowList().contains(eachEnemyArrow)) continue;
                 if (eachMyArrow.isNotCollided(eachEnemyArrow)) continue;
+                system.recordInterception();
                 system.addInterceptParticles(
                         collisionMidpoint(eachMyArrow.getxPosition(), eachEnemyArrow.getxPosition()),
                         collisionMidpoint(eachMyArrow.getyPosition(), eachEnemyArrow.getyPosition()));

@@ -102,6 +102,7 @@ class PlayGameStateTest {
     void tacticalFeedbackLabelsIdentifyBothThePlayerAndEventType() {
         assertEquals("YOU: OPENING", PlayGameState.tacticalFeedbackLabel(PlayerSide.ONE, TacticalEventType.OPENING));
         assertEquals("RIVAL: FINISH", PlayGameState.tacticalFeedbackLabel(PlayerSide.TWO, TacticalEventType.FINISH));
+        assertEquals("ARROWS: INTERCEPT", PlayGameState.tacticalFeedbackLabel(null, TacticalEventType.INTERCEPT));
     }
 
     @Test
@@ -126,6 +127,9 @@ class PlayGameStateTest {
                 GameConstants.ARROW_BREAK_PARTICLE_COUNT * 2 + GameConstants.INTERCEPT_PARTICLE_COUNT + 1,
                 system.getCommonParticleSet().getParticleList().size());
         assertEquals(GameConstants.INTERCEPT_HIT_STOP_FRAMES, system.getCombatPauseFrameCount());
+        assertEquals(
+                new TacticalEvent(null, TacticalEventType.INTERCEPT, 0),
+                system.getTacticalEventLog().getFirst());
     }
 
     @Test
