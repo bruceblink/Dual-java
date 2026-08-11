@@ -61,6 +61,11 @@ public class DamagedPlayerActorState extends PlayerActorState {
     public PlayerActorState entryState(PlayerActor parentActor) {
         // 受击会打断正在进行的长弓蓄力，恢复移动后不能沿用旧进度。
         if (parentActor.getShortbowPressure().recordHit()) {
+            if (parentActor.getState() != null
+                    && parentActor.getState().isDrawingLongBow()
+                    && app.getSystem() != null) {
+                app.getSystem().cancelLongbowCharge(parentActor);
+            }
             parentActor.setChargedFrameCount(0);
             parentActor.setDamageRemainingFrameCount(durationFrameCount);
             parentActor.setDamageEndFeedbackFrameCount(0);

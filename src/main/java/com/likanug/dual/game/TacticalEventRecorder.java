@@ -38,6 +38,20 @@ public final class TacticalEventRecorder {
         return Optional.of(new TacticalEvent(attacker, TacticalEventType.OPENING, frame));
     }
 
+    /** Invalidates only the cancelled charge so a later charge must establish a fresh opening. */
+    public void recordLongbowChargeCancelled(PlayerSide attacker, int frame) {
+        validateFrame(frame);
+        PendingSequence sequence = pendingSequences.get(attacker);
+        if (sequence == null) return;
+        if (!isInWindow(sequence.pressureFrame, frame)) {
+            pendingSequences.remove(attacker);
+            return;
+        }
+        if (sequence.openingRecorded) {
+            pendingSequences.put(attacker, new PendingSequence(sequence.pressureFrame, false));
+        }
+    }
+
     /** Emits FINISH only when the same player lands a lethal longbow hit after a valid opening. */
     public Optional<TacticalEvent> recordLongbowFinish(PlayerSide attacker, int frame) {
         validateFrame(frame);

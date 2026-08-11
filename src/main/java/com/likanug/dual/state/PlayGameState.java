@@ -295,6 +295,7 @@ public class PlayGameState extends GameSystemState {
         switch (tacticalFeedbackEvent.type()) {
             case PRESSURE -> app.fill(232, 192, 96, alpha);
             case OPENING -> app.fill(64, 176, 128, alpha);
+            case DISRUPT -> app.fill(232, 192, 96, alpha);
             case FINISH -> app.fill(192, 64, 64, alpha);
             case INTERCEPT -> app.fill(96, 208, 232, alpha);
         }
@@ -309,6 +310,7 @@ public class PlayGameState extends GameSystemState {
     static String tacticalFeedbackLabel(PlayerSide attacker, TacticalEventType type) {
         if (type == TacticalEventType.INTERCEPT) return "ARROWS: INTERCEPT";
         String playerLabel = attacker == PlayerSide.ONE ? "YOU" : "RIVAL";
+        if (type == TacticalEventType.DISRUPT) return playerLabel + ": CHARGE BREAK";
         return playerLabel + ": " + type;
     }
 
@@ -363,8 +365,7 @@ public class PlayGameState extends GameSystemState {
                     killPlayer(otherGroup.getPlayer());
                     system.recordLongbowFinish(myGroup);
                 } else {
-                    thrustPlayerActor(eachMyArrow, (PlayerActor) enemyPlayer);
-                    system.recordPressure(myGroup);
+                    resolveShortbowHit(system, eachMyArrow, myGroup, (PlayerActor) enemyPlayer);
                 }
 
                 breakArrow(eachMyArrow, myGroup);
@@ -380,13 +381,31 @@ public class PlayGameState extends GameSystemState {
                     killPlayer(myGroup.getPlayer());
                     system.recordLongbowFinish(otherGroup);
                 } else {
-                    thrustPlayerActor(eachEnemyArrow, (PlayerActor) myGroup.getPlayer());
-                    system.recordPressure(otherGroup);
+                    resolveShortbowHit(
+                            system, eachEnemyArrow, otherGroup, (PlayerActor) myGroup.getPlayer());
                 }
 
                 breakArrow(eachEnemyArrow, otherGroup);
             }
         }
+    }
+
+    /** Applies one shortbow hit and adds extra feedback only when it interrupts an active longbow charge. */
+    private void resolveShortbowHit(
+            GameSystem system,
+            AbstractArrowActor arrow,
+            ActorGroup attackerGroup,
+            PlayerActor target) {
+        final boolean chargeInterrupted = target.getState() != null && target.getState().isDrawingLongBow();
+        final float targetX = target.getxPosition();
+        final float targetY = target.getyPosition();
+        thrustPlayerActor(arrow, target);
+        system.recordPressure(attackerGroup);
+        if (!chargeInterrupted) return;
+
+        system.recordLongbowDisruption(attackerGroup);
+        system.addDisruptionParticles(targetX, targetY);
+        system.startCombatPause(GameConstants.DISRUPT_HIT_STOP_FRAMES);
     }
 
     public void killPlayer(AbstractPlayerActor player) {

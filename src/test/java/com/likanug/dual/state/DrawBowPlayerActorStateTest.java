@@ -6,6 +6,7 @@ import com.likanug.dual.actor.ActorGroup;
 import com.likanug.dual.actor.player.NullPlayerActor;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.game.GameSystem;
+import com.likanug.dual.game.TacticalEventType;
 import com.likanug.dual.inputDevice.KeyInput;
 import com.likanug.dual.inputDevice.InputDevice;
 import com.likanug.dual.playerEngine.PlayerEngine;
@@ -96,6 +97,28 @@ class DrawBowPlayerActorStateTest {
                 DrawLongbowPlayerActorState.ReleaseOutcome.FIRE,
                 DrawLongbowPlayerActorState.releaseOutcome(false, 30, 30)
         );
+    }
+
+    @Test
+    void manuallyCancelledLongbowCannotReuseItsOldTacticalOpening() {
+        App app = new App();
+        app.setCurrentKeyInput(new KeyInput());
+        GameSystem system = new GameSystem(false, false, app);
+        app.setSystem(system);
+        PlayerActor player = (PlayerActor) system.getMyGroup().getPlayer();
+        DrawLongbowPlayerActorState state = new DrawLongbowPlayerActorState(app);
+        state.setMoveState(new MovePlayerActorState(app));
+        system.recordPressure(system.getMyGroup());
+        player.setState(state.entryState(player));
+
+        state.onButtonReleased(player);
+        system.recordLongbowFinish(system.getMyGroup());
+
+        assertFalse(system.getTacticalEventLog().stream()
+                .anyMatch(event -> event.type() == TacticalEventType.FINISH));
+        player.setState(state.entryState(player));
+        system.recordLongbowFinish(system.getMyGroup());
+        assertEquals(TacticalEventType.FINISH, system.getTacticalEventLog().getLast().type());
     }
 
     @Test

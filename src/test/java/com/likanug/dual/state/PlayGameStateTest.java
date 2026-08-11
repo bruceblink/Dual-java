@@ -11,6 +11,8 @@ import com.likanug.dual.game.TacticalEvent;
 import com.likanug.dual.game.TacticalEventType;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -101,6 +103,7 @@ class PlayGameStateTest {
     @Test
     void tacticalFeedbackLabelsIdentifyBothThePlayerAndEventType() {
         assertEquals("YOU: OPENING", PlayGameState.tacticalFeedbackLabel(PlayerSide.ONE, TacticalEventType.OPENING));
+        assertEquals("YOU: CHARGE BREAK", PlayGameState.tacticalFeedbackLabel(PlayerSide.ONE, TacticalEventType.DISRUPT));
         assertEquals("RIVAL: FINISH", PlayGameState.tacticalFeedbackLabel(PlayerSide.TWO, TacticalEventType.FINISH));
         assertEquals("ARROWS: INTERCEPT", PlayGameState.tacticalFeedbackLabel(null, TacticalEventType.INTERCEPT));
     }
@@ -144,5 +147,35 @@ class PlayGameStateTest {
         }
         assertFalse(system.consumeCombatPauseFrame());
         assertEquals(0, system.getCombatPauseFrameCount());
+    }
+
+    @Test
+    void shortbowHitBreaksAChargeAndInvalidatesItsOldOpening() {
+        App app = new App();
+        GameSystem system = new GameSystem(true, false, app);
+        app.setSystem(system);
+        PlayGameState state = new PlayGameState(app);
+        PlayerActor target = (PlayerActor) system.getOtherGroup().getPlayer();
+        DrawLongbowPlayerActorState longbowState = new DrawLongbowPlayerActorState(app);
+        system.recordPressure(system.getOtherGroup());
+        target.setState(longbowState.entryState(target));
+        system.drainTacticalEvents();
+        ShortbowArrow arrow = new ShortbowArrow(app);
+        arrow.setxPosition(target.getxPosition());
+        arrow.setyPosition(target.getyPosition());
+        system.getMyGroup().addArrow(arrow);
+
+        state.checkCollision(system);
+        system.recordLongbowFinish(system.getOtherGroup());
+
+        assertEquals(List.of(
+                new TacticalEvent(PlayerSide.ONE, TacticalEventType.PRESSURE, 0),
+                new TacticalEvent(PlayerSide.ONE, TacticalEventType.DISRUPT, 0)
+        ), system.getTacticalEventLog());
+        assertEquals(0, target.getChargedFrameCount());
+        assertEquals(GameConstants.DISRUPT_HIT_STOP_FRAMES, system.getCombatPauseFrameCount());
+        assertEquals(
+                GameConstants.ARROW_BREAK_PARTICLE_COUNT + GameConstants.DISRUPT_PARTICLE_COUNT + 1,
+                system.getCommonParticleSet().getParticleList().size());
     }
 }

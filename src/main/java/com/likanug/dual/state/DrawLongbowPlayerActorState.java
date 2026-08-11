@@ -193,6 +193,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
         if (releaseOutcome(false, parentActor.getChargedFrameCount(), chargeRequiredFrameCount)
                 != ReleaseOutcome.CANCEL) return;
 
+        if (app.getSystem() != null) app.getSystem().cancelLongbowCharge(parentActor);
         parentActor.setChargedFrameCount(0);
         final Particle cancelParticle = app.getSystem().getCommonParticleSet().getBuilder()
                 .type(3)

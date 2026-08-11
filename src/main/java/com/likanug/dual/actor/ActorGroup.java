@@ -49,6 +49,8 @@ public class ActorGroup {
 
     public void displayArrows() {
         for (AbstractArrowActor eachArrow : arrowList) {
+            // Collision marks arrows before hit-stop; hiding marked arrows keeps the frozen impact frame truthful.
+            if (removingArrowList.contains(eachArrow)) continue;
             eachArrow.display();
         }
     }

@@ -66,6 +66,11 @@ public final class GameConstants {
     public static final int INTERCEPT_RING_SIZE = 48;
     public static final float INTERCEPT_RING_STROKE = 3.0F;
     public static final int INTERCEPT_HIT_STOP_FRAMES = 4;
+    public static final int DISRUPT_PARTICLE_COUNT = 8;
+    public static final int DISRUPT_PARTICLE_SIZE = 5;
+    public static final int DISRUPT_RING_SIZE = 72;
+    public static final float DISRUPT_RING_STROKE = 4.0F;
+    public static final int DISRUPT_HIT_STOP_FRAMES = 3;
     public static final int SCREEN_SHAKE_ON_KILL = 50;
     public static final int SCREEN_SHAKE_ON_HIT = 10;
 }

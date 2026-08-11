@@ -4,6 +4,7 @@ package com.likanug.dual.game;
 public enum TacticalEventType {
     PRESSURE,
     OPENING,
+    DISRUPT,
     FINISH,
     INTERCEPT
 }

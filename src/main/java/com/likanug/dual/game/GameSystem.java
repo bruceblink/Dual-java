@@ -405,6 +405,18 @@ public class GameSystem {
                 .ifPresent(tacticalEventLog::add);
     }
 
+    /** Invalidates a released or interrupted charge without discarding its still-active pressure window. */
+    public void cancelLongbowCharge(PlayerActor attacker) {
+        tacticalEventRecorder.recordLongbowChargeCancelled(
+                resolvePlayerSide(attacker.getGroup()), combatFrameCount);
+    }
+
+    /** Records the standalone counterplay fact when a shortbow interrupts an active longbow charge. */
+    public void recordLongbowDisruption(ActorGroup attackerGroup) {
+        tacticalEventLog.add(new TacticalEvent(
+                resolvePlayerSide(attackerGroup), TacticalEventType.DISRUPT, combatFrameCount));
+    }
+
     /** Records a lethal longbow payoff only when it completes the same player's tactical sequence. */
     public void recordLongbowFinish(ActorGroup attackerGroup) {
         tacticalEventRecorder.recordLongbowFinish(resolvePlayerSide(attackerGroup), combatFrameCount)
@@ -550,6 +562,30 @@ public class GameSystem {
                     .lifespanSecond(0.3F)
                     .build();
             commonParticleSet.getParticleList().add(shard);
+        }
+    }
+
+    /** Creates an amber break ring and shards at a player whose active longbow charge was interrupted. */
+    public void addDisruptionParticles(float x, float y) {
+        final int disruptionColor = app.color(232, 192, 96);
+        final ParticleBuilder builder = commonParticleSet.getBuilder()
+                .initialize()
+                .position(x, y)
+                .particleColor(disruptionColor);
+        commonParticleSet.getParticleList().add(builder
+                .type(3)
+                .particleSize(GameConstants.DISRUPT_RING_SIZE)
+                .weight(GameConstants.DISRUPT_RING_STROKE)
+                .lifespanSecond(0.35F)
+                .build());
+
+        for (int index = 0; index < GameConstants.DISRUPT_PARTICLE_COUNT; index++) {
+            commonParticleSet.getParticleList().add(builder
+                    .type(1)
+                    .polarVelocity(app.random(TWO_PI), app.random(1.5F, 4.5F))
+                    .particleSize(GameConstants.DISRUPT_PARTICLE_SIZE)
+                    .lifespanSecond(0.3F)
+                    .build());
         }
     }
 }

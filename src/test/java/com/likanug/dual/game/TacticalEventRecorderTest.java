@@ -81,6 +81,23 @@ class TacticalEventRecorderTest {
     }
 
     @Test
+    void cancelledChargeRequiresAFreshOpeningBeforeItCanFinish() {
+        TacticalEventRecorder recorder = new TacticalEventRecorder(90);
+        recorder.recordPressure(PlayerSide.ONE, 10);
+        recorder.recordLongbowChargeStarted(PlayerSide.ONE, 20);
+
+        recorder.recordLongbowChargeCancelled(PlayerSide.ONE, 30);
+
+        assertTrue(recorder.recordLongbowFinish(PlayerSide.ONE, 31).isEmpty());
+        assertEquals(
+                Optional.of(new TacticalEvent(PlayerSide.ONE, TacticalEventType.OPENING, 32)),
+                recorder.recordLongbowChargeStarted(PlayerSide.ONE, 32));
+        assertEquals(
+                Optional.of(new TacticalEvent(PlayerSide.ONE, TacticalEventType.FINISH, 40)),
+                recorder.recordLongbowFinish(PlayerSide.ONE, 40));
+    }
+
+    @Test
     void interceptionIsTheOnlyNeutralTacticalFact() {
         assertEquals(
                 new TacticalEvent(null, TacticalEventType.INTERCEPT, 5),
