@@ -29,6 +29,9 @@ import static com.likanug.dual.App.INTERNAL_CANVAS_WIDTH;
 import static processing.core.PConstants.*;
 
 public class GameSystem {
+    static final float DEMO_GUIDE_WIDTH = 352.0F;
+    static final float DEMO_GUIDE_LEFT_X = INTERNAL_CANVAS_WIDTH - DEMO_GUIDE_WIDTH;
+    private static final float DEMO_GUIDE_CONTENT_X = DEMO_GUIDE_LEFT_X + 32.0F;
     private final App app;
     private final ActorGroup myGroup;
     private final ActorGroup otherGroup;
@@ -462,41 +465,51 @@ public class GameSystem {
 
     public void displayDemo() {
         app.pushStyle();
+        app.rectMode(CORNER);
+        app.noStroke();
+        app.fill(248, 244);
+        app.rect(DEMO_GUIDE_LEFT_X, 0.0F, DEMO_GUIDE_WIDTH, INTERNAL_CANVAS_HEIGHT);
+        app.fill(96, 208, 232);
+        app.rect(DEMO_GUIDE_LEFT_X, 0.0F, 5.0F, INTERNAL_CANVAS_HEIGHT);
 
-        final float panelCenterX = INTERNAL_CANVAS_WIDTH * 0.5F;
-        final float panelCenterY = INTERNAL_CANVAS_HEIGHT * 0.5F;
-        final float contentOffsetX = panelCenterX - 320.0F;
-
-        app.stroke(0);
-        app.strokeWeight(2);
-        app.fill(255, 240);
-        app.rect(
-                panelCenterX,
-                panelCenterY,
-                448.0F,
-                432.0F
-        );
-
-        app.textFont(App.smallFont, 20);
-        app.textLeading(26);
-        app.textAlign(RIGHT, BASELINE);
+        app.textAlign(LEFT, CENTER);
         app.fill(0);
-        app.text("WASD / Arrow:", contentOffsetX + 280, 160);
-        app.text("Mouse:", contentOffsetX + 280, 225);
-        app.text("Left / Z:", contentOffsetX + 280, 290);
-        app.text("Right / X:", contentOffsetX + 280, 355);
-        app.textAlign(LEFT);
-        app.text("Move", contentOffsetX + 300, 160);
-        app.text("Aim outside lock range", contentOffsetX + 300, 225);
-        app.text("Shortbow", contentOffsetX + 300, 290);
-        app.text("Hold to charge longbow", contentOffsetX + 300, 355);
-        app.textAlign(CENTER);
-        app.text("P2: IJKL move, TFGH aim, B/V bow", panelCenterX, 420);
-        app.text("Z: Choose local mode", panelCenterX, 465);
-        app.text("(Click to hide this window)", panelCenterX, 500);
-        app.popStyle();
+        app.textFont(App.largeFont, 52);
+        app.text("DUAL", DEMO_GUIDE_CONTENT_X, 58.0F);
+        app.textFont(App.smallFont, 13);
+        app.fill(0, 136);
+        app.text("TACTICAL ARCHERY", DEMO_GUIDE_CONTENT_X, 101.0F);
 
-        app.strokeWeight(1);
+        drawDemoGuideRow("MOVE", "WASD / ARROWS", 151.0F);
+        drawDemoGuideRow("MANUAL AIM", "MOUSE BEYOND LOCK RANGE", 226.0F);
+        drawDemoGuideRow("SHORTBOW", "LEFT CLICK / Z", 301.0F);
+        drawDemoGuideRow("LONGBOW", "HOLD RIGHT CLICK / X", 376.0F);
+
+        app.stroke(0, 40);
+        app.line(DEMO_GUIDE_CONTENT_X, 441.0F, INTERNAL_CANVAS_WIDTH - 32.0F, 441.0F);
+        app.noStroke();
+        drawDemoGuideRow("P2 KEYBOARD", "IJKL + TFGH + B / V", 468.0F);
+
+        app.fill(96, 208, 232);
+        app.rect(DEMO_GUIDE_CONTENT_X, 554.0F, 10.0F, 10.0F);
+        app.fill(0, 224);
+        app.textFont(App.smallFont, 17);
+        app.text("Z   CHOOSE MODE", DEMO_GUIDE_CONTENT_X + 22.0F, 559.0F);
+        app.text("O   SETTINGS     P   PAUSE", DEMO_GUIDE_CONTENT_X, 605.0F);
+        app.fill(0, 128);
+        app.textFont(App.smallFont, 14);
+        app.text("CLICK   HIDE GUIDE", DEMO_GUIDE_CONTENT_X, 670.0F);
+        app.popStyle();
+    }
+
+    /** Draws one heading and control pair inside the fixed demo rail without covering the duel center. */
+    private void drawDemoGuideRow(String heading, String controls, float y) {
+        app.textFont(App.smallFont, 12);
+        app.fill(0, 128);
+        app.text(heading, DEMO_GUIDE_CONTENT_X, y);
+        app.textFont(App.smallFont, 18);
+        app.fill(0, 224);
+        app.text(controls, DEMO_GUIDE_CONTENT_X, y + 25.0F);
     }
 
     public void addSquareParticles(float x, float y, int particleCount, int particleSize, float minSpeed, float maxSpeed, int lifespanSecondValue) {

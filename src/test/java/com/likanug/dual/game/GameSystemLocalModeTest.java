@@ -6,6 +6,8 @@ import com.likanug.dual.inputDevice.KeyInput;
 import com.likanug.dual.playerEngine.HumanPlayerEngine;
 import org.junit.jupiter.api.Test;
 
+import static com.likanug.dual.App.INTERNAL_CANVAS_WIDTH;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,5 +49,11 @@ class GameSystemLocalModeTest {
 
         assertFalse(playerOneInput.isZPressed);
         assertFalse(playerTwoInput.isXPressed);
+    }
+
+    @Test
+    void demoGuideRailStaysAttachedToTheRightOutsideTheCentralDuelCorridor() {
+        assertEquals(INTERNAL_CANVAS_WIDTH, GameSystem.DEMO_GUIDE_LEFT_X + GameSystem.DEMO_GUIDE_WIDTH);
+        assertTrue(GameSystem.DEMO_GUIDE_LEFT_X >= INTERNAL_CANVAS_WIDTH * 0.7F);
     }
 }
