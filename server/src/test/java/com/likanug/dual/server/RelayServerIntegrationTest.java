@@ -59,6 +59,18 @@ class RelayServerIntegrationTest {
             outB.flush();
             byte[] receivedRematch = readExactly(inA, NetworkProtocol.REMATCH_REQUEST_MSG_LEN);
             assertArrayEquals(rematch, receivedRematch);
+
+            byte[] nextMatchResult = new byte[]{NetworkProtocol.TYPE_ROUND_RESULT, 1, 0, 1, 0, 1};
+            outA.write(nextMatchResult);
+            outA.flush();
+            byte[] receivedNextMatchResult = readExactly(inB, NetworkProtocol.ROUND_RESULT_MSG_LEN);
+            assertArrayEquals(nextMatchResult, receivedNextMatchResult);
+
+            byte[] nextMatchRematch = new byte[]{NetworkProtocol.TYPE_REMATCH_REQUEST, 1, 1};
+            outB.write(nextMatchRematch);
+            outB.flush();
+            byte[] receivedNextMatchRematch = readExactly(inA, NetworkProtocol.REMATCH_REQUEST_MSG_LEN);
+            assertArrayEquals(nextMatchRematch, receivedNextMatchRematch);
         } finally {
             server.stop();
             serverThread.join(1000);
