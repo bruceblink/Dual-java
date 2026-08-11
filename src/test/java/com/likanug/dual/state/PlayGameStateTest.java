@@ -57,6 +57,23 @@ class PlayGameStateTest {
     }
 
     @Test
+    void primaryAndMutedHudTextMeetNormalTextContrastOnTheArena() {
+        assertTrue(grayscaleContrastRatio(
+                PlayGameState.HUD_PRIMARY_COLOR, GameConstants.ARENA_BACKGROUND_COLOR) >= 4.5);
+        assertTrue(grayscaleContrastRatio(
+                PlayGameState.HUD_MUTED_COLOR, GameConstants.ARENA_BACKGROUND_COLOR) >= 4.5);
+    }
+
+    @Test
+    void compactHudBackdropsKeepStableDimensionsAndOpacity() {
+        assertEquals(176, PlayGameState.HUD_PANEL_ALPHA);
+        assertEquals(384.0F, PlayGameState.MATCH_SCORE_PANEL_WIDTH);
+        assertEquals(32.0F, PlayGameState.MATCH_SCORE_PANEL_HEIGHT);
+        assertEquals(128.0F, PlayGameState.SHORTBOW_HUD_PANEL_WIDTH);
+        assertEquals(66.0F, PlayGameState.SHORTBOW_HUD_PANEL_HEIGHT);
+    }
+
+    @Test
     void calculateThrustAngleUsesCenteredRandomOffset() {
         float base = 1.25f;
 
@@ -245,5 +262,18 @@ class PlayGameStateTest {
         assertInstanceOf(LethalHitState.class, system.getCurrentState());
         assertEquals(1, system.getMatchScore().getPlayerOneWins());
         assertEquals(1, system.getRoundCombatStats().playerOne().longbowHits());
+    }
+
+    private static double grayscaleContrastRatio(int first, int second) {
+        final double lighter = Math.max(relativeLuminance(first), relativeLuminance(second));
+        final double darker = Math.min(relativeLuminance(first), relativeLuminance(second));
+        return (lighter + 0.05) / (darker + 0.05);
+    }
+
+    private static double relativeLuminance(int grayscale) {
+        final double channel = Math.max(0, Math.min(255, grayscale)) / 255.0;
+        return channel <= 0.04045
+                ? channel / 12.92
+                : Math.pow((channel + 0.055) / 1.055, 2.4);
     }
 }

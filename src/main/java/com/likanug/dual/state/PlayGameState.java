@@ -38,6 +38,16 @@ public class PlayGameState extends GameSystemState {
     static final float OPPONENT_LONGBOW_HUD_Y = OPPONENT_SHORTBOW_HUD_Y + 48.0F;
     static final float MATCH_SCORE_HUD_Y = 24.0F;
     static final float TACTICAL_FEEDBACK_Y = 64.0F;
+    static final int HUD_PRIMARY_COLOR = 240;
+    static final int HUD_MUTED_COLOR = 224;
+    static final int HUD_DARK_COLOR = 16;
+    static final int HUD_PANEL_ALPHA = 176;
+    static final float MATCH_SCORE_PANEL_WIDTH = 384.0F;
+    static final float MATCH_SCORE_PANEL_HEIGHT = 32.0F;
+    static final float SHORTBOW_HUD_PANEL_WIDTH = 128.0F;
+    static final float SHORTBOW_HUD_PANEL_HEIGHT = 66.0F;
+    static final float ACTIVE_STATUS_PANEL_WIDTH = 128.0F;
+    static final float ACTIVE_STATUS_PANEL_HEIGHT = 34.0F;
     private static final float SHORTBOW_HUD_DOT_SIZE = 16.0F;
     private static final float SHORTBOW_HUD_DOT_GAP = 24.0F;
     private static final float SHORTBOW_RECOVERY_BAR_WIDTH = 72.0F;
@@ -101,7 +111,9 @@ public class PlayGameState extends GameSystemState {
 
         int messageDurationFrameCount = FPS;
         if (properFrameCount >= messageDurationFrameCount) return;
-        app.fill(0, (float) (255.0 * (1.0 - (float) properFrameCount / messageDurationFrameCount)));
+        app.fill(
+                HUD_PRIMARY_COLOR,
+                (float) (255.0 * (1.0 - (float) properFrameCount / messageDurationFrameCount)));
         app.text("Go", INTERNAL_CANVAS_WIDTH * 0.5F, INTERNAL_CANVAS_HEIGHT * 0.5F);
     }
 
@@ -156,15 +168,16 @@ public class PlayGameState extends GameSystemState {
         final boolean tacticalOpening = system.hasTacticalOpening(player);
         final int activeColor = ready
                 ? app.color(192, 64, 64)
-                : tacticalOpening ? app.color(232, 192, 96) : app.color(0, 176);
+                : tacticalOpening ? app.color(232, 192, 96) : app.color(HUD_PRIMARY_COLOR, 224);
 
         app.pushStyle();
+        displayHudBackdrop(x, y - 4.0F, ACTIVE_STATUS_PANEL_WIDTH, ACTIVE_STATUS_PANEL_HEIGHT);
         app.textAlign(CENTER, CENTER);
         app.textFont(App.smallFont, 14);
         app.fill(activeColor);
         app.text(longbowChargeDisplayLabel(ownerLabel, progressRatio, ready), x, y - 13.0F);
         app.noStroke();
-        app.fill(0, 36);
+        app.fill(HUD_DARK_COLOR, 112);
         app.rect(x, y + 4.0F, LONGBOW_CHARGE_BAR_WIDTH, LONGBOW_CHARGE_BAR_HEIGHT);
         app.fill(activeColor);
         app.rect(
@@ -188,9 +201,10 @@ public class PlayGameState extends GameSystemState {
         if (player.getDamageRemainingFrameCount() <= 0 || pressureCount <= 0) return;
 
         app.pushStyle();
+        displayHudBackdrop(x, y, ACTIVE_STATUS_PANEL_WIDTH, ACTIVE_STATUS_PANEL_HEIGHT);
         app.textAlign(CENTER, CENTER);
         app.textFont(App.smallFont, 14);
-        app.fill(0, 160);
+        app.fill(HUD_PRIMARY_COLOR, 224);
         app.text(
                 ownerLabel == null
                         ? pressureStatusLabel(pressureCount, player.getShortbowPressure().getMaximumConsecutiveRefreshes())
@@ -212,9 +226,14 @@ public class PlayGameState extends GameSystemState {
     /** Draws the current round and first-to target in the stable HUD layer outside screen shake. */
     private void displayMatchScore(GameSystem system) {
         app.pushStyle();
+        displayHudBackdrop(
+                INTERNAL_CANVAS_WIDTH * 0.5F,
+                MATCH_SCORE_HUD_Y,
+                MATCH_SCORE_PANEL_WIDTH,
+                MATCH_SCORE_PANEL_HEIGHT);
         app.textAlign(CENTER, CENTER);
         app.textFont(App.smallFont, 18);
-        app.fill(0, 192);
+        app.fill(HUD_PRIMARY_COLOR, 224);
         app.text(matchScoreDisplayLabel(system.getMatchScore()), INTERNAL_CANVAS_WIDTH * 0.5F, MATCH_SCORE_HUD_Y);
         app.popStyle();
     }
@@ -237,14 +256,15 @@ public class PlayGameState extends GameSystemState {
         final int maximumAmmo = player.getShortbowAmmo().getMaximumAmmo();
 
         app.pushStyle();
+        displayHudBackdrop(x, y - 4.0F, SHORTBOW_HUD_PANEL_WIDTH, SHORTBOW_HUD_PANEL_HEIGHT);
         app.textAlign(CENTER, CENTER);
         app.textFont(App.smallFont, 16);
-        app.fill(0, 176);
+        app.fill(HUD_PRIMARY_COLOR, 224);
         app.text(shortbowAmmoDisplayLabel(label, availableAmmo, maximumAmmo), x, y - 22.0F);
-        app.stroke(0, 176);
+        app.stroke(HUD_MUTED_COLOR, 224);
         for (int index = 0; index < maximumAmmo; index++) {
             if (index < availableAmmo) app.fill(255);
-            else app.fill(0, 48);
+            else app.fill(HUD_DARK_COLOR, 112);
             app.ellipse(
                     x + (index - (maximumAmmo - 1) * 0.5F) * SHORTBOW_HUD_DOT_GAP,
                     y,
@@ -255,15 +275,23 @@ public class PlayGameState extends GameSystemState {
         app.popStyle();
     }
 
+    /** Places a compact dark field behind small combat text without moving or covering the playfield center. */
+    private void displayHudBackdrop(float x, float y, float width, float height) {
+        app.noStroke();
+        app.fill(HUD_DARK_COLOR, HUD_PANEL_ALPHA);
+        app.rectMode(CENTER);
+        app.rect(x, y, width, height);
+    }
+
     /** Shows the next-arrow recovery fraction directly below the reserve dots without covering the arena. */
     private void displayShortbowRecoveryBar(float x, float y, float progressRatio) {
         if (progressRatio <= 0.0F) return;
         final float clampedProgress = Math.max(0.0F, Math.min(1.0F, progressRatio));
         final float barY = y + 16.0F;
         app.noStroke();
-        app.fill(0, 48);
+        app.fill(HUD_DARK_COLOR, 112);
         app.rect(x, barY, SHORTBOW_RECOVERY_BAR_WIDTH, SHORTBOW_RECOVERY_BAR_HEIGHT);
-        app.fill(255, 192);
+        app.fill(255, 224);
         app.rect(
                 x - SHORTBOW_RECOVERY_BAR_WIDTH * 0.5F
                         + SHORTBOW_RECOVERY_BAR_WIDTH * clampedProgress * 0.5F,

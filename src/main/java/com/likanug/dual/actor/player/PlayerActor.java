@@ -15,6 +15,9 @@ import static processing.core.PConstants.TWO_PI;
 
 public class PlayerActor extends AbstractPlayerActor {
 
+    static final int OUTLINE_FOR_DARK_BODY_COLOR = 240;
+    static final int OUTLINE_FOR_LIGHT_BODY_COLOR = 16;
+    static final float BODY_OUTLINE_STROKE = 2.0F;
     private final float bodySize = GameConstants.PLAYER_BODY_SIZE;
     private final float halfBodySize = bodySize * 0.5F;
     private final int fillColor;
@@ -230,7 +233,9 @@ public class PlayerActor extends AbstractPlayerActor {
     }
 
     public void display() {
-        app.stroke(0);
+        app.pushStyle();
+        app.stroke(bodyOutlineColor(fillColor));
+        app.strokeWeight(BODY_OUTLINE_STROKE);
         app.fill(fillColor);
         app.pushMatrix();
         app.translate(xPosition, yPosition);
@@ -240,5 +245,11 @@ public class PlayerActor extends AbstractPlayerActor {
         app.popMatrix();
         state.displayEffect(this);
         app.popMatrix();
+        app.popStyle();
+    }
+
+    /** Chooses the opposite lightness so either black or white bodies keep a visible silhouette. */
+    static int bodyOutlineColor(int bodyColor) {
+        return bodyColor < 128 ? OUTLINE_FOR_DARK_BODY_COLOR : OUTLINE_FOR_LIGHT_BODY_COLOR;
     }
 }

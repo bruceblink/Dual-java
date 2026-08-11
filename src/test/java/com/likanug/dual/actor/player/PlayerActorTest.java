@@ -37,6 +37,14 @@ class PlayerActorTest {
     }
 
     @Test
+    void bodyOutlineUsesOppositeLightnessForBothPlayerColors() {
+        assertEquals(PlayerActor.OUTLINE_FOR_DARK_BODY_COLOR, PlayerActor.bodyOutlineColor(0));
+        assertEquals(PlayerActor.OUTLINE_FOR_LIGHT_BODY_COLOR, PlayerActor.bodyOutlineColor(255));
+        assertEquals(PlayerActor.OUTLINE_FOR_DARK_BODY_COLOR, PlayerActor.bodyOutlineColor(127));
+        assertEquals(PlayerActor.OUTLINE_FOR_LIGHT_BODY_COLOR, PlayerActor.bodyOutlineColor(128));
+    }
+
+    @Test
     void longbowRecoveryCountsDownAndRoundResetClearsIt() {
         PlayerEngine engine = new PlayerEngine() {
             @Override
