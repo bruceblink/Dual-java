@@ -13,6 +13,7 @@ import com.likanug.dual.network.NetworkClient;
 import com.likanug.dual.network.NetworkServer;
 import processing.core.PApplet;
 import processing.core.PFont;
+import processing.core.PImage;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -46,6 +47,7 @@ public class App extends PApplet {
     private LocalInputRouter localInputRouter;
     private GameSystem system;
     private boolean paused;
+    private PImage pausedFrame;
     private final AudioSettings audioSettings = new AudioSettings();
 
     // ──────────────────────────────────────────────
@@ -85,7 +87,13 @@ public class App extends PApplet {
     public GameSystem getSystem() { return system; }
     public void setSystem(GameSystem s) { this.system = s; }
     public boolean isPaused() { return paused; }
-    public void setPaused(boolean p) { this.paused = p; }
+    /** Changes the local pause state and clears held inputs so they cannot fire after resuming. */
+    public void setPaused(boolean p) {
+        if (paused == p) return;
+        paused = p;
+        pausedFrame = null;
+        clearLocalInputs();
+    }
     public boolean isLocalModeMenuVisible() { return networkMode == NetworkMode.LOCAL_MODE_MENU; }
     public boolean isSettingsMenuVisible() { return networkMode == NetworkMode.SETTINGS_MENU; }
     public AudioSettings getAudioSettings() { return audioSettings; }
@@ -129,6 +137,7 @@ public class App extends PApplet {
 
     public void newGame(boolean demo, boolean instruction, AiDifficulty aiDifficulty, ArenaLayout arenaLayout) {
         clearLocalInputs();
+        setPaused(false);
         // 如果正在联机，先断线
         if (activeNetwork != null) {
             activeNetwork.disconnect();
@@ -141,6 +150,7 @@ public class App extends PApplet {
     /** Starts a local two-player match while preserving both configured keyboard snapshots. */
     public void newLocalGame(boolean instruction) {
         clearLocalInputs();
+        setPaused(false);
         if (activeNetwork != null) {
             activeNetwork.disconnect();
             activeNetwork = null;
@@ -172,6 +182,7 @@ public class App extends PApplet {
 
     /** 启动联机对战（握手完成后调用） */
     public void startOnlineGame(GameNetwork network) {
+        setPaused(false);
         this.activeNetwork = network;
         this.networkMode   = NetworkMode.ONLINE;
         this.system        = new GameSystem(network, this);
@@ -179,6 +190,11 @@ public class App extends PApplet {
 
     @Override
     public void draw() {
+        if (paused && networkMode == NetworkMode.NONE) {
+            drawPausedGame();
+            return;
+        }
+        pausedFrame = null;
         background(GameConstants.ARENA_BACKGROUND_COLOR);
         pushMatrix();
         translate(canvasOffsetX(), canvasOffsetY());
@@ -194,6 +210,48 @@ public class App extends PApplet {
             case SETTINGS_MENU -> drawSettingsMenu();
         }
         popMatrix();
+    }
+
+    /** Keeps Processing responsive while presenting the last completed gameplay frame as frozen. */
+    private void drawPausedGame() {
+        if (pausedFrame == null) pausedFrame = get();
+        pushStyle();
+        imageMode(CORNER);
+        image(pausedFrame, 0, 0, width, height);
+        popStyle();
+
+        pushMatrix();
+        translate(canvasOffsetX(), canvasOffsetY());
+        scale(canvasScale());
+        drawPauseOverlay();
+        popMatrix();
+    }
+
+    /** Draws the pause commands over the arena without advancing any gameplay state. */
+    private void drawPauseOverlay() {
+        pushStyle();
+        rectMode(CENTER);
+        textAlign(CENTER, CENTER);
+        noStroke();
+        fill(0, 176);
+        rect(
+                INTERNAL_CANVAS_WIDTH * 0.5F,
+                INTERNAL_CANVAS_HEIGHT * 0.5F,
+                INTERNAL_CANVAS_WIDTH,
+                INTERNAL_CANVAS_HEIGHT);
+        fill(12);
+        rect(INTERNAL_CANVAS_WIDTH * 0.5F, 360.0F, INTERNAL_CANVAS_WIDTH, 310.0F);
+
+        fill(255);
+        textFont(largeFont, 64);
+        text("PAUSED", INTERNAL_CANVAS_WIDTH * 0.5F, 298.0F);
+        fill(96, 208, 232);
+        rect(INTERNAL_CANVAS_WIDTH * 0.5F, 350.0F, 176.0F, 4.0F);
+        fill(255, 224);
+        textFont(smallFont, 20);
+        text("P   RESUME", INTERNAL_CANVAS_WIDTH * 0.5F, 394.0F);
+        text("O   SETTINGS", INTERNAL_CANVAS_WIDTH * 0.5F, 430.0F);
+        popStyle();
     }
 
     float canvasScale() {
@@ -424,7 +482,7 @@ public class App extends PApplet {
     // ──────────────────────────────────────────────
     @Override
     public void mousePressed() {
-        if (networkMode != NetworkMode.NONE || !isInsideCanvas(mouseX, mouseY)) return;
+        if (paused || networkMode != NetworkMode.NONE || !isInsideCanvas(mouseX, mouseY)) return;
 
         if (system.isDemoPlay()) {
             system.setShowsInstructionWindow(!system.isShowsInstructionWindow());
@@ -458,7 +516,7 @@ public class App extends PApplet {
 
     /** 只接受本地竞技场内的鼠标位置，避免边框区域改变瞄准方向。 */
     private void updateMouseAim() {
-        if (networkMode != NetworkMode.NONE || !isInsideCanvas(mouseX, mouseY)) return;
+        if (paused || networkMode != NetworkMode.NONE || !isInsideCanvas(mouseX, mouseY)) return;
         CanvasPoint point = toCanvasPoint(mouseX, mouseY);
         currentKeyInput.updateMouseAim(point.x(), point.y());
     }
@@ -467,6 +525,9 @@ public class App extends PApplet {
     public void focusLost() {
         // AWT 可能在 setup() 创建输入对象前发送失焦事件；此时没有按键状态需要释放。
         clearLocalInputs();
+        if (networkMode == NetworkMode.NONE && system != null && !system.isDemoPlay()) {
+            setPaused(true);
+        }
     }
 
     @Override
@@ -502,17 +563,16 @@ public class App extends PApplet {
             networkMode = NetworkMode.SETTINGS_MENU;
             return;
         }
+        if (key != CODED && (key == 'p' || key == 'P')) {
+            setPaused(!paused);
+            return;
+        }
+        if (paused) return;
         if (key == 'n' || key == 'N') {
             networkMode = NetworkMode.LOBBY_MENU;
             return;
         }
-        // 原有逻辑
         if (key != CODED) {
-            if (key == 'p' || key == 'P') {
-                if (paused) loop(); else noLoop();
-                paused = !paused;
-                return;
-            }
             applyLocalKey(true);
             return;
         }

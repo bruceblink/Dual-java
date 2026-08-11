@@ -216,4 +216,64 @@ public class AppTest {
         assertFalse(playerTwo.isAPressed);
         assertFalse(playerTwo.isAimRightPressed);
     }
+
+    @Test
+    void pauseShortcutTogglesAndClearsHeldLocalInputs() {
+        KeyInput playerOne = new KeyInput();
+        KeyInput playerTwo = new KeyInput();
+        playerOne.isWPressed = true;
+        playerTwo.isAimRightPressed = true;
+        app.setCurrentKeyInput(playerOne);
+        app.setSecondKeyInput(playerTwo);
+
+        app.key = 'p';
+        app.keyPressed();
+
+        assertTrue(app.isPaused());
+        assertFalse(playerOne.isWPressed);
+        assertFalse(playerTwo.isAimRightPressed);
+
+        app.key = 'P';
+        app.keyPressed();
+        assertFalse(app.isPaused());
+    }
+
+    @Test
+    void focusLossPausesAnActiveLocalMatchButNotTheDemo() {
+        app.setCurrentKeyInput(new KeyInput());
+        app.setSecondKeyInput(new KeyInput());
+        app.setSystem(new GameSystem(false, false, app));
+
+        app.focusLost();
+        assertTrue(app.isPaused());
+
+        App demoApp = new App();
+        demoApp.setCurrentKeyInput(new KeyInput());
+        demoApp.setSecondKeyInput(new KeyInput());
+        demoApp.setSystem(new GameSystem(true, false, demoApp));
+
+        demoApp.focusLost();
+        assertFalse(demoApp.isPaused());
+    }
+
+    @Test
+    void pausedMatchCanVisitSettingsAndNewGameResetsPause() {
+        app.setCurrentKeyInput(new KeyInput());
+        app.setSecondKeyInput(new KeyInput());
+        app.setPaused(true);
+
+        app.key = 'o';
+        app.keyPressed();
+        assertTrue(app.isSettingsMenuVisible());
+        assertTrue(app.isPaused());
+
+        app.key = ESC;
+        app.keyPressed();
+        assertFalse(app.isSettingsMenuVisible());
+        assertTrue(app.isPaused());
+
+        app.newGame(false, false);
+        assertFalse(app.isPaused());
+    }
+
 }
