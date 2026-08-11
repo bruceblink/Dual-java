@@ -36,6 +36,14 @@ class PlayGameStateTest {
     }
 
     @Test
+    void longbowHudClampsChargeProgressAndNamesTheReadyState() {
+        assertEquals("Longbow 0%", PlayGameState.longbowChargeDisplayLabel("Longbow", -0.2F, false));
+        assertEquals("Longbow 50%", PlayGameState.longbowChargeDisplayLabel("Longbow", 0.5F, false));
+        assertEquals("P2 Longbow 100%", PlayGameState.longbowChargeDisplayLabel("P2 Longbow", 1.4F, false));
+        assertEquals("Longbow READY", PlayGameState.longbowChargeDisplayLabel("Longbow", 1.0F, true));
+    }
+
+    @Test
     void matchScoreHudNamesRoundScoreAndTarget() {
         MatchScore score = new MatchScore(3);
         score.recordRoundWin(PlayerSide.ONE);

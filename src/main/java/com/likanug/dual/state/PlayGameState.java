@@ -30,15 +30,19 @@ public class PlayGameState extends GameSystemState {
     static final float SHORTBOW_HUD_X = 72.0F;
     static final float SHORTBOW_HUD_Y = INTERNAL_CANVAS_HEIGHT - 42.0F;
     static final float PRESSURE_HUD_Y = SHORTBOW_HUD_Y - 54.0F;
+    static final float LONGBOW_HUD_Y = PRESSURE_HUD_Y - 42.0F;
     static final float OPPONENT_SHORTBOW_HUD_X = INTERNAL_CANVAS_WIDTH - SHORTBOW_HUD_X;
     static final float OPPONENT_SHORTBOW_HUD_Y = 94.0F;
     static final float OPPONENT_PRESSURE_HUD_Y = 40.0F;
+    static final float OPPONENT_LONGBOW_HUD_Y = OPPONENT_SHORTBOW_HUD_Y + 48.0F;
     static final float MATCH_SCORE_HUD_Y = 24.0F;
     static final float TACTICAL_FEEDBACK_Y = 64.0F;
     private static final float SHORTBOW_HUD_DOT_SIZE = 16.0F;
     private static final float SHORTBOW_HUD_DOT_GAP = 24.0F;
     private static final float SHORTBOW_RECOVERY_BAR_WIDTH = 72.0F;
     private static final float SHORTBOW_RECOVERY_BAR_HEIGHT = 4.0F;
+    private static final float LONGBOW_CHARGE_BAR_WIDTH = 104.0F;
+    private static final float LONGBOW_CHARGE_BAR_HEIGHT = 6.0F;
     private static final int TACTICAL_FEEDBACK_DURATION_FRAMES = (int) (FPS * 0.75F);
     private TacticalEvent tacticalFeedbackEvent;
     private int tacticalFeedbackStartFrame;
@@ -82,6 +86,7 @@ public class PlayGameState extends GameSystemState {
     public void displayMessage(GameSystem system) {
         displayMatchScore(system);
         displayPressureStatus(system);
+        displayLongbowCharge(system);
         displayShortbowAmmo(system);
         displayLocalOpponentHud(system);
         displayTacticalFeedback(system);
@@ -107,7 +112,67 @@ public class PlayGameState extends GameSystemState {
         if (!system.isLocalTwoPlayer() || system.getOtherGroup().getPlayer().isNull()) return;
         final PlayerActor player = (PlayerActor) system.getOtherGroup().getPlayer();
         displayPressureStatus(player, OPPONENT_SHORTBOW_HUD_X, OPPONENT_PRESSURE_HUD_Y, "P2");
+        displayLongbowChargeHud(
+                system,
+                player,
+                OPPONENT_SHORTBOW_HUD_X,
+                OPPONENT_LONGBOW_HUD_Y,
+                "P2 Longbow");
         displayShortbowAmmoHud(player, OPPONENT_SHORTBOW_HUD_X, OPPONENT_SHORTBOW_HUD_Y, "P2 Shortbow");
+    }
+
+    /** Shows the local player's longbow commitment in the stable HUD layer while a charge is active. */
+    private void displayLongbowCharge(GameSystem system) {
+        if (system.getMyGroup().getPlayer().isNull()) return;
+        displayLongbowChargeHud(
+                system,
+                (PlayerActor) system.getMyGroup().getPlayer(),
+                SHORTBOW_HUD_X,
+                LONGBOW_HUD_Y,
+                "Longbow");
+    }
+
+    /** Draws one compact charge bar without changing weapon timing or consuming tactical events. */
+    private void displayLongbowChargeHud(
+            GameSystem system,
+            PlayerActor player,
+            float x,
+            float y,
+            String ownerLabel) {
+        if (!player.getState().isDrawingLongBow()) return;
+
+        final int requiredFrames = Math.round(GameConstants.LONGBOW_CHARGE_SEC * FPS);
+        final float progressRatio = DrawLongbowPlayerActorState.calculateChargeProgress(
+                player.getChargedFrameCount(), requiredFrames);
+        final boolean ready = player.getState().hasCompletedLongBowCharge(player);
+        final boolean tacticalOpening = system.hasTacticalOpening(player);
+        final int activeColor = ready
+                ? app.color(192, 64, 64)
+                : tacticalOpening ? app.color(232, 192, 96) : app.color(0, 176);
+
+        app.pushStyle();
+        app.textAlign(CENTER, CENTER);
+        app.textFont(App.smallFont, 14);
+        app.fill(activeColor);
+        app.text(longbowChargeDisplayLabel(ownerLabel, progressRatio, ready), x, y - 13.0F);
+        app.noStroke();
+        app.fill(0, 36);
+        app.rect(x, y + 4.0F, LONGBOW_CHARGE_BAR_WIDTH, LONGBOW_CHARGE_BAR_HEIGHT);
+        app.fill(activeColor);
+        app.rect(
+                x - LONGBOW_CHARGE_BAR_WIDTH * 0.5F
+                        + LONGBOW_CHARGE_BAR_WIDTH * progressRatio * 0.5F,
+                y + 4.0F,
+                LONGBOW_CHARGE_BAR_WIDTH * progressRatio,
+                LONGBOW_CHARGE_BAR_HEIGHT);
+        app.popStyle();
+    }
+
+    /** Formats a clamped percentage until the fully charged state becomes ready to release. */
+    static String longbowChargeDisplayLabel(String ownerLabel, float progressRatio, boolean ready) {
+        if (ready) return ownerLabel + " READY";
+        final int percentage = Math.round(Math.max(0.0F, Math.min(1.0F, progressRatio)) * 100.0F);
+        return ownerLabel + " " + percentage + "%";
     }
 
     private void displayPressureStatus(PlayerActor player, float x, float y, String ownerLabel) {
