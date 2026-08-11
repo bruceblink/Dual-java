@@ -34,7 +34,8 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     }
 
     public PlayerActorState entryState(PlayerActor parentActor) {
-        parentActor.setChargedFrameCount(0);
+        // The press frame is the first deterministic charge frame even though the new state acts next frame.
+        parentActor.setChargedFrameCount(advanceChargeFrameCount(true, 0, chargeRequiredFrameCount));
         parentActor.setChargeReadyFeedbackShown(false);
         aim(parentActor, parentActor.getEngine().getControllingInputDevice());
         if (app.getSystem() != null) app.getSystem().recordLongbowChargeStarted(parentActor);
@@ -138,10 +139,14 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
         }
         app.strokeWeight(1);
         app.rotate(+HALF_PI);
-        parentActor.setChargedFrameCount(parentActor.getChargedFrameCount() + 1);
     }
 
     public void act(PlayerActor parentActor) {
+        final boolean buttonPressed = buttonPressed(parentActor.getEngine().getControllingInputDevice());
+        parentActor.setChargedFrameCount(advanceChargeFrameCount(
+                buttonPressed,
+                parentActor.getChargedFrameCount(),
+                chargeRequiredFrameCount));
         super.act(parentActor);
 
         if (parentActor.getChargedFrameCount() != chargeRequiredFrameCount
@@ -208,6 +213,13 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     static float calculateChargeProgress(int chargedFrameCount, int requiredFrameCount) {
         if (requiredFrameCount <= 0) return 1.0F;
         return min(1.0F, Math.max(0.0F, (float) chargedFrameCount / requiredFrameCount));
+    }
+
+    /** Advances a held charge by one simulation frame and caps it at the firing threshold. */
+    static int advanceChargeFrameCount(boolean buttonPressed, int chargedFrameCount, int requiredFrameCount) {
+        final int safeFrameCount = Math.max(0, chargedFrameCount);
+        if (!buttonPressed || requiredFrameCount <= 0) return safeFrameCount;
+        return Math.min(requiredFrameCount, safeFrameCount + 1);
     }
 
     /** Returns whether a living target is close enough for deterministic longbow aim assistance. */

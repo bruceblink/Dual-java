@@ -99,6 +99,15 @@ class DrawBowPlayerActorStateTest {
     }
 
     @Test
+    void longbowChargeAdvancesOnlyWhileHeldAndStopsAtTheFiringThreshold() {
+        assertEquals(1, DrawLongbowPlayerActorState.advanceChargeFrameCount(true, 0, 30));
+        assertEquals(15, DrawLongbowPlayerActorState.advanceChargeFrameCount(false, 15, 30));
+        assertEquals(30, DrawLongbowPlayerActorState.advanceChargeFrameCount(true, 29, 30));
+        assertEquals(30, DrawLongbowPlayerActorState.advanceChargeFrameCount(true, 30, 30));
+        assertEquals(1, DrawLongbowPlayerActorState.advanceChargeFrameCount(true, -2, 30));
+    }
+
+    @Test
     void longbowReadyFeedbackIsEmittedOnlyOnceAtTheChargeBoundary() {
         App app = new App();
         KeyInput keyInput = new KeyInput();
