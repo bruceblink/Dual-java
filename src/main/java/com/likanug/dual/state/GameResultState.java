@@ -3,6 +3,7 @@ package com.likanug.dual.state;
 import com.likanug.dual.App;
 import com.likanug.dual.GameConstants;
 import com.likanug.dual.game.GameSystem;
+import com.likanug.dual.game.LethalHitSnapshot;
 import com.likanug.dual.game.MatchScore;
 import com.likanug.dual.game.PlayerSide;
 import com.likanug.dual.game.TacticalEvent;
@@ -29,6 +30,7 @@ public class GameResultState extends GameSystemState {
     static final float TACTICAL_RESET_PROMPT_Y = RESET_PROMPT_Y;
     private final TacticalEvent finishFeedback;
     private final MatchScore.RoundResult roundResult;
+    private final LethalHitSnapshot lethalHitSnapshot;
     private boolean networkResetRequested;
     private boolean networkResetTimedOut;
     private boolean networkScoreMismatch;
@@ -46,6 +48,16 @@ public class GameResultState extends GameSystemState {
 
     /** Keeps the round outcome alongside existing tactical result feedback for the next-round action. */
     public GameResultState(App app, String msg, TacticalEvent finishFeedback, MatchScore.RoundResult roundResult) {
+        this(app, msg, finishFeedback, roundResult, null);
+    }
+
+    /** Carries the actual lethal path into the first result frames so cause and outcome stay connected. */
+    public GameResultState(
+            App app,
+            String msg,
+            TacticalEvent finishFeedback,
+            MatchScore.RoundResult roundResult,
+            LethalHitSnapshot lethalHitSnapshot) {
         super(app);
         if (finishFeedback != null && finishFeedback.type() != TacticalEventType.FINISH) {
             throw new IllegalArgumentException("Result feedback must be a FINISH event.");
@@ -53,9 +65,15 @@ public class GameResultState extends GameSystemState {
         resultMessage = msg;
         this.finishFeedback = finishFeedback;
         this.roundResult = roundResult;
+        this.lethalHitSnapshot = lethalHitSnapshot;
     }
 
     public void runSystem(GameSystem system) {
+        if (lethalHitSnapshot != null && properFrameCount < GameConstants.LETHAL_RESULT_TRAIL_FRAMES) {
+            final float alpha = 0.55F
+                    * (1.0F - (float) properFrameCount / GameConstants.LETHAL_RESULT_TRAIL_FRAMES);
+            LethalHitState.displaySnapshot(app, lethalHitSnapshot, alpha, 1.0F);
+        }
         system.getMyGroup().update();
         system.getOtherGroup().update();
         system.getMyGroup().displayPlayer();
@@ -85,6 +103,11 @@ public class GameResultState extends GameSystemState {
             app.textFont(smallFont, 28);
             app.fill(192, 64, 64);
             app.text(PlayGameState.tacticalFeedbackLabel(finishFeedback.attacker(), finishFeedback.type()),
+                    RESULT_MESSAGE_X, TACTICAL_FINISH_Y);
+        } else if (lethalHitSnapshot != null) {
+            app.textFont(smallFont, 28);
+            app.fill(192, 64, 64);
+            app.text(LethalHitState.lethalFeedbackLabel(lethalHitSnapshot.attacker(), false),
                     RESULT_MESSAGE_X, TACTICAL_FINISH_Y);
         }
         if (roundResult != null) {
@@ -180,6 +203,10 @@ public class GameResultState extends GameSystemState {
 
     TacticalEvent getFinishFeedback() {
         return finishFeedback;
+    }
+
+    LethalHitSnapshot getLethalHitSnapshot() {
+        return lethalHitSnapshot;
     }
 
     private float resultMessageY() {

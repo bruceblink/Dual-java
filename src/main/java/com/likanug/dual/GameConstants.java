@@ -73,6 +73,10 @@ public final class GameConstants {
     public static final int DISRUPT_RING_SIZE = 72;
     public static final float DISRUPT_RING_STROKE = 4.0F;
     public static final int DISRUPT_HIT_STOP_FRAMES = 3;
+    public static final int LETHAL_HIT_FREEZE_FRAMES = 12;
+    public static final int LETHAL_RESULT_TRAIL_FRAMES = 18;
+    public static final float LETHAL_IMPACT_RING_START_SIZE = 72.0F;
+    public static final float LETHAL_IMPACT_RING_END_SIZE = 104.0F;
     public static final int SCREEN_SHAKE_ON_KILL = 50;
     public static final int SCREEN_SHAKE_ON_HIT = 10;
 }

@@ -9,6 +9,9 @@ import static com.likanug.dual.App.INTERNAL_CANVAS_WIDTH;
 public abstract class AbstractArrowActor extends Actor {
 
     protected final float halfLength;
+    private float launchX;
+    private float launchY;
+    private boolean hasLaunchPosition;
 
     public AbstractArrowActor(float _collisionRadius, float _halfLength, App app) {
         super(_collisionRadius, app);
@@ -28,4 +31,23 @@ public abstract class AbstractArrowActor extends Actor {
     }
 
     public abstract boolean isLethal();
+
+    /** Saves the firing point once so later hit feedback can show the arrow's truthful path. */
+    public void setLaunchPosition(float launchX, float launchY) {
+        this.launchX = launchX;
+        this.launchY = launchY;
+        hasLaunchPosition = true;
+    }
+
+    public boolean hasLaunchPosition() {
+        return hasLaunchPosition;
+    }
+
+    public float getLaunchX() {
+        return launchX;
+    }
+
+    public float getLaunchY() {
+        return launchY;
+    }
 }

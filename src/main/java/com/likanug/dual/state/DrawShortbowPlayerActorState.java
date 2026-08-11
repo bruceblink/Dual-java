@@ -73,6 +73,7 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
         final float directionAngle = parentActor.getAimAngle();
         newArrow.setxPosition(parentActor.getxPosition() + 24 * cos(directionAngle));
         newArrow.setyPosition(parentActor.getyPosition() + 24 * sin(directionAngle));
+        newArrow.setLaunchPosition(parentActor.getxPosition(), parentActor.getyPosition());
         newArrow.setRotationAngle(directionAngle);
         newArrow.setVelocity(directionAngle, 24);
 

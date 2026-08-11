@@ -67,6 +67,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
             LongbowArrowShaft newArrow = new LongbowArrowShaft(app);
             newArrow.setxPosition(parentActor.getxPosition() + i * arrowComponentInterval * cos(parentActor.getAimAngle()));
             newArrow.setyPosition(parentActor.getyPosition() + i * arrowComponentInterval * sin(parentActor.getAimAngle()));
+            newArrow.setLaunchPosition(parentActor.getxPosition(), parentActor.getyPosition());
             newArrow.setRotationAngle(parentActor.getAimAngle());
             newArrow.setVelocity(parentActor.getAimAngle(), GameConstants.LONGBOW_SPEED);
 
@@ -76,6 +77,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
         LongbowArrowHead newArrow = new LongbowArrowHead(app);
         newArrow.setxPosition(parentActor.getxPosition() + arrowShaftNumber * arrowComponentInterval * cos(parentActor.getAimAngle()));
         newArrow.setyPosition(parentActor.getyPosition() + arrowShaftNumber * arrowComponentInterval * sin(parentActor.getAimAngle()));
+        newArrow.setLaunchPosition(parentActor.getxPosition(), parentActor.getyPosition());
         newArrow.setRotationAngle(parentActor.getAimAngle());
         newArrow.setVelocity(parentActor.getAimAngle(), GameConstants.LONGBOW_SPEED);
 

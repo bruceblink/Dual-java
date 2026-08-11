@@ -10,6 +10,7 @@ import com.likanug.dual.actor.player.NullPlayerActor;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.game.GameSystem;
 import com.likanug.dual.game.MatchScore;
+import com.likanug.dual.game.LethalHitSnapshot;
 import com.likanug.dual.game.PlayerSide;
 import com.likanug.dual.game.TacticalEvent;
 import com.likanug.dual.game.TacticalEventType;
@@ -46,6 +47,7 @@ public class PlayGameState extends GameSystemState {
     private static final int TACTICAL_FEEDBACK_DURATION_FRAMES = (int) (FPS * 0.75F);
     private TacticalEvent tacticalFeedbackEvent;
     private int tacticalFeedbackStartFrame;
+    private LethalHitSnapshot pendingLethalHit;
 
     public PlayGameState(App app) {
         super(app);
@@ -316,12 +318,22 @@ public class PlayGameState extends GameSystemState {
 
     public void checkStateTransition(GameSystem system) {
         if (system.getMyGroup().getPlayer().isNull()) {
-            system.setCurrentState(new GameResultState(
-                    app, "You lose.", getFinishFeedback(), system.recordRoundWin(PlayerSide.TWO)));
+            transitionToRoundResult(system, "You lose.", PlayerSide.TWO);
         } else if (system.getOtherGroup().getPlayer().isNull()) {
-            system.setCurrentState(new GameResultState(
-                    app, "You win.", getFinishFeedback(), system.recordRoundWin(PlayerSide.ONE)));
+            transitionToRoundResult(system, "You win.", PlayerSide.ONE);
         }
+    }
+
+    /** Chooses the readable lethal freeze for real arrow hits while preserving legacy direct-result tests. */
+    private void transitionToRoundResult(GameSystem system, String message, PlayerSide winner) {
+        final TacticalEvent finish = getFinishFeedback();
+        final MatchScore.RoundResult roundResult = system.recordRoundWin(winner);
+        if (pendingLethalHit == null) {
+            system.setCurrentState(new GameResultState(app, message, finish, roundResult));
+            return;
+        }
+        system.setCurrentState(new LethalHitState(
+                app, message, finish, roundResult, pendingLethalHit));
     }
 
     /** Passes only the completed tactical sequence into the next state, not transient pressure or opening notices. */
@@ -362,6 +374,7 @@ public class PlayGameState extends GameSystemState {
                 if (eachMyArrow.isNotCollided(enemyPlayer)) continue;
 
                 if (eachMyArrow.isLethal()) {
+                    pendingLethalHit = captureLethalHit(system, eachMyArrow, myGroup, (PlayerActor) enemyPlayer);
                     killPlayer(otherGroup.getPlayer());
                     system.recordLongbowFinish(myGroup);
                 } else {
@@ -378,6 +391,8 @@ public class PlayGameState extends GameSystemState {
                 if (eachEnemyArrow.isNotCollided(myGroup.getPlayer())) continue;
 
                 if (eachEnemyArrow.isLethal()) {
+                    pendingLethalHit = captureLethalHit(
+                            system, eachEnemyArrow, otherGroup, (PlayerActor) myGroup.getPlayer());
                     killPlayer(myGroup.getPlayer());
                     system.recordLongbowFinish(otherGroup);
                 } else {
@@ -406,6 +421,32 @@ public class PlayGameState extends GameSystemState {
         system.recordLongbowDisruption(attackerGroup);
         system.addDisruptionParticles(targetX, targetY);
         system.startCombatPause(GameConstants.DISRUPT_HIT_STOP_FRAMES);
+    }
+
+    /** Captures launch, collision, and target geometry before the killed actor is replaced by NullPlayerActor. */
+    private LethalHitSnapshot captureLethalHit(
+            GameSystem system,
+            AbstractArrowActor arrow,
+            ActorGroup attackerGroup,
+            PlayerActor target) {
+        final PlayerSide attacker = attackerGroup == system.getMyGroup() ? PlayerSide.ONE : PlayerSide.TWO;
+        final float launchX = arrow.hasLaunchPosition()
+                ? arrow.getLaunchX() : attackerGroup.getPlayer().getxPosition();
+        final float launchY = arrow.hasLaunchPosition()
+                ? arrow.getLaunchY() : attackerGroup.getPlayer().getyPosition();
+        return new LethalHitSnapshot(
+                attacker,
+                launchX,
+                launchY,
+                arrow.getxPosition(),
+                arrow.getyPosition(),
+                target.getxPosition(),
+                target.getyPosition(),
+                target.getFillColor());
+    }
+
+    LethalHitSnapshot getPendingLethalHit() {
+        return pendingLethalHit;
     }
 
     public void killPlayer(AbstractPlayerActor player) {

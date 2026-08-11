@@ -3,6 +3,7 @@ package com.likanug.dual.state;
 import com.likanug.dual.App;
 import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.arrow.ShortbowArrow;
+import com.likanug.dual.actor.arrow.LongbowArrowHead;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.game.GameSystem;
 import com.likanug.dual.game.MatchScore;
@@ -16,6 +17,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static processing.core.PConstants.HALF_PI;
 
 class PlayGameStateTest {
@@ -177,5 +179,28 @@ class PlayGameStateTest {
         assertEquals(
                 GameConstants.ARROW_BREAK_PARTICLE_COUNT + GameConstants.DISRUPT_PARTICLE_COUNT + 1,
                 system.getCommonParticleSet().getParticleList().size());
+    }
+
+    @Test
+    void lethalArrowCapturesItsLaunchPathBeforeTheResultFreeze() {
+        App app = new App();
+        GameSystem system = new GameSystem(true, false, app);
+        app.setSystem(system);
+        PlayGameState state = new PlayGameState(app);
+        PlayerActor target = (PlayerActor) system.getOtherGroup().getPlayer();
+        LongbowArrowHead arrow = new LongbowArrowHead(app);
+        arrow.setLaunchPosition(320.0F, 640.0F);
+        arrow.setxPosition(target.getxPosition());
+        arrow.setyPosition(target.getyPosition());
+        system.getMyGroup().addArrow(arrow);
+
+        state.checkCollision(system);
+        state.checkStateTransition(system);
+
+        assertEquals(PlayerSide.ONE, state.getPendingLethalHit().attacker());
+        assertEquals(320.0F, state.getPendingLethalHit().launchX());
+        assertEquals(target.getxPosition(), state.getPendingLethalHit().targetX());
+        assertInstanceOf(LethalHitState.class, system.getCurrentState());
+        assertEquals(1, system.getMatchScore().getPlayerOneWins());
     }
 }
