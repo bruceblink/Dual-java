@@ -1,11 +1,14 @@
 package com.likanug.dual.actor.player;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.playerEngine.PlayerEngine;
 import com.likanug.dual.state.MovePlayerActorState;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlayerActorTest {
 
@@ -52,5 +55,31 @@ class PlayerActorTest {
         player.setLongbowRecoveryFrameCount(10);
         player.resetForRound(100.0F, 200.0F, new MovePlayerActorState(app));
         assertEquals(0, player.getLongbowRecoveryFrameCount());
+    }
+
+    @Test
+    void shortbowBufferExpiresOnceAndRoundResetClearsIt() {
+        PlayerEngine engine = new PlayerEngine() {
+            @Override
+            public void run(PlayerActor player) {
+            }
+        };
+        App app = new App();
+        PlayerActor player = new PlayerActor(engine, 255, app);
+
+        player.bufferShortbowInput();
+        assertTrue(player.hasBufferedShortbowInput());
+        for (int frame = 0; frame < GameConstants.SHORTBOW_INPUT_BUFFER_FRAMES; frame++) {
+            player.update();
+        }
+        assertFalse(player.hasBufferedShortbowInput());
+
+        player.bufferShortbowInput();
+        player.clearShortbowInputBuffer();
+        assertFalse(player.hasBufferedShortbowInput());
+
+        player.bufferShortbowInput();
+        player.resetForRound(100.0F, 200.0F, new MovePlayerActorState(app));
+        assertEquals(0, player.getShortbowInputBufferFrameCount());
     }
 }

@@ -99,4 +99,9 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
         return shotButtonPressed && cooldownFrameCount <= 0 && hasAmmo;
     }
 
+    /** Checks cadence and reserve before Move commits a buffered press to the weapon state. */
+    boolean isReadyToFire(PlayerActor player) {
+        return player.getShortbowCooldownFrameCount() <= 0 && player.getShortbowAmmo().canFire();
+    }
+
 }

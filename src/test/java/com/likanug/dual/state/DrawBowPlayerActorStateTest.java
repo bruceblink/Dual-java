@@ -182,6 +182,54 @@ class DrawBowPlayerActorStateTest {
     }
 
     @Test
+    void bufferedShortbowFiresOnceWhenLongbowRecoveryEnds() {
+        ShortbowStateFixture fixture = shortbowStateFixture();
+        fixture.player.setLongbowRecoveryFrameCount(3);
+        fixture.input.operateShotButton(true);
+
+        fixture.player.act();
+        fixture.input.operateShotButton(false);
+        assertEquals(0, fixture.playerGroup.getArrowList().size());
+        assertTrue(fixture.player.hasBufferedShortbowInput());
+
+        while (fixture.player.getLongbowRecoveryFrameCount() > 0) {
+            fixture.player.update();
+            fixture.player.act();
+        }
+
+        assertEquals(1, fixture.playerGroup.getArrowList().size());
+        assertFalse(fixture.player.hasBufferedShortbowInput());
+    }
+
+    @Test
+    void invalidShortbowPressStaysMobileAndDoesNotBlockHeldLongbow() {
+        ShortbowStateFixture fixture = shortbowStateFixture();
+        fixture.player.setShortbowCooldownFrameCount(10);
+        fixture.input.operateShotButton(true);
+        fixture.input.operateLongShotButton(true);
+
+        fixture.player.act();
+
+        assertEquals(fixture.longbowState, fixture.player.getState());
+        assertEquals(0, fixture.playerGroup.getArrowList().size());
+        assertFalse(fixture.player.hasBufferedShortbowInput());
+    }
+
+    @Test
+    void shortbowPressDuringLongbowChargeIsNotReleasedAfterCancellation() {
+        ShortbowStateFixture fixture = shortbowStateFixture();
+        fixture.input.operateLongShotButton(true);
+        fixture.player.act();
+        assertEquals(fixture.longbowState, fixture.player.getState());
+
+        fixture.input.operateShotButton(true);
+        fixture.player.act();
+
+        assertFalse(fixture.player.hasBufferedShortbowInput());
+        assertEquals(0, fixture.playerGroup.getArrowList().size());
+    }
+
+    @Test
     void longbowChargeAdvancesOnlyWhileHeldAndStopsAtTheFiringThreshold() {
         assertEquals(1, DrawLongbowPlayerActorState.advanceChargeFrameCount(true, 0, 30));
         assertEquals(15, DrawLongbowPlayerActorState.advanceChargeFrameCount(false, 15, 30));
@@ -268,5 +316,40 @@ class DrawBowPlayerActorStateTest {
         target.setyPosition(100.0F + GameConstants.LONGBOW_AUTO_AIM_RANGE + 1.0F);
         state.aim(player, engine.getControllingInputDevice());
         assertEquals(0.25F, player.getAimAngle(), 1e-6);
+    }
+
+    /** Builds the shared state graph used by timing tests without depending on Processing rendering. */
+    private static ShortbowStateFixture shortbowStateFixture() {
+        App app = new App();
+        PlayerEngine engine = new PlayerEngine() {
+            @Override
+            public void run(PlayerActor player) {
+            }
+        };
+        InputDevice input = (InputDevice) engine.getControllingInputDevice();
+        PlayerActor player = new PlayerActor(engine, 255, app);
+        PlayerActor target = new PlayerActor(engine, 0, app);
+        ActorGroup playerGroup = new ActorGroup();
+        ActorGroup targetGroup = new ActorGroup();
+        playerGroup.setEnemyGroup(targetGroup);
+        targetGroup.setEnemyGroup(playerGroup);
+        playerGroup.setPlayer(player);
+        targetGroup.setPlayer(target);
+        MovePlayerActorState moveState = new MovePlayerActorState(app);
+        DrawShortbowPlayerActorState shortbowState = new DrawShortbowPlayerActorState(app);
+        DrawLongbowPlayerActorState longbowState = new DrawLongbowPlayerActorState(app);
+        moveState.setDrawShortbowState(shortbowState);
+        moveState.setDrawLongbowState(longbowState);
+        shortbowState.setMoveState(moveState);
+        longbowState.setMoveState(moveState);
+        player.setState(moveState);
+        return new ShortbowStateFixture(input, player, playerGroup, longbowState);
+    }
+
+    private record ShortbowStateFixture(
+            InputDevice input,
+            PlayerActor player,
+            ActorGroup playerGroup,
+            DrawLongbowPlayerActorState longbowState) {
     }
 }

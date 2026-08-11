@@ -40,15 +40,17 @@ public class MovePlayerActorState extends PlayerActorState {
         // Longbow recovery preserves movement but blocks both weapons so a missed shot creates counterplay.
         if (parentActor.getLongbowRecoveryFrameCount() > 0) return;
 
-        if (input.isShotButtonJustPressed()) {
+        final boolean shortbowRequested = input.isShotButtonJustPressed()
+                || parentActor.hasBufferedShortbowInput();
+        if (shortbowRequested && drawShortbowState.isReadyToFire(parentActor)) {
+            parentActor.clearShortbowInputBuffer();
             parentActor.setState(drawShortbowState.entryState(parentActor));
             parentActor.setAimAngle(getEnemyPlayerActorAngle(parentActor));
-            if (drawShortbowState.triggerPulled(parentActor)) {
-                drawShortbowState.fire(parentActor);
-            }
+            drawShortbowState.fire(parentActor);
             return;
         }
         if (input.isLongShotButtonPressed()) {
+            parentActor.clearShortbowInputBuffer();
             parentActor.setState(drawLongbowState.entryState(parentActor));
         }
     }

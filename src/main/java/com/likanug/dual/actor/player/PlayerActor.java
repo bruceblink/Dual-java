@@ -26,6 +26,7 @@ public class PlayerActor extends AbstractPlayerActor {
     private int damageRemainingFrameCount;
     private int damageEndFeedbackFrameCount;
     private int shortbowCooldownFrameCount;
+    private int shortbowInputBufferFrameCount;
     private final ShortbowAmmo shortbowAmmo = new ShortbowAmmo(
             GameConstants.SHORTBOW_MAX_AMMO,
             Math.round(GameConstants.SHORTBOW_AMMO_RECOVERY_SEC * FPS));
@@ -105,6 +106,23 @@ public class PlayerActor extends AbstractPlayerActor {
         this.shortbowCooldownFrameCount = shortbowCooldownFrameCount;
     }
 
+    public int getShortbowInputBufferFrameCount() {
+        return shortbowInputBufferFrameCount;
+    }
+
+    public boolean hasBufferedShortbowInput() {
+        return shortbowInputBufferFrameCount > 0;
+    }
+
+    /** Remembers one press edge briefly so recovery and damage boundaries do not swallow player intent. */
+    public void bufferShortbowInput() {
+        shortbowInputBufferFrameCount = GameConstants.SHORTBOW_INPUT_BUFFER_FRAMES;
+    }
+
+    public void clearShortbowInputBuffer() {
+        shortbowInputBufferFrameCount = 0;
+    }
+
     public ShortbowAmmo getShortbowAmmo() {
         return shortbowAmmo;
     }
@@ -129,6 +147,7 @@ public class PlayerActor extends AbstractPlayerActor {
         damageRemainingFrameCount = 0;
         damageEndFeedbackFrameCount = 0;
         shortbowCooldownFrameCount = 0;
+        shortbowInputBufferFrameCount = 0;
         shortbowAmmo.reset();
         shortbowPressure.reset();
         state = moveState.entryState(this);
@@ -157,6 +176,12 @@ public class PlayerActor extends AbstractPlayerActor {
 
     public void act() {
         engine.run(this);
+        if (state.isDrawingLongBow()) {
+            // A committed longbow charge must not release into a shortbow press made during that charge.
+            clearShortbowInputBuffer();
+        } else if (engine.getControllingInputDevice().isShotButtonJustPressed()) {
+            bufferShortbowInput();
+        }
         state.act(this);
     }
 
@@ -165,6 +190,7 @@ public class PlayerActor extends AbstractPlayerActor {
         shortbowAmmo.tickRecovery();
         // Cooldown advances during every movement state so a released shortbow cannot leave it frozen.
         shortbowCooldownFrameCount = Math.max(0, shortbowCooldownFrameCount - 1);
+        shortbowInputBufferFrameCount = Math.max(0, shortbowInputBufferFrameCount - 1);
         longbowRecoveryFrameCount = Math.max(0, longbowRecoveryFrameCount - 1);
         damageEndFeedbackFrameCount = Math.max(0, damageEndFeedbackFrameCount - 1);
 
