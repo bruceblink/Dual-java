@@ -31,11 +31,20 @@ class NetworkServerClientIntegrationTest {
             join.sendInput(input);
             waitUntil(() -> host.getRemoteInput().isUpPressed && host.getRemoteInput().isZPressed, 1000);
 
-            for (int round = 1; round <= 3; round++) {
-                NetworkRoundResult result = new NetworkRoundResult(
-                        round, NetworkRoundResult.SIDE_ONE, round, 0, round == 3);
-                join.sendRoundResult(result);
-                waitUntil(() -> result.equals(host.getRemoteRoundResult()), 1000);
+            for (int match = 0; match < 2; match++) {
+                for (int round = 1; round <= 3; round++) {
+                    NetworkRoundResult result = new NetworkRoundResult(
+                            round, NetworkRoundResult.SIDE_ONE, round, 0, round == 3);
+                    join.sendRoundResult(result);
+                    waitUntil(() -> result.equals(host.getRemoteRoundResult()), 1000);
+                }
+                assertTrue(host.isConnected());
+                if (match == 0) {
+                    NetworkRematchRequest request = new NetworkRematchRequest(3, true);
+                    join.sendRematchRequest(request);
+                    waitUntil(() -> request.equals(host.getRemoteRematchRequest()), 1000);
+                    host.resetRemoteMatchState();
+                }
             }
             assertTrue(host.getRemoteRoundResult().matchComplete());
         } finally {
