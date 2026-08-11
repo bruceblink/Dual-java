@@ -182,6 +182,7 @@ class DrawBowPlayerActorStateTest {
         assertEquals(
                 Math.round(GameConstants.LONGBOW_RECOVERY_SEC * App.FPS),
                 player.getLongbowRecoveryFrameCount());
+        assertEquals(1, system.getRoundCombatStats().playerOne().longbowShots());
         assertEquals(moveState, player.getState());
         assertEquals(1.0F, MovePlayerActorState.recoveryProgress(
                 player.getLongbowRecoveryFrameCount(),

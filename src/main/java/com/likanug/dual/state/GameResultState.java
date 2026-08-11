@@ -6,6 +6,7 @@ import com.likanug.dual.game.GameSystem;
 import com.likanug.dual.game.LethalHitSnapshot;
 import com.likanug.dual.game.MatchScore;
 import com.likanug.dual.game.PlayerSide;
+import com.likanug.dual.game.RoundCombatStats;
 import com.likanug.dual.game.TacticalEvent;
 import com.likanug.dual.game.TacticalEventType;
 
@@ -28,6 +29,14 @@ public class GameResultState extends GameSystemState {
     static final float TACTICAL_FINISH_Y = INTERNAL_CANVAS_HEIGHT * 0.5F - 28.0F;
     static final float ROUND_SCORE_Y = INTERNAL_CANVAS_HEIGHT * 0.5F + 28.0F;
     static final float TACTICAL_RESET_PROMPT_Y = RESET_PROMPT_Y;
+    static final float REPORT_LEFT_X = 210.0F;
+    static final float REPORT_RIGHT_X = INTERNAL_CANVAS_WIDTH - REPORT_LEFT_X;
+    static final float REPORT_HEADER_Y = INTERNAL_CANVAS_HEIGHT * 0.5F - 76.0F;
+    static final float REPORT_SHORTBOW_Y = REPORT_HEADER_Y + 34.0F;
+    static final float REPORT_LONGBOW_Y = REPORT_SHORTBOW_Y + 28.0F;
+    static final float REPORT_TACTICAL_Y = REPORT_LONGBOW_Y + 28.0F;
+    static final float REPORT_TIME_Y = RESET_PROMPT_Y;
+    static final float REPORT_PROMPT_Y = INTERNAL_CANVAS_HEIGHT * 0.5F + 140.0F;
     private final TacticalEvent finishFeedback;
     private final MatchScore.RoundResult roundResult;
     private final LethalHitSnapshot lethalHitSnapshot;
@@ -114,6 +123,7 @@ public class GameResultState extends GameSystemState {
             app.textFont(smallFont, 22);
             app.fill(224);
             app.text(roundScoreDisplayLabel(roundResult), RESULT_MESSAGE_X, ROUND_SCORE_Y);
+            displayRoundReport(system.getRoundCombatStats());
         }
         if (!system.isDemoPlay() && shouldShowResetPrompt()) {
             app.textFont(smallFont, 20);
@@ -121,6 +131,27 @@ public class GameResultState extends GameSystemState {
             app.text(resetPromptLabel(), RESET_PROMPT_X, resetPromptY());
         }
         app.popStyle();
+    }
+
+    /** Draws a neutral action summary without assigning a hidden score to either player's decisions. */
+    private void displayRoundReport(RoundCombatStats.Snapshot report) {
+        displayPlayerReport("YOU", REPORT_LEFT_X, report.playerOne());
+        displayPlayerReport("RIVAL", REPORT_RIGHT_X, report.playerTwo());
+        app.textFont(smallFont, 16);
+        app.fill(224, 176);
+        app.text(roundSummaryLabel(report.interceptionCount(), report.activeFrameCount()),
+                RESULT_MESSAGE_X, REPORT_TIME_Y);
+    }
+
+    private void displayPlayerReport(String heading, float x, RoundCombatStats.PlayerSnapshot report) {
+        app.textFont(smallFont, 18);
+        app.fill(255, 224);
+        app.text(heading, x, REPORT_HEADER_Y);
+        app.textFont(smallFont, 16);
+        app.fill(224, 192);
+        app.text(weaponReportLabel("SHORT", report.shortbowHits(), report.shortbowShots()), x, REPORT_SHORTBOW_Y);
+        app.text(weaponReportLabel("LONG", report.longbowHits(), report.longbowShots()), x, REPORT_LONGBOW_Y);
+        app.text(chargeBreakReportLabel(report.chargeBreaks()), x, REPORT_TACTICAL_Y);
     }
 
     public void checkStateTransition(GameSystem system) {
@@ -201,6 +232,21 @@ public class GameResultState extends GameSystemState {
                 + " - " + result.playerTwoWins();
     }
 
+    static String weaponReportLabel(String weapon, int hits, int shots) {
+        return weapon + "  HITS " + hits + "  |  SHOTS " + shots;
+    }
+
+    static String chargeBreakReportLabel(int chargeBreaks) {
+        return "BREAK " + chargeBreaks;
+    }
+
+    /** Formats deterministic active frames as tenths of a second without locale-dependent punctuation. */
+    static String roundSummaryLabel(int interceptions, int activeFrames) {
+        final int tenths = Math.round(Math.max(0, activeFrames) * 10.0F / FPS);
+        return "INTERCEPT " + Math.max(0, interceptions)
+                + "  |  ACTIVE " + tenths / 10 + "." + tenths % 10 + "s";
+    }
+
     TacticalEvent getFinishFeedback() {
         return finishFeedback;
     }
@@ -214,6 +260,7 @@ public class GameResultState extends GameSystemState {
     }
 
     private float resetPromptY() {
+        if (roundResult != null) return REPORT_PROMPT_Y;
         return finishFeedback == null ? RESET_PROMPT_Y : TACTICAL_RESET_PROMPT_Y;
     }
 

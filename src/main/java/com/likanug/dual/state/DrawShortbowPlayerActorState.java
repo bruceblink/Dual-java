@@ -78,6 +78,7 @@ public class DrawShortbowPlayerActorState extends DrawBowPlayerActorState {
         newArrow.setVelocity(directionAngle, 24);
 
         parentActor.getGroup().addArrow(newArrow);
+        if (app.getSystem() != null) app.getSystem().recordShortbowShot(parentActor.getGroup());
         parentActor.setShortbowCooldownFrameCount(fireIntervalFrameCount);
     }
 

@@ -53,4 +53,14 @@ class GameResultStateTest {
         assertEquals(false, GameResultState.hasNetworkRematchTimedOut(299));
         assertEquals(true, GameResultState.hasNetworkRematchTimedOut(300));
     }
+
+    @Test
+    void roundReportLabelsKeepHitsShotsTacticsAndTimeCompact() {
+        assertEquals("SHORT  HITS 2  |  SHOTS 5", GameResultState.weaponReportLabel("SHORT", 2, 5));
+        assertEquals("LONG  HITS 1  |  SHOTS 2", GameResultState.weaponReportLabel("LONG", 1, 2));
+        assertEquals("BREAK 1", GameResultState.chargeBreakReportLabel(1));
+        assertEquals("INTERCEPT 3  |  ACTIVE 24.5s",
+                GameResultState.roundSummaryLabel(3, 24 * App.FPS + App.FPS / 2));
+        assertEquals("INTERCEPT 0  |  ACTIVE 0.0s", GameResultState.roundSummaryLabel(-1, -1));
+    }
 }

@@ -82,6 +82,7 @@ class PlayGameStateTest {
         assertEquals(
                 new TacticalEvent(PlayerSide.ONE, TacticalEventType.PRESSURE, 0),
                 system.getTacticalEventLog().getFirst());
+        assertEquals(1, system.getRoundCombatStats().playerOne().shortbowHits());
     }
 
     @Test
@@ -135,6 +136,32 @@ class PlayGameStateTest {
         assertEquals(
                 new TacticalEvent(null, TacticalEventType.INTERCEPT, 0),
                 system.getTacticalEventLog().getFirst());
+        assertEquals(1, system.getRoundCombatStats().interceptionCount());
+    }
+
+    @Test
+    void oneArrowCanResolveOnlyOneInterceptionPerFrame() {
+        App app = new App();
+        GameSystem system = new GameSystem(true, false, app);
+        app.setSystem(system);
+        PlayGameState state = new PlayGameState(app);
+        ShortbowArrow myArrow = new ShortbowArrow(app);
+        ShortbowArrow firstEnemyArrow = new ShortbowArrow(app);
+        ShortbowArrow secondEnemyArrow = new ShortbowArrow(app);
+        for (ShortbowArrow arrow : List.of(myArrow, firstEnemyArrow, secondEnemyArrow)) {
+            arrow.setxPosition(240.0F);
+            arrow.setyPosition(160.0F);
+        }
+        system.getMyGroup().addArrow(myArrow);
+        system.getOtherGroup().addArrow(firstEnemyArrow);
+        system.getOtherGroup().addArrow(secondEnemyArrow);
+
+        state.checkCollision(system);
+
+        assertEquals(1, system.getRoundCombatStats().interceptionCount());
+        assertEquals(1, system.getTacticalEventLog().size());
+        assertEquals(1, system.getMyGroup().getRemovingArrowList().size());
+        assertEquals(1, system.getOtherGroup().getRemovingArrowList().size());
     }
 
     @Test
@@ -149,6 +176,20 @@ class PlayGameStateTest {
         }
         assertFalse(system.consumeCombatPauseFrame());
         assertEquals(0, system.getCombatPauseFrameCount());
+    }
+
+    @Test
+    void activeCombatClockExcludesHitStopFrames() {
+        App app = new App();
+        GameSystem system = new GameSystem(true, false, app);
+        system.startCombatPause(2);
+
+        assertFalse(PlayGameState.beginActiveCombatFrame(system));
+        assertFalse(PlayGameState.beginActiveCombatFrame(system));
+        assertEquals(0, system.getRoundCombatStats().activeFrameCount());
+
+        assertTrue(PlayGameState.beginActiveCombatFrame(system));
+        assertEquals(1, system.getRoundCombatStats().activeFrameCount());
     }
 
     @Test
@@ -175,6 +216,7 @@ class PlayGameStateTest {
                 new TacticalEvent(PlayerSide.ONE, TacticalEventType.DISRUPT, 0)
         ), system.getTacticalEventLog());
         assertEquals(0, target.getChargedFrameCount());
+        assertEquals(1, system.getRoundCombatStats().playerOne().chargeBreaks());
         assertEquals(GameConstants.DISRUPT_HIT_STOP_FRAMES, system.getCombatPauseFrameCount());
         assertEquals(
                 GameConstants.ARROW_BREAK_PARTICLE_COUNT + GameConstants.DISRUPT_PARTICLE_COUNT + 1,
@@ -202,5 +244,6 @@ class PlayGameStateTest {
         assertEquals(target.getxPosition(), state.getPendingLethalHit().targetX());
         assertInstanceOf(LethalHitState.class, system.getCurrentState());
         assertEquals(1, system.getMatchScore().getPlayerOneWins());
+        assertEquals(1, system.getRoundCombatStats().playerOne().longbowHits());
     }
 }

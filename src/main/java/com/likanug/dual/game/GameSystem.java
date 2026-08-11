@@ -56,6 +56,7 @@ public class GameSystem {
     /** 用于游戏物理运算的可确定性随机数生成器（联机时双方使用相同种子保证一致） */
     private final Random gameRandom;
     private final MatchScore matchScore = new MatchScore(GameConstants.MATCH_ROUNDS_TO_WIN);
+    private final RoundCombatStats roundCombatStats = new RoundCombatStats();
 
     public GameSystem(boolean demo, boolean instruction, App app) {
         this(demo, instruction, app, false, AiDifficulty.STANDARD, ArenaLayout.open());
@@ -281,6 +282,7 @@ public class GameSystem {
         screenShakeValue = 0;
         combatFrameCount = 0;
         combatPauseFrameCount = 0;
+        roundCombatStats.reset();
         resetTacticalEvents();
         currentState = new StartGameState(app);
     }
@@ -380,6 +382,26 @@ public class GameSystem {
     /** Advances the deterministic combat clock once for each active play-state simulation frame. */
     public void advanceCombatFrame() {
         combatFrameCount++;
+        roundCombatStats.advanceFrame();
+    }
+
+    public RoundCombatStats.Snapshot getRoundCombatStats() {
+        return roundCombatStats.snapshot();
+    }
+
+    /** Counts a committed shortbow arrow after ammo consumption succeeds. */
+    public void recordShortbowShot(ActorGroup attackerGroup) {
+        roundCombatStats.recordShortbowShot(resolvePlayerSide(attackerGroup));
+    }
+
+    /** Counts one complete longbow release rather than each visual shaft component. */
+    public void recordLongbowShot(ActorGroup attackerGroup) {
+        roundCombatStats.recordLongbowShot(resolvePlayerSide(attackerGroup));
+    }
+
+    /** Counts the confirmed lethal collision independently of whether it completes a tactical chain. */
+    public void recordLongbowHit(ActorGroup attackerGroup) {
+        roundCombatStats.recordLongbowHit(resolvePlayerSide(attackerGroup));
     }
 
     /** Returns immutable tactical facts for upcoming UI feedback or replay consumers. */
@@ -396,7 +418,9 @@ public class GameSystem {
 
     /** Records the confirmed shortbow hit that begins one player's tactical opportunity. */
     public void recordPressure(ActorGroup attackerGroup) {
-        tacticalEventLog.add(tacticalEventRecorder.recordPressure(resolvePlayerSide(attackerGroup), combatFrameCount));
+        final PlayerSide attacker = resolvePlayerSide(attackerGroup);
+        roundCombatStats.recordShortbowHit(attacker);
+        tacticalEventLog.add(tacticalEventRecorder.recordPressure(attacker, combatFrameCount));
     }
 
     /** Records a longbow charge only when it follows the same player's recent shortbow pressure. */
@@ -413,6 +437,7 @@ public class GameSystem {
 
     /** Records the standalone counterplay fact when a shortbow interrupts an active longbow charge. */
     public void recordLongbowDisruption(ActorGroup attackerGroup) {
+        roundCombatStats.recordChargeBreak(resolvePlayerSide(attackerGroup));
         tacticalEventLog.add(new TacticalEvent(
                 resolvePlayerSide(attackerGroup), TacticalEventType.DISRUPT, combatFrameCount));
     }
@@ -426,6 +451,7 @@ public class GameSystem {
     /** Records one neutral arrow-interception fact for the fixed HUD and replay feedback layer. */
     public void recordInterception() {
         tacticalEventLog.add(TacticalEvent.intercept(combatFrameCount));
+        roundCombatStats.recordInterception();
     }
 
     /** Returns whether a charging player is still converting a recent shortbow hit into an opening. */

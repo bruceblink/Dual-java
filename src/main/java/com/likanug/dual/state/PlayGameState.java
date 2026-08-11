@@ -54,12 +54,11 @@ public class PlayGameState extends GameSystemState {
     }
 
     public void runSystem(GameSystem system) {
-        if (system.consumeCombatPauseFrame()) {
+        if (!beginActiveCombatFrame(system)) {
             displayFrozenCombatFrame(system);
             return;
         }
 
-        system.advanceCombatFrame();
         system.getMyGroup().update();
         system.getOtherGroup().update();
         system.resolveArenaCollisions();
@@ -74,6 +73,13 @@ public class PlayGameState extends GameSystemState {
 
         system.getCommonParticleSet().update();
         system.getCommonParticleSet().display();
+    }
+
+    /** Consumes hit-stop before advancing the deterministic clock, returning whether simulation may run. */
+    static boolean beginActiveCombatFrame(GameSystem system) {
+        if (system.consumeCombatPauseFrame()) return false;
+        system.advanceCombatFrame();
+        return true;
     }
 
     /** Keeps the collision scene and its particles visible while simulation waits for the hit-stop window. */
@@ -363,6 +369,7 @@ public class PlayGameState extends GameSystemState {
                 system.startCombatPause(GameConstants.INTERCEPT_HIT_STOP_FRAMES);
                 breakArrow(eachMyArrow, myGroup);
                 breakArrow(eachEnemyArrow, otherGroup);
+                break;
             }
         }
 
@@ -375,6 +382,7 @@ public class PlayGameState extends GameSystemState {
 
                 if (eachMyArrow.isLethal()) {
                     pendingLethalHit = captureLethalHit(system, eachMyArrow, myGroup, (PlayerActor) enemyPlayer);
+                    system.recordLongbowHit(myGroup);
                     killPlayer(otherGroup.getPlayer());
                     system.recordLongbowFinish(myGroup);
                 } else {
@@ -393,6 +401,7 @@ public class PlayGameState extends GameSystemState {
                 if (eachEnemyArrow.isLethal()) {
                     pendingLethalHit = captureLethalHit(
                             system, eachEnemyArrow, otherGroup, (PlayerActor) myGroup.getPlayer());
+                    system.recordLongbowHit(otherGroup);
                     killPlayer(myGroup.getPlayer());
                     system.recordLongbowFinish(otherGroup);
                 } else {
