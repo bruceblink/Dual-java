@@ -23,4 +23,12 @@ class PlayerActorTest {
         player.update();
         assertEquals(0, player.getShortbowCooldownFrameCount());
     }
+
+    @Test
+    void diagonalMovementUsesTheSameAccelerationMagnitudeAsCardinalMovement() {
+        assertEquals(1.0F, PlayerActor.inputAccelerationScale(1.0F, 0.0F));
+        assertEquals(1.0F, PlayerActor.inputAccelerationScale(0.0F, -1.0F));
+        assertEquals((float) (1.0 / Math.sqrt(2.0)), PlayerActor.inputAccelerationScale(1.0F, 1.0F));
+        assertEquals((float) (1.0 / Math.sqrt(2.0)), PlayerActor.inputAccelerationScale(-0.5F, 0.5F));
+    }
 }

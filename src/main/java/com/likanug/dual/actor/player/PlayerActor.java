@@ -126,8 +126,23 @@ public class PlayerActor extends AbstractPlayerActor {
 
 
     public void addVelocity(float xAcceleration, float yAcceleration) {
-        xVelocity = constrain(xVelocity + xAcceleration, -GameConstants.PLAYER_MAX_VX, GameConstants.PLAYER_MAX_VX);
-        yVelocity = constrain(yVelocity + yAcceleration, -GameConstants.PLAYER_MAX_VY, GameConstants.PLAYER_MAX_VY);
+        // Keep diagonal input at the same acceleration magnitude as a cardinal direction before applying caps.
+        final float accelerationScale = inputAccelerationScale(xAcceleration, yAcceleration);
+        xVelocity = constrain(
+                xVelocity + xAcceleration * accelerationScale,
+                -GameConstants.PLAYER_MAX_VX,
+                GameConstants.PLAYER_MAX_VX);
+        yVelocity = constrain(
+                yVelocity + yAcceleration * accelerationScale,
+                -GameConstants.PLAYER_MAX_VY,
+                GameConstants.PLAYER_MAX_VY);
+    }
+
+    /** Returns the deterministic scale that prevents simultaneous horizontal and vertical input from being faster. */
+    static float inputAccelerationScale(float xAcceleration, float yAcceleration) {
+        return xAcceleration != 0.0F && yAcceleration != 0.0F
+                ? (float) (1.0 / Math.sqrt(2.0))
+                : 1.0F;
     }
 
     public void act() {
