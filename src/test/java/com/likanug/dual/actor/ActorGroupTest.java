@@ -20,8 +20,21 @@ class ActorGroupTest {
         assertEquals(0, arrow.displayCount);
     }
 
+    @Test
+    void pendingRemovalArrowCannotEmitEffectsPastItsCollisionPoint() {
+        ActorGroup group = new ActorGroup();
+        CountingArrow arrow = new CountingArrow();
+        group.addArrow(arrow);
+        group.getRemovingArrowList().add(arrow);
+
+        group.actArrows();
+
+        assertEquals(0, arrow.actCount);
+    }
+
     private static final class CountingArrow extends AbstractArrowActor {
         private int displayCount;
+        private int actCount;
 
         private CountingArrow() {
             super(1.0F, 1.0F, new App());
@@ -29,6 +42,7 @@ class ActorGroupTest {
 
         @Override
         protected void act() {
+            actCount++;
         }
 
         @Override

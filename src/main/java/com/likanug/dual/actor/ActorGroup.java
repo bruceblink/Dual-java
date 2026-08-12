@@ -27,8 +27,19 @@ public class ActorGroup {
     }
 
     public void act() {
+        actPlayer();
+        actArrows();
+    }
+
+    /** Applies the player's input before projectile collisions so a new defensive shot can respond immediately. */
+    public void actPlayer() {
         player.act();
+    }
+
+    /** Emits effects only for arrows that survived this frame's cover and interception checks. */
+    public void actArrows() {
         for (AbstractArrowActor eachArrow : arrowList) {
+            if (removingArrowList.contains(eachArrow)) continue;
             eachArrow.act();
         }
     }

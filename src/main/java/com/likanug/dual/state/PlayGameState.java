@@ -15,7 +15,10 @@ import com.likanug.dual.game.PlayerSide;
 import com.likanug.dual.game.TacticalEvent;
 import com.likanug.dual.game.TacticalEventType;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import static com.likanug.dual.App.FPS;
 import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
@@ -72,14 +75,17 @@ public class PlayGameState extends GameSystemState {
         system.getMyGroup().update();
         system.getOtherGroup().update();
         system.resolveArenaCollisions();
-        system.getMyGroup().act();
-        system.getOtherGroup().act();
+        system.getMyGroup().actPlayer();
+        system.getOtherGroup().actPlayer();
+        resolveArrowInterceptions(system);
+        system.getMyGroup().actArrows();
+        system.getOtherGroup().actArrows();
         system.getMyGroup().displayPlayer();
         system.getOtherGroup().displayPlayer();
         system.getMyGroup().displayArrows();
         system.getOtherGroup().displayArrows();
 
-        checkCollision(system);
+        resolvePlayerHits(system);
 
         system.getCommonParticleSet().update();
         system.getCommonParticleSet().display();
@@ -382,24 +388,44 @@ public class PlayGameState extends GameSystemState {
     }
 
     public void checkCollision(GameSystem system) {
+        resolveArrowInterceptions(system);
+        resolvePlayerHits(system);
+    }
+
+    /** Resolves this frame's arrow pairs from earliest contact to latest, independent of list order. */
+    private void resolveArrowInterceptions(GameSystem system) {
         final ActorGroup myGroup = system.getMyGroup();
         final ActorGroup otherGroup = system.getOtherGroup();
+        final List<InterceptionCandidate> candidates = new ArrayList<>();
 
         for (AbstractArrowActor eachMyArrow : myGroup.getArrowList()) {
             if (myGroup.getRemovingArrowList().contains(eachMyArrow)) continue;
             for (AbstractArrowActor eachEnemyArrow : otherGroup.getArrowList()) {
                 if (otherGroup.getRemovingArrowList().contains(eachEnemyArrow)) continue;
-                if (eachMyArrow.isNotCollided(eachEnemyArrow)) continue;
-                system.recordInterception();
-                system.addInterceptParticles(
-                        collisionMidpoint(eachMyArrow.getxPosition(), eachEnemyArrow.getxPosition()),
-                        collisionMidpoint(eachMyArrow.getyPosition(), eachEnemyArrow.getyPosition()));
-                system.startCombatPause(GameConstants.INTERCEPT_HIT_STOP_FRAMES);
-                breakArrow(eachMyArrow, myGroup);
-                breakArrow(eachEnemyArrow, otherGroup);
-                break;
+                final Optional<AbstractArrowActor.ArrowCollision> collision =
+                        eachMyArrow.findCollision(eachEnemyArrow);
+                collision.ifPresent(impact -> candidates.add(
+                        new InterceptionCandidate(eachMyArrow, eachEnemyArrow, impact)));
             }
         }
+
+        candidates.sort(Comparator.comparingDouble(candidate -> candidate.impact().timeRatio()));
+        for (InterceptionCandidate candidate : candidates) {
+            if (myGroup.getRemovingArrowList().contains(candidate.myArrow())
+                    || otherGroup.getRemovingArrowList().contains(candidate.enemyArrow())) continue;
+            final AbstractArrowActor.ArrowCollision impact = candidate.impact();
+            system.recordInterception();
+            system.addInterceptParticles(impact.impactX(), impact.impactY());
+            system.startCombatPause(GameConstants.INTERCEPT_HIT_STOP_FRAMES);
+            breakArrowAt(candidate.myArrow(), myGroup, impact.impactX(), impact.impactY());
+            breakArrowAt(candidate.enemyArrow(), otherGroup, impact.impactX(), impact.impactY());
+        }
+    }
+
+    /** Applies surviving arrows to players after interception visuals have hidden destroyed projectiles. */
+    private void resolvePlayerHits(GameSystem system) {
+        final ActorGroup myGroup = system.getMyGroup();
+        final ActorGroup otherGroup = system.getOtherGroup();
 
         if (!otherGroup.getPlayer().isNull()) {
             for (AbstractArrowActor eachMyArrow : myGroup.getArrowList()) {
@@ -440,6 +466,12 @@ public class PlayGameState extends GameSystemState {
                 breakArrow(eachEnemyArrow, otherGroup);
             }
         }
+    }
+
+    private record InterceptionCandidate(
+            AbstractArrowActor myArrow,
+            AbstractArrowActor enemyArrow,
+            AbstractArrowActor.ArrowCollision impact) {
     }
 
     /** Applies one shortbow hit and adds extra feedback only when it interrupts an active longbow charge. */
@@ -494,18 +526,18 @@ public class PlayGameState extends GameSystemState {
     }
 
     public void breakArrow(AbstractArrowActor arrow, ActorGroup group) {
-        app.getSystem().addSquareParticles(arrow.getxPosition(), arrow.getyPosition(),
+        breakArrowAt(arrow, group, arrow.getxPosition(), arrow.getyPosition());
+    }
+
+    /** Removes an intercepted arrow while anchoring all fragments to the swept collision point. */
+    private void breakArrowAt(AbstractArrowActor arrow, ActorGroup group, float impactX, float impactY) {
+        app.getSystem().addSquareParticles(impactX, impactY,
                 GameConstants.ARROW_BREAK_PARTICLE_COUNT, GameConstants.ARROW_BREAK_PARTICLE_SIZE, 1, 5, 1);
         group.getRemovingArrowList().add(arrow);
     }
 
     static float calculateThrustAngle(float relativeAngle, float randomUnit) {
         return relativeAngle + (randomUnit - 0.5f) * HALF_PI;
-    }
-
-    /** Calculates the visual interception point halfway between the two arrows that destroyed each other. */
-    static float collisionMidpoint(float firstPosition, float secondPosition) {
-        return (firstPosition + secondPosition) * 0.5F;
     }
 
     public void thrustPlayerActor(Actor referenceActor, PlayerActor targetPlayerActor) {

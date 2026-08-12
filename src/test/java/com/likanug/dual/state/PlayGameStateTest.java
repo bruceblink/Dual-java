@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static processing.core.PConstants.HALF_PI;
+import static processing.core.PConstants.PI;
 
 class PlayGameStateTest {
 
@@ -145,7 +146,6 @@ class PlayGameStateTest {
 
         state.checkCollision(system);
 
-        assertEquals(204.0F, PlayGameState.collisionMidpoint(200.0F, 208.0F));
         assertEquals(
                 GameConstants.ARROW_BREAK_PARTICLE_COUNT * 2 + GameConstants.INTERCEPT_PARTICLE_COUNT + 1,
                 system.getCommonParticleSet().getParticleList().size());
@@ -179,6 +179,62 @@ class PlayGameStateTest {
         assertEquals(1, system.getTacticalEventLog().size());
         assertEquals(1, system.getMyGroup().getRemovingArrowList().size());
         assertEquals(1, system.getOtherGroup().getRemovingArrowList().size());
+    }
+
+    @Test
+    void sweptInterceptionUsesTheCrossingPointForEveryFragment() {
+        App app = new App();
+        GameSystem system = new GameSystem(true, false, app);
+        app.setSystem(system);
+        PlayGameState state = new PlayGameState(app);
+        ShortbowArrow myArrow = new ShortbowArrow(app);
+        ShortbowArrow enemyArrow = new ShortbowArrow(app);
+        myArrow.setxPosition(100.0F);
+        myArrow.setyPosition(100.0F);
+        myArrow.setVelocity(0.0F, 24.0F);
+        enemyArrow.setxPosition(124.0F);
+        enemyArrow.setyPosition(100.0F);
+        enemyArrow.setVelocity(PI, 24.0F);
+        myArrow.update();
+        enemyArrow.update();
+        system.getMyGroup().addArrow(myArrow);
+        system.getOtherGroup().addArrow(enemyArrow);
+
+        state.checkCollision(system);
+
+        assertEquals(1, system.getRoundCombatStats().interceptionCount());
+        assertEquals(1, system.getTacticalEventLog().size());
+        assertEquals(1, system.getMyGroup().getRemovingArrowList().size());
+        assertEquals(1, system.getOtherGroup().getRemovingArrowList().size());
+        assertEquals(GameConstants.INTERCEPT_HIT_STOP_FRAMES, system.getCombatPauseFrameCount());
+        system.getCommonParticleSet().getParticleList().forEach(particle -> {
+            assertEquals(112.0F, particle.getxPosition(), 1.0e-4F);
+            assertEquals(100.0F, particle.getyPosition(), 1.0e-4F);
+        });
+    }
+
+    @Test
+    void earliestSweptContactWinsEvenWhenTheLaterArrowWasInsertedFirst() {
+        App app = new App();
+        GameSystem system = new GameSystem(true, false, app);
+        app.setSystem(system);
+        PlayGameState state = new PlayGameState(app);
+        ShortbowArrow myArrow = movingArrow(app, 100.0F, 24.0F);
+        ShortbowArrow laterEnemyArrow = stationaryArrow(app, 136.0F);
+        ShortbowArrow earlierEnemyArrow = stationaryArrow(app, 120.0F);
+        system.getMyGroup().addArrow(myArrow);
+        system.getOtherGroup().addArrow(laterEnemyArrow);
+        system.getOtherGroup().addArrow(earlierEnemyArrow);
+
+        state.checkCollision(system);
+
+        assertEquals(1, system.getRoundCombatStats().interceptionCount());
+        assertTrue(system.getOtherGroup().getRemovingArrowList().contains(earlierEnemyArrow));
+        assertFalse(system.getOtherGroup().getRemovingArrowList().contains(laterEnemyArrow));
+        system.getCommonParticleSet().getParticleList().forEach(particle -> {
+            assertEquals(112.0F, particle.getxPosition(), 1.0e-4F);
+            assertEquals(100.0F, particle.getyPosition(), 1.0e-4F);
+        });
     }
 
     @Test
@@ -275,5 +331,18 @@ class PlayGameStateTest {
         return channel <= 0.04045
                 ? channel / 12.92
                 : Math.pow((channel + 0.055) / 1.055, 2.4);
+    }
+
+    private static ShortbowArrow movingArrow(App app, float startX, float speed) {
+        ShortbowArrow arrow = new ShortbowArrow(app);
+        arrow.setxPosition(startX);
+        arrow.setyPosition(100.0F);
+        arrow.setVelocity(0.0F, speed);
+        arrow.update();
+        return arrow;
+    }
+
+    private static ShortbowArrow stationaryArrow(App app, float x) {
+        return movingArrow(app, x, 0.0F);
     }
 }
