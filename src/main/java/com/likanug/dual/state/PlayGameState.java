@@ -2,7 +2,6 @@ package com.likanug.dual.state;
 
 import com.likanug.dual.App;
 import com.likanug.dual.GameConstants;
-import com.likanug.dual.actor.Actor;
 import com.likanug.dual.actor.ActorGroup;
 import com.likanug.dual.actor.arrow.AbstractArrowActor;
 import com.likanug.dual.actor.player.AbstractPlayerActor;
@@ -26,7 +25,6 @@ import static com.likanug.dual.App.INTERNAL_CANVAS_WIDTH;
 import static processing.core.PApplet.atan2;
 import static processing.core.PApplet.cos;
 import static processing.core.PApplet.sin;
-import static processing.core.PConstants.HALF_PI;
 import static processing.core.PConstants.CENTER;
 
 public class PlayGameState extends GameSystemState {
@@ -536,13 +534,19 @@ public class PlayGameState extends GameSystemState {
         group.getRemovingArrowList().add(arrow);
     }
 
-    static float calculateThrustAngle(float relativeAngle, float randomUnit) {
-        return relativeAngle + (randomUnit - 0.5f) * HALF_PI;
+    /** Uses the incoming arrow's real travel direction so players can predict every shortbow knockback. */
+    static float calculateThrustAngle(AbstractArrowActor arrow) {
+        final float speedSquared = arrow.getxVelocity() * arrow.getxVelocity()
+                + arrow.getyVelocity() * arrow.getyVelocity();
+        if (speedSquared <= 1.0E-6F) {
+            return arrow.getDirectionAngle();
+        }
+        return atan2(arrow.getyVelocity(), arrow.getxVelocity());
     }
 
-    public void thrustPlayerActor(Actor referenceActor, PlayerActor targetPlayerActor) {
-        final float relativeAngle = atan2(targetPlayerActor.getyPosition() - referenceActor.getyPosition(), targetPlayerActor.getxPosition() - referenceActor.getxPosition());
-        final float thrustAngle = calculateThrustAngle(relativeAngle, app.getSystem().getGameRandom().nextFloat());
+    /** Overwrites the target's velocity with the fixed knockback impulse and enters the damaged state. */
+    public void thrustPlayerActor(AbstractArrowActor referenceArrow, PlayerActor targetPlayerActor) {
+        final float thrustAngle = calculateThrustAngle(referenceArrow);
         targetPlayerActor.setxVelocity(cos(thrustAngle) * GameConstants.PLAYER_THRUST_SPEED);
         targetPlayerActor.setyVelocity(sin(thrustAngle) * GameConstants.PLAYER_THRUST_SPEED);
         targetPlayerActor.setState(app.getSystem().getDamagedState().entryState(targetPlayerActor));

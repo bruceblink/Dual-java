@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static processing.core.PConstants.HALF_PI;
 import static processing.core.PConstants.PI;
 
 class PlayGameStateTest {
@@ -75,12 +74,17 @@ class PlayGameStateTest {
     }
 
     @Test
-    void calculateThrustAngleUsesCenteredRandomOffset() {
-        float base = 1.25f;
+    void calculateThrustAngleFollowsTheIncomingArrowVelocity() {
+        App app = new App();
+        ShortbowArrow arrow = new ShortbowArrow(app);
+        arrow.setVelocity(PI, 24.0F);
+        arrow.setxVelocity(3.0F);
+        arrow.setyVelocity(4.0F);
 
-        assertEquals(base - HALF_PI * 0.5f, PlayGameState.calculateThrustAngle(base, 0.0f), 1e-6);
-        assertEquals(base, PlayGameState.calculateThrustAngle(base, 0.5f), 1e-6);
-        assertEquals(base + HALF_PI * 0.5f, PlayGameState.calculateThrustAngle(base, 1.0f), 1e-6);
+        assertEquals((float) Math.atan2(4.0F, 3.0F), PlayGameState.calculateThrustAngle(arrow), 1.0E-6F);
+
+        arrow.setVelocity(PI, 0.0F);
+        assertEquals(PI, PlayGameState.calculateThrustAngle(arrow), 1.0E-6F);
     }
 
     @Test
@@ -101,6 +105,30 @@ class PlayGameStateTest {
                 new TacticalEvent(PlayerSide.ONE, TacticalEventType.PRESSURE, 0),
                 system.getTacticalEventLog().getFirst());
         assertEquals(1, system.getRoundCombatStats().playerOne().shortbowHits());
+    }
+
+    @Test
+    void shortbowKnockbackKeepsAFixedStrengthAlongTheArrowTrajectory() {
+        App app = new App();
+        GameSystem system = new GameSystem(true, false, app);
+        app.setSystem(system);
+        PlayGameState state = new PlayGameState(app);
+        PlayerActor target = (PlayerActor) system.getOtherGroup().getPlayer();
+        ShortbowArrow arrow = new ShortbowArrow(app);
+        arrow.setxPosition(target.getxPosition() - 4.0F);
+        arrow.setyPosition(target.getyPosition() + 4.0F);
+        arrow.setVelocity(PI * 0.25F, 24.0F);
+        system.getMyGroup().addArrow(arrow);
+
+        state.checkCollision(system);
+
+        final float expectedComponent = GameConstants.PLAYER_THRUST_SPEED / (float) Math.sqrt(2.0);
+        assertEquals(expectedComponent, target.getxVelocity(), 1.0E-5F);
+        assertEquals(expectedComponent, target.getyVelocity(), 1.0E-5F);
+        assertEquals(
+                GameConstants.PLAYER_THRUST_SPEED,
+                Math.hypot(target.getxVelocity(), target.getyVelocity()),
+                1.0E-5F);
     }
 
     @Test

@@ -21,7 +21,6 @@ import com.likanug.dual.inputDevice.KeyInput;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import static com.likanug.dual.App.FPS;
 import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
@@ -53,8 +52,6 @@ public class GameSystem {
     private final List<TacticalEvent> tacticalEventLog = new ArrayList<>();
     private int combatFrameCount;
     private int combatPauseFrameCount;
-    /** 用于游戏物理运算的可确定性随机数生成器（联机时双方使用相同种子保证一致） */
-    private final Random gameRandom;
     private final MatchScore matchScore = new MatchScore(GameConstants.MATCH_ROUNDS_TO_WIN);
     private final RoundCombatStats roundCombatStats = new RoundCombatStats();
 
@@ -120,14 +117,12 @@ public class GameSystem {
         this.demoPlay = demo;
         this.localTwoPlayer = localTwoPlayer;
         this.showsInstructionWindow = instruction;
-        this.gameRandom = new Random();
     }
 
     /**
      * 联机对战构造方法。
      * myGroup（本地玩家，位于画面下方）使用键盘输入；
      * otherGroup（远端玩家，位于画面上方）使用网络输入。
-     * gameRandom 用共享种子初始化，保证双端物理运算一致。
      */
     public GameSystem(GameNetwork network, App app) {
         this.app = app;
@@ -167,7 +162,6 @@ public class GameSystem {
         this.localTwoPlayer = false;
         this.arenaLayout = ArenaLayout.open();
         this.showsInstructionWindow = false;
-        this.gameRandom = new Random(network.getSharedSeed());
     }
 
     GameSystem(App app) {
@@ -368,11 +362,6 @@ public class GameSystem {
 
     public void setShowsInstructionWindow(boolean showsInstructionWindow) {
         this.showsInstructionWindow = showsInstructionWindow;
-    }
-
-    /** 返回用于游戏物理运算的可确定性随机数生成器 */
-    public Random getGameRandom() {
-        return gameRandom;
     }
 
     public int getCombatFrameCount() {
