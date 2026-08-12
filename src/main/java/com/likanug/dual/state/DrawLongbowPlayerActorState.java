@@ -27,6 +27,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     private final int effectColor = app.color(192, 64, 64);
     private final int lockColor = app.color(64, 176, 128);
     private final int openingColor = app.color(232, 192, 96);
+    private final int blockedTargetColor = app.color(160, 184, 192);
     private final int ringSize = GameConstants.LONGBOW_RING_SIZE;
     private final float ringStrokeWeight = GameConstants.LONGBOW_RING_STROKE;
 
@@ -105,6 +106,8 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
         final AbstractPlayerActor enemyPlayer = getEnemyPlayer(parentActor);
         final boolean targetLocked = isAutoAimTargetAvailable(
                 parentActor, enemyPlayer, GameConstants.LONGBOW_AUTO_AIM_RANGE, currentArenaLayout());
+        final boolean targetBlockedByCover = isTargetWithinAutoAimRange(
+                parentActor, enemyPlayer, GameConstants.LONGBOW_AUTO_AIM_RANGE) && !targetLocked;
         final boolean tacticalOpening = app.getSystem() != null
                 && app.getSystem().hasTacticalOpening(parentActor);
 
@@ -133,6 +136,8 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
                     48,
                     48);
             app.strokeWeight(1);
+        } else if (targetBlockedByCover) {
+            displayBlockedTargetReticle(parentActor, enemyPlayer);
         }
 
         app.rotate(-HALF_PI);
@@ -243,16 +248,22 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     /** Uses the projectile's collision radius so aim assistance cannot promise a shot cover will absorb. */
     static boolean isAutoAimTargetAvailable(
             PlayerActor player, AbstractPlayerActor target, float maximumRange, ArenaLayout arenaLayout) {
-        if (target == null || target.isNull() || maximumRange < 0.0F) return false;
-        final float deltaX = target.getxPosition() - player.getxPosition();
-        final float deltaY = target.getyPosition() - player.getyPosition();
-        return deltaX * deltaX + deltaY * deltaY <= maximumRange * maximumRange
-                && arenaLayout.hasClearProjectilePath(
+        if (!isTargetWithinAutoAimRange(player, target, maximumRange)) return false;
+        return arenaLayout.hasClearProjectilePath(
                 player.getxPosition(),
                 player.getyPosition(),
                 target.getxPosition(),
                 target.getyPosition(),
                 GameConstants.LONGBOW_COMPONENT_COLLISION_RADIUS);
+    }
+
+    /** Separates range from line of sight so the reticle can explain why a nearby target is not locked. */
+    static boolean isTargetWithinAutoAimRange(
+            PlayerActor player, AbstractPlayerActor target, float maximumRange) {
+        if (target == null || target.isNull() || maximumRange < 0.0F) return false;
+        final float deltaX = target.getxPosition() - player.getxPosition();
+        final float deltaY = target.getyPosition() - player.getyPosition();
+        return deltaX * deltaX + deltaY * deltaY <= maximumRange * maximumRange;
     }
 
     /** Computes the visible guide endpoint, using the wall surface rather than a circle-center approximation. */
@@ -277,6 +288,19 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
 
     /** Stores one world-space endpoint so the rendered guide can stop exactly at an obstacle surface. */
     record PreviewEndpoint(float x, float y) {
+    }
+
+    /** Draws a muted crossed reticle for a nearby enemy that the cover prevents from being auto-locked. */
+    private void displayBlockedTargetReticle(PlayerActor parentActor, AbstractPlayerActor enemyPlayer) {
+        final float targetX = enemyPlayer.getxPosition() - parentActor.getxPosition();
+        final float targetY = enemyPlayer.getyPosition() - parentActor.getyPosition();
+        final float halfSize = 18.0F;
+        app.stroke(blockedTargetColor, 168);
+        app.strokeWeight(2);
+        app.ellipse(targetX, targetY, halfSize * 2.0F, halfSize * 2.0F);
+        app.line(targetX - halfSize, targetY - halfSize, targetX + halfSize, targetY + halfSize);
+        app.line(targetX - halfSize, targetY + halfSize, targetX + halfSize, targetY - halfSize);
+        app.strokeWeight(1);
     }
 
     private AbstractPlayerActor getEnemyPlayer(PlayerActor parentActor) {

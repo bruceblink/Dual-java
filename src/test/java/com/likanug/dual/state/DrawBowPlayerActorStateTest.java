@@ -357,6 +357,31 @@ class DrawBowPlayerActorStateTest {
     }
 
     @Test
+    void targetRangePredicateLetsTheUiDistinguishCoverFromDistance() {
+        App app = new App();
+        PlayerEngine engine = new PlayerEngine() {
+            @Override
+            public void run(PlayerActor player) {
+            }
+        };
+        PlayerActor player = new PlayerActor(engine, 255, app);
+        PlayerActor target = new PlayerActor(engine, 0, app);
+        player.setxPosition(640.0F);
+        player.setyPosition(620.0F);
+        target.setxPosition(640.0F);
+        target.setyPosition(100.0F);
+
+        assertTrue(DrawLongbowPlayerActorState.isTargetWithinAutoAimRange(
+                player, target, GameConstants.LONGBOW_AUTO_AIM_RANGE));
+        assertFalse(DrawLongbowPlayerActorState.isAutoAimTargetAvailable(
+                player, target, GameConstants.LONGBOW_AUTO_AIM_RANGE, ArenaLayout.centralCover()));
+
+        target.setyPosition(99.0F);
+        assertFalse(DrawLongbowPlayerActorState.isTargetWithinAutoAimRange(
+                player, target, GameConstants.LONGBOW_AUTO_AIM_RANGE));
+    }
+
+    @Test
     void blockedLongbowAimFallsBackToTheManualInputAngle() {
         App app = new App();
         GameSystem system = new GameSystem(
