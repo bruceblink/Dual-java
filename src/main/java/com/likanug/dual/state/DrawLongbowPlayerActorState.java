@@ -6,6 +6,7 @@ import com.likanug.dual.actor.arrow.LongbowArrowHead;
 import com.likanug.dual.actor.arrow.LongbowArrowShaft;
 import com.likanug.dual.actor.player.AbstractPlayerActor;
 import com.likanug.dual.actor.player.PlayerActor;
+import com.likanug.dual.game.ArenaLayout;
 import com.likanug.dual.inputDevice.AbstractInputDevice;
 import com.likanug.dual.particle.Particle;
 import com.likanug.dual.game.SoundFeedback;
@@ -43,12 +44,13 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     }
 
     /**
-     * Locks onto a living enemy inside the assist radius; outside it, mouse aim or the keyboard fallback remains active.
+     * Locks onto a living, visible enemy inside the assist radius; cover returns control to manual aim.
      * Re-evaluating every frame lets players move during the charge without losing a valid nearby target.
      */
     public void aim(PlayerActor parentActor, AbstractInputDevice input) {
         final AbstractPlayerActor enemyPlayer = getEnemyPlayer(parentActor);
-        if (isAutoAimTargetAvailable(parentActor, enemyPlayer, GameConstants.LONGBOW_AUTO_AIM_RANGE)) {
+        if (isAutoAimTargetAvailable(
+                parentActor, enemyPlayer, GameConstants.LONGBOW_AUTO_AIM_RANGE, currentArenaLayout())) {
             parentActor.setAimAngle(getEnemyPlayerActorAngle(parentActor));
             return;
         }
@@ -102,7 +104,7 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     public void displayEffect(PlayerActor parentActor) {
         final AbstractPlayerActor enemyPlayer = getEnemyPlayer(parentActor);
         final boolean targetLocked = isAutoAimTargetAvailable(
-                parentActor, enemyPlayer, GameConstants.LONGBOW_AUTO_AIM_RANGE);
+                parentActor, enemyPlayer, GameConstants.LONGBOW_AUTO_AIM_RANGE, currentArenaLayout());
         final boolean tacticalOpening = app.getSystem() != null
                 && app.getSystem().hasTacticalOpening(parentActor);
 
@@ -115,7 +117,12 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
         else
             app.stroke(0, 128);
 
-        app.line(0, 0, 800 * cos(parentActor.getAimAngle()), 800 * sin(parentActor.getAimAngle()));
+        final PreviewEndpoint previewEndpoint = previewEndpoint(parentActor, currentArenaLayout());
+        app.line(
+                0,
+                0,
+                previewEndpoint.x() - parentActor.getxPosition(),
+                previewEndpoint.y() - parentActor.getyPosition());
 
         if (targetLocked) {
             app.stroke(tacticalOpening ? openingColor : lockColor);
@@ -230,10 +237,46 @@ public class DrawLongbowPlayerActorState extends DrawBowPlayerActorState {
     /** Returns whether a living target is close enough for deterministic longbow aim assistance. */
     static boolean isAutoAimTargetAvailable(
             PlayerActor player, AbstractPlayerActor target, float maximumRange) {
+        return isAutoAimTargetAvailable(player, target, maximumRange, ArenaLayout.open());
+    }
+
+    /** Uses the projectile's collision radius so aim assistance cannot promise a shot cover will absorb. */
+    static boolean isAutoAimTargetAvailable(
+            PlayerActor player, AbstractPlayerActor target, float maximumRange, ArenaLayout arenaLayout) {
         if (target == null || target.isNull() || maximumRange < 0.0F) return false;
         final float deltaX = target.getxPosition() - player.getxPosition();
         final float deltaY = target.getyPosition() - player.getyPosition();
-        return deltaX * deltaX + deltaY * deltaY <= maximumRange * maximumRange;
+        return deltaX * deltaX + deltaY * deltaY <= maximumRange * maximumRange
+                && arenaLayout.hasClearProjectilePath(
+                player.getxPosition(),
+                player.getyPosition(),
+                target.getxPosition(),
+                target.getyPosition(),
+                GameConstants.LONGBOW_COMPONENT_COLLISION_RADIUS);
+    }
+
+    /** Computes the visible guide endpoint, using the wall surface rather than a circle-center approximation. */
+    static PreviewEndpoint previewEndpoint(PlayerActor player, ArenaLayout arenaLayout) {
+        final float maximumPreviewLength = 800.0F;
+        final float endX = player.getxPosition() + maximumPreviewLength * cos(player.getAimAngle());
+        final float endY = player.getyPosition() + maximumPreviewLength * sin(player.getAimAngle());
+        return arenaLayout.findCoverImpact(
+                        player.getxPosition(),
+                        player.getyPosition(),
+                        endX,
+                        endY,
+                        GameConstants.LONGBOW_COMPONENT_COLLISION_RADIUS)
+                .map(impact -> new PreviewEndpoint(impact.x(), impact.y()))
+                .orElse(new PreviewEndpoint(endX, endY));
+    }
+
+    /** Reads the active arena, while isolated state tests retain the open arena behavior. */
+    private ArenaLayout currentArenaLayout() {
+        return app.getSystem() == null ? ArenaLayout.open() : app.getSystem().getArenaLayout();
+    }
+
+    /** Stores one world-space endpoint so the rendered guide can stop exactly at an obstacle surface. */
+    record PreviewEndpoint(float x, float y) {
     }
 
     private AbstractPlayerActor getEnemyPlayer(PlayerActor parentActor) {

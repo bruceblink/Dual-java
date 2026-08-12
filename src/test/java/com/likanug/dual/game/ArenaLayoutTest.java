@@ -85,6 +85,15 @@ class ArenaLayoutTest {
     }
 
     @Test
+    void projectilePathVisibilityMatchesTheCoverCollisionRule() {
+        ArenaLayout cover = ArenaLayout.centralCover();
+
+        assertFalse(cover.hasClearProjectilePath(640.0F, 620.0F, 640.0F, 100.0F, 16.0F));
+        assertTrue(cover.hasClearProjectilePath(300.0F, 620.0F, 300.0F, 100.0F, 16.0F));
+        assertTrue(cover.hasClearProjectilePath(640.0F, 416.0F, 640.0F, 460.0F, 16.0F));
+    }
+
+    @Test
     void obstacleRejectsNonPositiveDimensions() {
         org.junit.jupiter.api.Assertions.assertThrows(
                 IllegalArgumentException.class,

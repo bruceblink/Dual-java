@@ -1,6 +1,7 @@
 package com.likanug.dual.actor.arrow;
 
 import com.likanug.dual.App;
+import com.likanug.dual.GameConstants;
 import com.likanug.dual.particle.Particle;
 
 import static processing.core.PConstants.HALF_PI;
@@ -9,7 +10,7 @@ import static processing.core.PConstants.PI;
 public abstract class LongbowArrowComponent extends AbstractArrowActor {
 
     public LongbowArrowComponent(App app) {
-        super(16, 16, app);
+        super(GameConstants.LONGBOW_COMPONENT_COLLISION_RADIUS, 16, app);
     }
 
     public void act() {

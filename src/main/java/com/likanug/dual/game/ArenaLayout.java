@@ -74,6 +74,19 @@ public final class ArenaLayout {
         return Optional.ofNullable(earliestImpact);
     }
 
+    /**
+     * Returns whether a circular projectile path reaches its target without cover absorbing it first.
+     * This keeps aim assistance and the visible preview honest with the projectile collision rule.
+     */
+    public boolean hasClearProjectilePath(
+            float startX,
+            float startY,
+            float endX,
+            float endY,
+            float radius) {
+        return findCoverImpact(startX, startY, endX, endY, radius).isEmpty();
+    }
+
     /** Pushes a player to the nearest safe side when movement enters a cover rectangle. */
     public void resolvePlayer(PlayerActor player) {
         final float radius = player.getHalfBodySize();

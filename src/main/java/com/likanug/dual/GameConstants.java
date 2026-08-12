@@ -36,6 +36,7 @@ public final class GameConstants {
     public static final float LONGBOW_SPEED = 64.0F;
     public static final float LONGBOW_COMPONENT_INTERVAL = 24.0F;
     public static final int LONGBOW_SHAFT_COUNT = 5;
+    public static final float LONGBOW_COMPONENT_COLLISION_RADIUS = 16.0F;
     public static final float LONGBOW_CHARGE_SEC = 0.5F;
     public static final float LONGBOW_RECOVERY_SEC = 0.35F;
     public static final float LONGBOW_CHARGE_MOVE_RATIO = 0.5F;

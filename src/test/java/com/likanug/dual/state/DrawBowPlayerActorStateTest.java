@@ -5,6 +5,7 @@ import com.likanug.dual.GameConstants;
 import com.likanug.dual.actor.ActorGroup;
 import com.likanug.dual.actor.player.NullPlayerActor;
 import com.likanug.dual.actor.player.PlayerActor;
+import com.likanug.dual.game.ArenaLayout;
 import com.likanug.dual.game.GameSystem;
 import com.likanug.dual.game.TacticalEventType;
 import com.likanug.dual.inputDevice.KeyInput;
@@ -327,6 +328,76 @@ class DrawBowPlayerActorStateTest {
                 player, target, GameConstants.LONGBOW_AUTO_AIM_RANGE));
         assertFalse(DrawLongbowPlayerActorState.isAutoAimTargetAvailable(
                 player, new NullPlayerActor(app), GameConstants.LONGBOW_AUTO_AIM_RANGE));
+    }
+
+    @Test
+    void longbowAutoAimRequiresAnUnobstructedCoverPath() {
+        App app = new App();
+        PlayerEngine engine = new PlayerEngine() {
+            @Override
+            public void run(PlayerActor player) {
+            }
+        };
+        PlayerActor player = new PlayerActor(engine, 255, app);
+        PlayerActor target = new PlayerActor(engine, 0, app);
+        player.setxPosition(640.0F);
+        player.setyPosition(620.0F);
+        target.setxPosition(640.0F);
+        target.setyPosition(100.0F);
+
+        assertTrue(DrawLongbowPlayerActorState.isAutoAimTargetAvailable(
+                player, target, GameConstants.LONGBOW_AUTO_AIM_RANGE, ArenaLayout.open()));
+        assertFalse(DrawLongbowPlayerActorState.isAutoAimTargetAvailable(
+                player, target, GameConstants.LONGBOW_AUTO_AIM_RANGE, ArenaLayout.centralCover()));
+
+        target.setxPosition(300.0F);
+        target.setyPosition(300.0F);
+        assertTrue(DrawLongbowPlayerActorState.isAutoAimTargetAvailable(
+                player, target, GameConstants.LONGBOW_AUTO_AIM_RANGE, ArenaLayout.centralCover()));
+    }
+
+    @Test
+    void blockedLongbowAimFallsBackToTheManualInputAngle() {
+        App app = new App();
+        GameSystem system = new GameSystem(
+                false, false, app, false, AiDifficulty.STANDARD, ArenaLayout.centralCover());
+        app.setSystem(system);
+        PlayerActor player = (PlayerActor) system.getMyGroup().getPlayer();
+        PlayerActor target = (PlayerActor) system.getOtherGroup().getPlayer();
+        player.setxPosition(640.0F);
+        player.setyPosition(620.0F);
+        target.setxPosition(640.0F);
+        target.setyPosition(100.0F);
+        player.getEngine().getControllingInputDevice().operateAim(0.25F);
+        DrawLongbowPlayerActorState state = new DrawLongbowPlayerActorState(app);
+
+        state.aim(player, player.getEngine().getControllingInputDevice());
+
+        assertEquals(0.25F, player.getAimAngle(), 1.0E-6F);
+    }
+
+    @Test
+    void longbowPreviewStopsOnTheCoverSurfaceAndKeepsItsOpenArenaEndpoint() {
+        App app = new App();
+        PlayerEngine engine = new PlayerEngine() {
+            @Override
+            public void run(PlayerActor player) {
+            }
+        };
+        PlayerActor player = new PlayerActor(engine, 255, app);
+        player.setxPosition(640.0F);
+        player.setyPosition(620.0F);
+        player.setAimAngle((float) (-Math.PI * 0.5));
+
+        DrawLongbowPlayerActorState.PreviewEndpoint blocked = DrawLongbowPlayerActorState.previewEndpoint(
+                player, ArenaLayout.centralCover());
+        DrawLongbowPlayerActorState.PreviewEndpoint open = DrawLongbowPlayerActorState.previewEndpoint(
+                player, ArenaLayout.open());
+
+        assertEquals(640.0F, blocked.x(), 1.0E-3F);
+        assertEquals(400.0F, blocked.y(), 1.0E-3F);
+        assertEquals(640.0F, open.x(), 1.0E-3F);
+        assertEquals(-180.0F, open.y(), 1.0E-3F);
     }
 
     @Test
