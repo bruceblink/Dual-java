@@ -149,6 +149,11 @@ public class App extends PApplet {
 
     /** Starts a local two-player match while preserving both configured keyboard snapshots. */
     public void newLocalGame(boolean instruction) {
+        newLocalGame(instruction, ArenaLayout.open());
+    }
+
+    /** Starts local two-player combat on the selected arena without routing either player through AI input. */
+    public void newLocalGame(boolean instruction, ArenaLayout arenaLayout) {
         clearLocalInputs();
         setPaused(false);
         if (activeNetwork != null) {
@@ -156,7 +161,7 @@ public class App extends PApplet {
             activeNetwork = null;
         }
         networkMode = NetworkMode.NONE;
-        system = new GameSystem(false, instruction, this, true);
+        system = new GameSystem(false, instruction, this, true, AiDifficulty.STANDARD, arenaLayout);
     }
 
     /** Opens the visible local mode chooser while keeping the demo system available for cancel. */
@@ -421,7 +426,11 @@ public class App extends PApplet {
         text("3  Advanced AI", 0, 30);
         text("4  Local 2P", 0, 75);
         text("5  Standard AI + Cover", 0, 120);
-        text("ESC    Back to demo", 0, 175);
+        text("6  Local 2P + Cover", 0, 165);
+        textFont(smallFont, 15);
+        fill(64, 112);
+        text("P1: WASD + mouse    P2: IJKL + TFGH", 0, 193);
+        text("ESC    Back to demo", 0, 220);
         popStyle();
         popMatrix();
     }
@@ -604,6 +613,10 @@ public class App extends PApplet {
         }
         if (key == '5') {
             newGame(false, false, AiDifficulty.STANDARD, ArenaLayout.centralCover());
+            return;
+        }
+        if (key == '6') {
+            newLocalGame(false, ArenaLayout.centralCover());
             return;
         }
         if (key == '4' || key == 'l' || key == 'L') newLocalGame(false);

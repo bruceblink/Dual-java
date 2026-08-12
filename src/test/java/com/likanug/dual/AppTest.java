@@ -148,6 +148,20 @@ public class AppTest {
     }
 
     @Test
+    void localModeMenuStartsTwoPlayerCombatOnTheCentralCoverArena() {
+        app.setCurrentKeyInput(new KeyInput());
+        app.setSecondKeyInput(new KeyInput());
+        app.openLocalModeMenu();
+
+        app.key = '6';
+        app.keyPressed();
+
+        assertFalse(app.isLocalModeMenuVisible());
+        assertTrue(app.getSystem().isLocalTwoPlayer());
+        assertEquals(ArenaLayout.centralCover().getDisplayName(), app.getSystem().getArenaLayout().getDisplayName());
+    }
+
+    @Test
     void localModeMenuCanBeCancelledBackToTheDemo() {
         app.setCurrentKeyInput(new KeyInput());
         app.setSecondKeyInput(new KeyInput());
