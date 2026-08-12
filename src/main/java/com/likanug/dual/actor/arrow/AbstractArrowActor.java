@@ -111,4 +111,21 @@ public abstract class AbstractArrowActor extends Actor {
     public float getLaunchY() {
         return launchY;
     }
+
+    public boolean hasPreviousPosition() {
+        return hasPreviousPosition;
+    }
+
+    public float getPreviousXPosition() {
+        return previousXPosition;
+    }
+
+    public float getPreviousYPosition() {
+        return previousYPosition;
+    }
+
+    /** Identifies the one visible projectile component allowed to create a cover-impact burst. */
+    public boolean isPrimaryProjectileComponent() {
+        return true;
+    }
 }

@@ -68,6 +68,10 @@ public final class GameConstants {
     public static final int INTERCEPT_RING_SIZE = 48;
     public static final float INTERCEPT_RING_STROKE = 3.0F;
     public static final int INTERCEPT_HIT_STOP_FRAMES = 4;
+    public static final int COVER_IMPACT_PARTICLE_COUNT = 6;
+    public static final int COVER_IMPACT_PARTICLE_SIZE = 4;
+    public static final int COVER_IMPACT_RING_SIZE = 18;
+    public static final float COVER_IMPACT_RING_STROKE = 2.0F;
     public static final int DISRUPT_PARTICLE_COUNT = 8;
     public static final int DISRUPT_PARTICLE_SIZE = 5;
     public static final int DISRUPT_RING_SIZE = 72;

@@ -18,4 +18,9 @@ public class LongbowArrowShaft extends LongbowArrowComponent {
         app.popMatrix();
         app.strokeWeight(1);
     }
+
+    @Override
+    public boolean isPrimaryProjectileComponent() {
+        return false;
+    }
 }

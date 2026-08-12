@@ -21,17 +21,20 @@ class PlayGameStateArenaCollisionTest {
         app.setSystem(system);
         ShortbowArrow myArrow = new ShortbowArrow(app);
         ShortbowArrow enemyArrow = new ShortbowArrow(app);
-        myArrow.setxPosition(640.0F);
+        myArrow.setxPosition(520.0F);
         myArrow.setyPosition(360.0F);
-        enemyArrow.setxPosition(640.0F);
+        myArrow.setLaunchPosition(480.0F, 360.0F);
+        enemyArrow.setxPosition(760.0F);
         enemyArrow.setyPosition(360.0F);
+        enemyArrow.setLaunchPosition(800.0F, 360.0F);
         system.getMyGroup().addArrow(myArrow);
         system.getOtherGroup().addArrow(enemyArrow);
-        system.getMyGroup().getRemovingArrowList().add(myArrow);
-        system.getOtherGroup().getRemovingArrowList().add(enemyArrow);
+        system.resolveArrowCoverCollisions();
 
         new PlayGameState(app).checkCollision(system);
 
+        assertTrue(system.getMyGroup().getRemovingArrowList().contains(myArrow));
+        assertTrue(system.getOtherGroup().getRemovingArrowList().contains(enemyArrow));
         assertTrue(system.getTacticalEventLog().isEmpty());
         assertTrue(system.getCombatPauseFrameCount() < GameConstants.INTERCEPT_HIT_STOP_FRAMES);
     }

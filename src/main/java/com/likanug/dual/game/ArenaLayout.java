@@ -4,6 +4,7 @@ import com.likanug.dual.App;
 import com.likanug.dual.actor.player.PlayerActor;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
 import static com.likanug.dual.App.INTERNAL_CANVAS_WIDTH;
@@ -44,6 +45,35 @@ public final class ArenaLayout {
         return obstacles.stream().anyMatch(rect -> rect.containsCircle(x, y, radius));
     }
 
+    /**
+     * Finds where a moving circular projectile first touches cover and projects feedback onto the wall surface.
+     * The start/end coordinates are consecutive simulation positions; the returned normal points out of cover.
+     */
+    public Optional<CoverImpact> findCoverImpact(
+            float startX,
+            float startY,
+            float endX,
+            float endY,
+            float radius) {
+        CoverImpact earliestImpact = null;
+        for (ArenaRect obstacle : obstacles) {
+            final Optional<ArenaRect.CircleImpact> obstacleImpact = obstacle.findFirstCircleImpact(
+                    startX, startY, endX, endY, radius);
+            if (obstacleImpact.isEmpty()) continue;
+            final ArenaRect.CircleImpact contact = obstacleImpact.get();
+            final CoverImpact impact = new CoverImpact(
+                    contact.timeRatio(),
+                    contact.x(),
+                    contact.y(),
+                    contact.normalX(),
+                    contact.normalY());
+            if (earliestImpact == null || impact.timeRatio() < earliestImpact.timeRatio()) {
+                earliestImpact = impact;
+            }
+        }
+        return Optional.ofNullable(earliestImpact);
+    }
+
     /** Pushes a player to the nearest safe side when movement enters a cover rectangle. */
     public void resolvePlayer(PlayerActor player) {
         final float radius = player.getHalfBodySize();
@@ -82,5 +112,9 @@ public final class ArenaLayout {
             app.rect(obstacle.centerX(), obstacle.centerY(), obstacle.width(), obstacle.height());
         }
         app.popStyle();
+    }
+
+    /** Describes the first wall point and outward direction of one projectile-cover collision. */
+    public record CoverImpact(float timeRatio, float x, float y, float normalX, float normalY) {
     }
 }

@@ -21,6 +21,7 @@ import com.likanug.dual.inputDevice.KeyInput;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.likanug.dual.App.FPS;
 import static com.likanug.dual.App.INTERNAL_CANVAS_HEIGHT;
@@ -328,15 +329,40 @@ public class GameSystem {
     public void resolveArenaCollisions() {
         arenaLayout.resolvePlayer((PlayerActor) myGroup.getPlayer());
         arenaLayout.resolvePlayer((PlayerActor) otherGroup.getPlayer());
+        resolveArrowCoverCollisions();
+    }
+
+    /** Removes both moved and newly spawned projectiles before they may intercept or hit a player. */
+    public void resolveArrowCoverCollisions() {
         removeArrowsInsideCover(myGroup);
         removeArrowsInsideCover(otherGroup);
     }
 
     private void removeArrowsInsideCover(ActorGroup group) {
         for (AbstractArrowActor arrow : group.getArrowList()) {
-            if (arenaLayout.blocksCircle(arrow.getxPosition(), arrow.getyPosition(), arrow.getCollisionRadius())) {
-                group.getRemovingArrowList().add(arrow);
-            }
+            if (group.getRemovingArrowList().contains(arrow)) continue;
+            final float startX = arrow.hasLaunchPosition()
+                    ? arrow.getLaunchX()
+                    : arrow.hasPreviousPosition() ? arrow.getPreviousXPosition() : arrow.getxPosition();
+            final float startY = arrow.hasLaunchPosition()
+                    ? arrow.getLaunchY()
+                    : arrow.hasPreviousPosition() ? arrow.getPreviousYPosition() : arrow.getyPosition();
+            final Optional<ArenaLayout.CoverImpact> impact = arenaLayout.findCoverImpact(
+                    startX,
+                    startY,
+                    arrow.getxPosition(),
+                    arrow.getyPosition(),
+                    arrow.getCollisionRadius());
+            if (impact.isEmpty()) continue;
+
+            group.getRemovingArrowList().add(arrow);
+            if (!arrow.isPrimaryProjectileComponent()) continue;
+            final ArenaLayout.CoverImpact primaryImpact = impact.get();
+            addCoverImpactParticles(
+                    primaryImpact.x(),
+                    primaryImpact.y(),
+                    primaryImpact.normalX(),
+                    primaryImpact.normalY());
         }
     }
 
@@ -577,6 +603,36 @@ public class GameSystem {
                     .lifespanSecond(0.3F)
                     .build();
             commonParticleSet.getParticleList().add(shard);
+        }
+    }
+
+    /** Creates a neutral ring and deterministic outward shards where a projectile meets solid cover. */
+    public void addCoverImpactParticles(float x, float y, float normalX, float normalY) {
+        final int impactColor = app.color(224);
+        final ParticleBuilder builder = commonParticleSet.getBuilder()
+                .initialize()
+                .position(x, y)
+                .particleColor(impactColor);
+        commonParticleSet.getParticleList().add(builder
+                .type(3)
+                .particleSize(GameConstants.COVER_IMPACT_RING_SIZE)
+                .weight(GameConstants.COVER_IMPACT_RING_STROKE)
+                .lifespanSecond(0.18F)
+                .build());
+
+        final float normalAngle = processing.core.PApplet.atan2(normalY, normalX);
+        for (int index = 0; index < GameConstants.COVER_IMPACT_PARTICLE_COUNT; index++) {
+            final float spreadRatio = GameConstants.COVER_IMPACT_PARTICLE_COUNT == 1
+                    ? 0.5F
+                    : (float) index / (GameConstants.COVER_IMPACT_PARTICLE_COUNT - 1);
+            final float shardAngle = normalAngle - PI * 0.25F + spreadRatio * PI * 0.5F;
+            final float shardSpeed = 2.0F + 0.4F * (index % 3);
+            commonParticleSet.getParticleList().add(builder
+                    .type(1)
+                    .polarVelocity(shardAngle, shardSpeed)
+                    .particleSize(GameConstants.COVER_IMPACT_PARTICLE_SIZE)
+                    .lifespanSecond(0.25F)
+                    .build());
         }
     }
 

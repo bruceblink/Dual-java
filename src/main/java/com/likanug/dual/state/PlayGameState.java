@@ -75,6 +75,8 @@ public class PlayGameState extends GameSystemState {
         system.resolveArenaCollisions();
         system.getMyGroup().actPlayer();
         system.getOtherGroup().actPlayer();
+        // A longbow head can spawn beyond thin cover, so resolve its full launch path before combat hits.
+        system.resolveArrowCoverCollisions();
         resolveArrowInterceptions(system);
         system.getMyGroup().actArrows();
         system.getOtherGroup().actArrows();
