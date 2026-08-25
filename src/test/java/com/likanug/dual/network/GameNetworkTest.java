@@ -18,12 +18,8 @@ class GameNetworkTest {
     @Test
     void receiverThreadUpdatesRemoteInputAndDisconnects() throws Exception {
         try (ChannelPair pair = createConnectedPair()) {
-            byte flags = NetworkMessage.encodeInput(true, false, true, false, true, false);
-            byte[] packet = new byte[] {
-                    NetworkMessage.TYPE_INPUT,
-                    flags,
-                    NetworkMessage.TYPE_DISCONNECT
-            };
+            byte[] input = NetworkMessage.encodeInputFrame(true, false, true, false, true, false, true, -1.25F);
+            byte[] packet = concat(input, new byte[]{NetworkMessage.TYPE_DISCONNECT});
 
             TestNetwork network = new TestNetwork();
             network.channel = pair.local;
@@ -40,12 +36,15 @@ class GameNetworkTest {
             assertFalse(remote.isRightPressed);
             assertTrue(remote.isZPressed);
             assertFalse(remote.isXPressed);
+            assertTrue(network.hasRemoteAim());
+            assertEquals(NetworkMessage.quantizeAimAngle(-1.25F),
+                    NetworkMessage.quantizeAimAngle(network.getRemoteAimAngle()));
             assertTrue(network.isDisconnected());
         }
     }
 
     @Test
-    void sendInputEncodesMessageAsTypeAndFlags() throws Exception {
+    void sendInputEncodesFixedMessageWithAim() throws Exception {
         try (ChannelPair pair = createConnectedPair()) {
             TestNetwork network = new TestNetwork();
             network.channel = pair.local;
@@ -54,20 +53,47 @@ class GameNetworkTest {
             KeyInput keyInput = new KeyInput();
             keyInput.isUpPressed = true;
             keyInput.isRightPressed = true;
-            keyInput.isXPressed = true;
+            keyInput.setMouseShotPressed(true);
+            keyInput.setMouseLongShotPressed(true);
 
-            network.sendInput(keyInput);
+            network.sendInput(keyInput, true, 1.25F);
 
-            byte[] written = readExactly(pair.remote, 2, 1000);
+            byte[] written = readExactly(pair.remote, NetworkMessage.INPUT_MSG_LEN, 1000);
             assertTrue(written[0] == NetworkMessage.TYPE_INPUT);
 
-            byte flags = written[1];
+            NetworkMessage.InputFrame frame = NetworkMessage.decodeInput(written);
+            byte flags = frame.flags();
             assertTrue(NetworkMessage.isUp(flags));
             assertFalse(NetworkMessage.isDown(flags));
             assertFalse(NetworkMessage.isLeft(flags));
             assertTrue(NetworkMessage.isRight(flags));
-            assertFalse(NetworkMessage.isZ(flags));
+            assertTrue(NetworkMessage.isZ(flags));
             assertTrue(NetworkMessage.isX(flags));
+            assertTrue(frame.hasAim());
+            assertEquals(NetworkMessage.quantizeAimAngle(1.25F),
+                    NetworkMessage.quantizeAimAngle(frame.aimAngle()));
+        }
+    }
+
+    @Test
+    void receiverKeepsLastValidAimWhenNextFrameHasNoAim() throws Exception {
+        try (ChannelPair pair = createConnectedPair()) {
+            TestNetwork network = new TestNetwork();
+            network.channel = pair.local;
+            network.connected = true;
+            network.startReceiverThread();
+
+            writeFully(pair.remote, concat(
+                    NetworkMessage.encodeInputFrame(false, false, false, false, false, false, true, 0.5F),
+                    NetworkMessage.encodeInputFrame(true, false, false, false, false, false, false, 0.0F),
+                    new byte[]{NetworkMessage.TYPE_DISCONNECT}));
+
+            waitUntilDisconnected(network, 1000);
+
+            assertTrue(network.hasRemoteAim());
+            assertEquals(NetworkMessage.quantizeAimAngle(0.5F),
+                    NetworkMessage.quantizeAimAngle(network.getRemoteAimAngle()));
+            assertTrue(network.getRemoteInput().isUpPressed);
         }
     }
 

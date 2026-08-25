@@ -143,9 +143,12 @@ public class RelayRoom {
 
                 switch (typeByte) {
                     case NetworkProtocol.TYPE_INPUT -> {
-                        byte flags = in.readByte();
+                        byte[] payload = in.readNBytes(NetworkProtocol.INPUT_MSG_LEN - 1);
+                        if (payload.length != NetworkProtocol.INPUT_MSG_LEN - 1) {
+                            throw new EOFException("Incomplete input message");
+                        }
                         out.writeByte(NetworkProtocol.TYPE_INPUT);
-                        out.writeByte(flags);
+                        out.write(payload);
                         out.flush();
                     }
                     case NetworkProtocol.TYPE_ROUND_RESULT -> {

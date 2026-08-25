@@ -309,7 +309,12 @@ public class App extends PApplet {
         }
         // 每帧把本地输入发往对端
         if (activeNetwork != null) {
-            activeNetwork.sendInput(currentKeyInput);
+            final var localPlayer = system.getMyGroup().getPlayer();
+            final boolean hasAim = currentKeyInput.hasMouseAim() || currentKeyInput.hasKeyboardAim();
+            final float aimAngle = hasAim
+                    ? currentKeyInput.getAimAngle(localPlayer.getxPosition(), localPlayer.getyPosition())
+                    : 0.0F;
+            activeNetwork.sendInput(currentKeyInput, hasAim, aimAngle);
         }
         system.run();
     }
@@ -491,7 +496,7 @@ public class App extends PApplet {
     // ──────────────────────────────────────────────
     @Override
     public void mousePressed() {
-        if (paused || networkMode != NetworkMode.NONE || !isInsideCanvas(mouseX, mouseY)) return;
+        if (paused || !isGameplayInputEnabled() || !isInsideCanvas(mouseX, mouseY)) return;
 
         if (system.isDemoPlay()) {
             system.setShowsInstructionWindow(!system.isShowsInstructionWindow());
@@ -525,9 +530,14 @@ public class App extends PApplet {
 
     /** 只接受本地竞技场内的鼠标位置，避免边框区域改变瞄准方向。 */
     private void updateMouseAim() {
-        if (paused || networkMode != NetworkMode.NONE || !isInsideCanvas(mouseX, mouseY)) return;
+        if (paused || !isGameplayInputEnabled() || !isInsideCanvas(mouseX, mouseY)) return;
         CanvasPoint point = toCanvasPoint(mouseX, mouseY);
         currentKeyInput.updateMouseAim(point.x(), point.y());
+    }
+
+    /** Allows mouse aim and buttons only in an active local or network match. */
+    private boolean isGameplayInputEnabled() {
+        return networkMode == NetworkMode.NONE || networkMode == NetworkMode.ONLINE;
     }
 
     @Override

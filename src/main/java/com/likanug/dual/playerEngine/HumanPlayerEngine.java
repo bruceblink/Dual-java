@@ -3,8 +3,6 @@ package com.likanug.dual.playerEngine;
 import com.likanug.dual.actor.player.PlayerActor;
 import com.likanug.dual.inputDevice.KeyInput;
 
-import static processing.core.PApplet.atan2;
-
 public class HumanPlayerEngine extends PlayerEngine {
 
     private final KeyInput currentKeyInput;
@@ -31,9 +29,8 @@ public class HumanPlayerEngine extends PlayerEngine {
         controllingInputDevice.operateShotButton(currentKeyInput.isShotPressed());
         controllingInputDevice.operateLongShotButton(currentKeyInput.isLongShotPressed());
         if (currentKeyInput.hasMouseAim()) {
-            controllingInputDevice.operateAim(atan2(
-                    currentKeyInput.getMouseAimY() - player.getyPosition(),
-                    currentKeyInput.getMouseAimX() - player.getxPosition()));
+            controllingInputDevice.operateAim(currentKeyInput.getAimAngle(
+                    player.getxPosition(), player.getyPosition()));
         } else if (currentKeyInput.hasKeyboardAim()) {
             controllingInputDevice.operateAim(currentKeyInput.getKeyboardAimAngle());
         }

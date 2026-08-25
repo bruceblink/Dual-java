@@ -26,6 +26,18 @@ public class NetworkPlayerEngine extends PlayerEngine {
         controllingInputDevice.operateMoveButton(-horizontal, -vertical);
         controllingInputDevice.operateShotButton(ki.isZPressed);
         controllingInputDevice.operateLongShotButton(ki.isXPressed);
+        if (network.hasRemoteAim()) {
+            // The remote player is rendered above us, so its arena angle is rotated by half a turn.
+            controllingInputDevice.operateAim(mirrorArenaAngle(network.getRemoteAimAngle()));
+        }
+    }
+
+    /** Converts the sender's bottom-player angle into this client's top-player view. */
+    static float mirrorArenaAngle(float angle) {
+        final float fullTurn = (float) (Math.PI * 2.0);
+        float mirrored = angle + (float) Math.PI;
+        if (mirrored >= fullTurn) mirrored -= fullTurn;
+        return mirrored;
     }
 
     private static int axisValue(boolean negativePressed, boolean positivePressed) {

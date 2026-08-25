@@ -28,8 +28,11 @@ class NetworkServerClientIntegrationTest {
             KeyInput input = new KeyInput();
             input.isUpPressed = true;
             input.isZPressed = true;
-            join.sendInput(input);
+            join.sendInput(input, true, -0.625F);
             waitUntil(() -> host.getRemoteInput().isUpPressed && host.getRemoteInput().isZPressed, 1000);
+            waitUntil(host::hasRemoteAim, 1000);
+            assertEquals(NetworkMessage.quantizeAimAngle(-0.625F),
+                    NetworkMessage.quantizeAimAngle(host.getRemoteAimAngle()));
 
             for (int match = 0; match < 2; match++) {
                 for (int round = 1; round <= 3; round++) {

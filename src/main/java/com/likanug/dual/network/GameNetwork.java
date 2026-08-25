@@ -10,7 +10,7 @@ import java.util.concurrent.locks.LockSupport;
 /**
  * P2P 网络连接基类。
  * <p>
- * 主线程调用 {@link #sendInput} 发送本地按键，后台接收线程更新 {@link #remoteInputFlags}，
+ * 主线程调用 {@link #sendInput} 发送本地按键和瞄准意图，后台接收线程更新远端输入快照，
  * 主线程通过 {@link #getRemoteInput} 取得最新远端输入。
  */
 public abstract class GameNetwork {
@@ -23,8 +23,9 @@ public abstract class GameNetwork {
 
     private final Object writeLock = new Object();
 
-    /** 最新收到的对方按键状态（后台线程写，主线程读，volatile 保证可见性） */
-    private volatile byte remoteInputFlags = 0;
+    /** 最新收到的远端输入快照；无瞄准帧不会清除此前有效的角度。 */
+    private volatile RemoteInputSnapshot remoteInputSnapshot =
+            new RemoteInputSnapshot((byte) 0, false, 0.0F);
 
     /** 双方共享的随机数种子，用于保证物理运算一致性 */
     private volatile int sharedSeed = 0;
@@ -40,14 +41,23 @@ public abstract class GameNetwork {
 
     /** 发送本地 KeyInput 到对端（每帧调用） */
     public void sendInput(KeyInput keyInput) {
+        sendInput(keyInput, false, 0.0F);
+    }
+
+    /**
+     * 发送本地规则输入和可选的绝对瞄准角；瞄准角由 App 在固定竞技场坐标中计算。
+     * 角度不存在时保留远端上一帧有效角度，避免画布外鼠标把瞄准重置到零度。
+     */
+    public void sendInput(KeyInput keyInput, boolean hasAim, float aimAngle) {
         if (!connected || channel == null || disconnected) return;
-        byte flags = NetworkMessage.encodeInput(
+        byte[] frame = NetworkMessage.encodeInputFrame(
                 keyInput.isUpPressed, keyInput.isDownPressed,
                 keyInput.isLeftPressed, keyInput.isRightPressed,
-                keyInput.isZPressed, keyInput.isXPressed);
+                keyInput.isShotPressed(), keyInput.isLongShotPressed(),
+                hasAim, aimAngle);
         try {
             synchronized (writeLock) {
-                writeFully(ByteBuffer.wrap(new byte[]{NetworkMessage.TYPE_INPUT, flags}));
+                writeFully(ByteBuffer.wrap(frame));
             }
         } catch (IOException e) {
             disconnected = true;
@@ -80,7 +90,7 @@ public abstract class GameNetwork {
 
     /** 获取对端最新 KeyInput（如尚未收到则返回全松开状态） */
     public KeyInput getRemoteInput() {
-        byte flags = remoteInputFlags;
+        byte flags = remoteInputSnapshot.flags();
         KeyInput ki = new KeyInput();
         ki.isUpPressed    = NetworkMessage.isUp(flags);
         ki.isDownPressed  = NetworkMessage.isDown(flags);
@@ -89,6 +99,14 @@ public abstract class GameNetwork {
         ki.isZPressed     = NetworkMessage.isZ(flags);
         ki.isXPressed     = NetworkMessage.isX(flags);
         return ki;
+    }
+
+    public boolean hasRemoteAim() {
+        return remoteInputSnapshot.hasAim();
+    }
+
+    public float getRemoteAimAngle() {
+        return remoteInputSnapshot.aimAngle();
     }
 
     /** 主动断线并通知对端 */
@@ -175,11 +193,25 @@ public abstract class GameNetwork {
                     byte type = oneByte.get(0);
                     switch (type) {
                         case NetworkMessage.TYPE_INPUT -> {
-                            oneByte.clear();
-                            if (!readFullyWithDeadline(channel, oneByte, System.nanoTime() + 5_000_000_000L)) {
-                                continue;
+                            ByteBuffer inputBuffer = ByteBuffer.allocate(NetworkMessage.INPUT_MSG_LEN - 1);
+                            if (!readFullyWithDeadline(channel, inputBuffer, System.nanoTime() + 5_000_000_000L)) {
+                                throw new IOException("Incomplete input frame");
                             }
-                            remoteInputFlags = oneByte.get(0);
+                            byte[] frame = new byte[NetworkMessage.INPUT_MSG_LEN];
+                            frame[0] = NetworkMessage.TYPE_INPUT;
+                            inputBuffer.flip();
+                            inputBuffer.get(frame, 1, frame.length - 1);
+                            final NetworkMessage.InputFrame inputFrame;
+                            try {
+                                inputFrame = NetworkMessage.decodeInput(frame);
+                            } catch (IllegalArgumentException e) {
+                                throw new IOException("Invalid input frame", e);
+                            }
+                            RemoteInputSnapshot previous = remoteInputSnapshot;
+                            remoteInputSnapshot = new RemoteInputSnapshot(
+                                    inputFrame.flags(),
+                                    previous.hasAim() || inputFrame.hasAim(),
+                                    inputFrame.hasAim() ? inputFrame.aimAngle() : previous.aimAngle());
                         }
                         case NetworkMessage.TYPE_ROUND_RESULT -> {
                             ByteBuffer resultBuffer = ByteBuffer.allocate(NetworkMessage.ROUND_RESULT_MSG_LEN - 1);
@@ -229,4 +261,6 @@ public abstract class GameNetwork {
         t.setDaemon(true);
         t.start();
     }
+
+    private record RemoteInputSnapshot(byte flags, boolean hasAim, float aimAngle) {}
 }

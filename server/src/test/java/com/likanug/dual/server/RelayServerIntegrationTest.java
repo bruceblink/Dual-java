@@ -48,6 +48,12 @@ class RelayServerIntegrationTest {
             outB.writeByte(NetworkProtocol.TYPE_START_ACK);
             outB.flush();
 
+            byte[] input = new byte[]{NetworkProtocol.TYPE_INPUT, (byte) 0x41, 0x12, 0x34};
+            outA.write(input);
+            outA.flush();
+            byte[] receivedInput = readExactly(inB, NetworkProtocol.INPUT_MSG_LEN);
+            assertArrayEquals(input, receivedInput);
+
             byte[] result = new byte[]{NetworkProtocol.TYPE_ROUND_RESULT, 1, 0, 1, 0, 0};
             outA.write(result);
             outA.flush();

@@ -15,7 +15,7 @@ class NetworkProtocolTest {
     }
 
     @Test
-    void inputMessageLengthIsTypePlusFlags() {
-        assertEquals(2, NetworkProtocol.INPUT_MSG_LEN);
+    void inputMessageLengthIncludesQuantizedAim() {
+        assertEquals(4, NetworkProtocol.INPUT_MSG_LEN);
     }
 }

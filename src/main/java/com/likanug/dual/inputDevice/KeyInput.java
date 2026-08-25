@@ -57,6 +57,14 @@ public class KeyInput {
         return (float) Math.atan2(vertical, horizontal);
     }
 
+    /** Resolves the same absolute aim angle for local play and the network input frame. */
+    public float getAimAngle(float originX, float originY) {
+        if (hasMouseAim) {
+            return (float) Math.atan2(mouseAimY - originY, mouseAimX - originX);
+        }
+        return getKeyboardAimAngle();
+    }
+
     /**
      * 保存最近一次位于竞技场内的鼠标目标，供玩家引擎换算瞄准角。
      * 画布外移动不会调用此方法，因此不会覆盖最后一个有效目标。
